@@ -1,0 +1,2637 @@
+{
+ "level": "N1",
+ "type": "vocab",
+ "count": 263,
+ "items": [
+  {
+   "id": "n1-v-0001",
+   "kanji": "意図",
+   "kana": "いと",
+   "meaning": "意圖",
+   "pos": "名詞",
+   "example": "発言の意図が分かりません。",
+   "exampleKana": "はつげんのいとがわかりません。",
+   "exampleMeaning": "不明白發言的意圖。"
+  },
+  {
+   "id": "n1-v-0002",
+   "kanji": "概念",
+   "kana": "がいねん",
+   "meaning": "概念",
+   "pos": "名詞",
+   "example": "この概念は説明が難しいです。",
+   "exampleKana": "このがいねんはせつめいがむずかしいです。",
+   "exampleMeaning": "這個概念很難說明。"
+  },
+  {
+   "id": "n1-v-0003",
+   "kanji": "前提",
+   "kana": "ぜんてい",
+   "meaning": "前提",
+   "pos": "名詞",
+   "example": "合意を前提に話を進めます。",
+   "exampleKana": "ごういをぜんていにはなしをすすめます。",
+   "exampleMeaning": "以達成共識為前提推進。"
+  },
+  {
+   "id": "n1-v-0004",
+   "kanji": "本質",
+   "kana": "ほんしつ",
+   "meaning": "本質",
+   "pos": "名詞",
+   "example": "問題の本質を見極めます。",
+   "exampleKana": "もんだいのほんしつをみきわめます。",
+   "exampleMeaning": "看清問題的本質。"
+  },
+  {
+   "id": "n1-v-0005",
+   "kanji": "根拠",
+   "kana": "こんきょ",
+   "meaning": "根據",
+   "pos": "名詞",
+   "example": "その主張には根拠がありません。",
+   "exampleKana": "そのしゅちょうにはこんきょがありません。",
+   "exampleMeaning": "那個主張沒有根據。"
+  },
+  {
+   "id": "n1-v-0006",
+   "kanji": "妥協",
+   "kana": "だきょう",
+   "meaning": "妥協",
+   "pos": "名詞",
+   "example": "双方が妥協して合意しました。",
+   "exampleKana": "そうほうがだきょうしてごういしました。",
+   "exampleMeaning": "雙方妥協達成共識。"
+  },
+  {
+   "id": "n1-v-0007",
+   "kanji": "偏見",
+   "kana": "へんけん",
+   "meaning": "偏見",
+   "pos": "名詞",
+   "example": "偏見を持たずに判断します。",
+   "exampleKana": "へんけんをもたずにはんだんします。",
+   "exampleMeaning": "不帶偏見地判斷。"
+  },
+  {
+   "id": "n1-v-0008",
+   "kanji": "葛藤",
+   "kana": "かっとう",
+   "meaning": "糾葛、內心衝突",
+   "pos": "名詞",
+   "example": "理想と現実の葛藤に悩みます。",
+   "exampleKana": "りそうとげんじつのかっとうになやみます。",
+   "exampleMeaning": "為理想與現實的矛盾而苦惱。"
+  },
+  {
+   "id": "n1-v-0009",
+   "kanji": "慣習",
+   "kana": "かんしゅう",
+   "meaning": "慣例、習俗",
+   "pos": "名詞",
+   "example": "地域の慣習を尊重します。",
+   "exampleKana": "ちいきのかんしゅうをそんちょうします。",
+   "exampleMeaning": "尊重當地的習俗。"
+  },
+  {
+   "id": "n1-v-0010",
+   "kanji": "権威",
+   "kana": "けんい",
+   "meaning": "權威",
+   "pos": "名詞",
+   "example": "彼はこの分野の権威です。",
+   "exampleKana": "かれはこのぶんやのけんいです。",
+   "exampleMeaning": "他是這個領域的權威。"
+  },
+  {
+   "id": "n1-v-0011",
+   "kanji": "弊害",
+   "kana": "へいがい",
+   "meaning": "弊病、害處",
+   "pos": "名詞",
+   "example": "制度の弊害が指摘されています。",
+   "exampleKana": "せいどのへいがいがしてきされています。",
+   "exampleMeaning": "制度的弊病受到指摘。"
+  },
+  {
+   "id": "n1-v-0012",
+   "kanji": "潜在",
+   "kana": "せんざい",
+   "meaning": "潛在",
+   "pos": "名詞",
+   "example": "潜在的なリスクを評価します。",
+   "exampleKana": "せんざいてきなリスクをひょうかします。",
+   "exampleMeaning": "評估潛在風險。"
+  },
+  {
+   "id": "n1-v-0013",
+   "kanji": "把握",
+   "kana": "はあく",
+   "meaning": "掌握、了解",
+   "pos": "名詞",
+   "example": "全体像を把握しています。",
+   "exampleKana": "ぜんたいぞうをはあくしています。",
+   "exampleMeaning": "掌握了整體樣貌。"
+  },
+  {
+   "id": "n1-v-0014",
+   "kanji": "是正",
+   "kana": "ぜせい",
+   "meaning": "糾正、改正",
+   "pos": "名詞",
+   "example": "不平等の是正が求められます。",
+   "exampleKana": "ふびょうどうのぜせいがもとめられます。",
+   "exampleMeaning": "要求糾正不平等。"
+  },
+  {
+   "id": "n1-v-0015",
+   "kanji": "遂行",
+   "kana": "すいこう",
+   "meaning": "完成、執行（任務）",
+   "pos": "名詞",
+   "example": "任務を無事に遂行しました。",
+   "exampleKana": "にんむをぶじにすいこうしました。",
+   "exampleMeaning": "順利完成了任務。"
+  },
+  {
+   "id": "n1-v-0016",
+   "kanji": "一環",
+   "kana": "いっかん",
+   "meaning": "一環",
+   "pos": "名詞",
+   "example": "教育改革の一環です。",
+   "exampleKana": "きょういくかいかくのいっかんです。",
+   "exampleMeaning": "是教育改革的一環。"
+  },
+  {
+   "id": "n1-v-0017",
+   "kanji": "兆し",
+   "kana": "きざし",
+   "meaning": "徵兆",
+   "pos": "名詞",
+   "example": "景気回復の兆しが見えます。",
+   "exampleKana": "けいきかいふくのきざしがみえます。",
+   "exampleMeaning": "看得到景氣復甦的徵兆。"
+  },
+  {
+   "id": "n1-v-0018",
+   "kanji": "矛先",
+   "kana": "ほこさき",
+   "meaning": "矛頭、攻擊方向",
+   "pos": "名詞",
+   "example": "批判の矛先が政府に向かいました。",
+   "exampleKana": "ひはんのほこさきがせいふにむかいました。",
+   "exampleMeaning": "批判的矛頭指向政府。"
+  },
+  {
+   "id": "n1-v-0019",
+   "kanji": "真相",
+   "kana": "しんそう",
+   "meaning": "真相",
+   "pos": "名詞",
+   "example": "事件の真相はまだ闇の中です。",
+   "exampleKana": "じけんのしんそうはまだやみのなかです。",
+   "exampleMeaning": "事件真相仍不明。"
+  },
+  {
+   "id": "n1-v-0020",
+   "kanji": "損なう",
+   "kana": "そこなう",
+   "meaning": "損害、破壞",
+   "pos": "動詞",
+   "example": "信頼を損なう行為です。",
+   "exampleKana": "しんらいをそこなうこういです。",
+   "exampleMeaning": "是損害信任的行為。"
+  },
+  {
+   "id": "n1-v-0021",
+   "kanji": "免れる",
+   "kana": "まぬがれる",
+   "meaning": "免於、逃過",
+   "pos": "動詞",
+   "example": "責任は免れません。",
+   "exampleKana": "せきにんはまぬがれません。",
+   "exampleMeaning": "難逃其責。"
+  },
+  {
+   "id": "n1-v-0022",
+   "kanji": "覆す",
+   "kana": "くつがえす",
+   "meaning": "推翻",
+   "pos": "動詞",
+   "example": "一審の判決を覆しました。",
+   "exampleKana": "いっしんのはんけつをくつがえしました。",
+   "exampleMeaning": "推翻了一審判決。"
+  },
+  {
+   "id": "n1-v-0023",
+   "kanji": "携わる",
+   "kana": "たずさわる",
+   "meaning": "從事、參與",
+   "pos": "動詞",
+   "example": "長年教育に携わってきました。",
+   "exampleKana": "ながねんきょういくにたずさわってきました。",
+   "exampleMeaning": "長年從事教育工作。"
+  },
+  {
+   "id": "n1-v-0024",
+   "kanji": "物語る",
+   "kana": "ものがたる",
+   "meaning": "說明、顯示",
+   "pos": "動詞",
+   "example": "データが問題の深刻さを物語っています。",
+   "exampleKana": "データがもんだいのしんこくさをものがたっています。",
+   "exampleMeaning": "數據說明了問題的嚴重性。"
+  },
+  {
+   "id": "n1-v-0025",
+   "kanji": "見なす",
+   "kana": "みなす",
+   "meaning": "視為、當作",
+   "pos": "動詞",
+   "example": "返事がなければ同意と見なします。",
+   "exampleKana": "へんじがなければどういとみなします。",
+   "exampleMeaning": "若無回覆則視為同意。"
+  },
+  {
+   "id": "n1-v-0026",
+   "kanji": "費やす",
+   "kana": "ついやす",
+   "meaning": "花費",
+   "pos": "動詞",
+   "example": "準備に一年を費やしました。",
+   "exampleKana": "じゅんびにいちねんをついやしました。",
+   "exampleMeaning": "花了一年準備。"
+  },
+  {
+   "id": "n1-v-0027",
+   "kanji": "強いる",
+   "kana": "しいる",
+   "meaning": "強迫",
+   "pos": "動詞",
+   "example": "犠牲を強いることになります。",
+   "exampleKana": "ぎせいをしいることになります。",
+   "exampleMeaning": "這會強迫他人做出犧牲。"
+  },
+  {
+   "id": "n1-v-0028",
+   "kanji": "滞る",
+   "kana": "とどこおる",
+   "meaning": "停滯、拖欠",
+   "pos": "動詞",
+   "example": "支払いが滞っています。",
+   "exampleKana": "しはらいがとどこおっています。",
+   "exampleMeaning": "款項拖欠中。"
+  },
+  {
+   "id": "n1-v-0029",
+   "kanji": "賄う",
+   "kana": "まかなう",
+   "meaning": "供應、籌措",
+   "pos": "動詞",
+   "example": "経費は寄付で賄います。",
+   "exampleKana": "けいひはきふでまかないます。",
+   "exampleMeaning": "經費以捐款支應。"
+  },
+  {
+   "id": "n1-v-0030",
+   "kanji": "即する",
+   "kana": "そくする",
+   "meaning": "符合、切合",
+   "pos": "動詞",
+   "example": "現実に即した計画が必要です。",
+   "exampleKana": "げんじつにそくしたけいかくがひつようです。",
+   "exampleMeaning": "需要切合實際的計畫。"
+  },
+  {
+   "id": "n1-v-0031",
+   "kanji": "顕著",
+   "kana": "けんちょ",
+   "meaning": "顯著",
+   "pos": "形容動詞（な形）",
+   "example": "効果は顕著でした。",
+   "exampleKana": "こうかはけんちょでした。",
+   "exampleMeaning": "效果顯著。"
+  },
+  {
+   "id": "n1-v-0032",
+   "kanji": "不可欠",
+   "kana": "ふかけつ",
+   "meaning": "不可或缺",
+   "pos": "形容動詞（な形）",
+   "example": "水は生活に不可欠です。",
+   "exampleKana": "みずはせいかつにふかけつです。",
+   "exampleMeaning": "水是生活不可或缺的。"
+  },
+  {
+   "id": "n1-v-0033",
+   "kanji": "円滑",
+   "kana": "えんかつ",
+   "meaning": "圓滑、順利",
+   "pos": "形容動詞（な形）",
+   "example": "交渉は円滑に進みました。",
+   "exampleKana": "こうしょうはえんかつにすすみました。",
+   "exampleMeaning": "談判順利進行。"
+  },
+  {
+   "id": "n1-v-0034",
+   "kanji": "露骨",
+   "kana": "ろこつ",
+   "meaning": "露骨",
+   "pos": "形容動詞（な形）",
+   "example": "露骨に嫌な顔をされました。",
+   "exampleKana": "ろこつにいやなかおをされました。",
+   "exampleMeaning": "對方露骨地擺臭臉。"
+  },
+  {
+   "id": "n1-v-0035",
+   "kanji": "質素",
+   "kana": "しっそ",
+   "meaning": "儉樸",
+   "pos": "形容動詞（な形）",
+   "example": "質素な暮らしをしています。",
+   "exampleKana": "しっそなくらしをしています。",
+   "exampleMeaning": "過著儉樸的生活。"
+  },
+  {
+   "id": "n1-v-0036",
+   "kanji": "はなはだしい",
+   "kana": "はなはだしい",
+   "meaning": "非常、過分的",
+   "pos": "形容詞（い形）",
+   "example": "認識がはなはだしく不足しています。",
+   "exampleKana": "にんしきがはなはだしくふそくしています。",
+   "exampleMeaning": "認知嚴重不足。"
+  },
+  {
+   "id": "n1-v-0037",
+   "kanji": "紛らわしい",
+   "kana": "まぎらわしい",
+   "meaning": "容易混淆的",
+   "pos": "形容詞（い形）",
+   "example": "紛らわしい名前で間違えました。",
+   "exampleKana": "まぎらわしいなまえでまちがえました。",
+   "exampleMeaning": "因名字相近而弄錯。"
+  },
+  {
+   "id": "n1-v-0038",
+   "kanji": "もっぱら",
+   "kana": "もっぱら",
+   "meaning": "專門、淨是",
+   "pos": "副詞",
+   "example": "週末はもっぱら家で過ごします。",
+   "exampleKana": "しゅうまつはもっぱらいえですごします。",
+   "exampleMeaning": "週末幾乎都待在家。"
+  },
+  {
+   "id": "n1-v-0039",
+   "kanji": "ことごとく",
+   "kana": "ことごとく",
+   "meaning": "全部、無一例外",
+   "pos": "副詞",
+   "example": "提案はことごとく却下されました。",
+   "exampleKana": "ていあんはことごとくきゃっかされました。",
+   "exampleMeaning": "提案全遭駁回。"
+  },
+  {
+   "id": "n1-v-0040",
+   "kanji": "おのずと",
+   "kana": "おのずと",
+   "meaning": "自然而然",
+   "pos": "副詞",
+   "example": "続ければおのずと結果が出ます。",
+   "exampleKana": "つづければおのずとけっかがでます。",
+   "exampleMeaning": "持續下去自然會有結果。"
+  },
+  {
+   "id": "n1-v-0041",
+   "kanji": "ひいては",
+   "kana": "ひいては",
+   "meaning": "進而、乃至",
+   "pos": "副詞",
+   "example": "それは会社、ひいては社会の利益になります。",
+   "exampleKana": "それはかいしゃ、ひいてはしゃかいのりえきになります。",
+   "exampleMeaning": "那對公司乃至社會都有益。"
+  },
+  {
+   "id": "n1-v-0042",
+   "kanji": "あえて",
+   "kana": "あえて",
+   "meaning": "特意、硬要",
+   "pos": "副詞",
+   "example": "あえて厳しいことを言います。",
+   "exampleKana": "あえてきびしいことをいいます。",
+   "exampleMeaning": "我特意說些嚴厲的話。"
+  },
+  {
+   "id": "n1-v-0043",
+   "kanji": "理念",
+   "kana": "りねん",
+   "meaning": "理念",
+   "pos": "名詞",
+   "example": "会社の理念に共感して入社しました。",
+   "exampleKana": "かいしゃのりねんにきょうかんしてにゅうしゃしました。",
+   "exampleMeaning": "認同公司理念而進了公司。"
+  },
+  {
+   "id": "n1-v-0044",
+   "kanji": "信念",
+   "kana": "しんねん",
+   "meaning": "信念",
+   "pos": "名詞",
+   "example": "彼は強い信念を持っています。",
+   "exampleKana": "かれはつよいしんねんをもっています。",
+   "exampleMeaning": "他有堅定的信念。"
+  },
+  {
+   "id": "n1-v-0045",
+   "kanji": "価値観",
+   "kana": "かちかん",
+   "meaning": "價值觀",
+   "pos": "名詞",
+   "example": "世代によって価値観が異なります。",
+   "exampleKana": "せだいによってかちかんがことなります。",
+   "exampleMeaning": "價值觀因世代而異。"
+  },
+  {
+   "id": "n1-v-0046",
+   "kanji": "観点",
+   "kana": "かんてん",
+   "meaning": "觀點",
+   "pos": "名詞",
+   "example": "別の観点から問題を捉えます。",
+   "exampleKana": "べつのかんてんからもんだいをとらえます。",
+   "exampleMeaning": "從不同觀點看待問題。"
+  },
+  {
+   "id": "n1-v-0047",
+   "kanji": "視点",
+   "kana": "してん",
+   "meaning": "視角",
+   "pos": "名詞",
+   "example": "子供の視点で物事を見ます。",
+   "exampleKana": "こどものしてんでものごとをみます。",
+   "exampleMeaning": "用孩子的視角看事情。"
+  },
+  {
+   "id": "n1-v-0048",
+   "kanji": "見解",
+   "kana": "けんかい",
+   "meaning": "見解",
+   "pos": "名詞",
+   "example": "政府の公式見解が発表されました。",
+   "exampleKana": "せいふのこうしきけんかいがはっぴょうされました。",
+   "exampleMeaning": "政府發表了官方見解。"
+  },
+  {
+   "id": "n1-v-0049",
+   "kanji": "主旨",
+   "kana": "しゅし",
+   "meaning": "主旨",
+   "pos": "名詞",
+   "example": "発言の主旨がよく分かりません。",
+   "exampleKana": "はつげんのしゅしがよくわかりません。",
+   "exampleMeaning": "不太明白發言的主旨。"
+  },
+  {
+   "id": "n1-v-0050",
+   "kanji": "趣旨",
+   "kana": "しゅし",
+   "meaning": "宗旨、意圖",
+   "pos": "名詞",
+   "example": "この会の趣旨を説明します。",
+   "exampleKana": "このかいのしゅしをせつめいします。",
+   "exampleMeaning": "說明這個會的宗旨。"
+  },
+  {
+   "id": "n1-v-0051",
+   "kanji": "本音",
+   "kana": "ほんね",
+   "meaning": "真心話",
+   "pos": "名詞",
+   "example": "なかなか本音を言いません。",
+   "exampleKana": "なかなかほんねをいいません。",
+   "exampleMeaning": "遲遲不肯說真心話。"
+  },
+  {
+   "id": "n1-v-0052",
+   "kanji": "建前",
+   "kana": "たてまえ",
+   "meaning": "場面話、原則",
+   "pos": "名詞",
+   "example": "それは建前で、実情は違います。",
+   "exampleKana": "それはたてまえで、じつじょうはちがいます。",
+   "exampleMeaning": "那是場面話，實情不同。"
+  },
+  {
+   "id": "n1-v-0053",
+   "kanji": "概略",
+   "kana": "がいりゃく",
+   "meaning": "概略",
+   "pos": "名詞",
+   "example": "計画の概略をお話しします。",
+   "exampleKana": "けいかくのがいりゃくをおはなしします。",
+   "exampleMeaning": "說明計畫的大概。"
+  },
+  {
+   "id": "n1-v-0054",
+   "kanji": "要旨",
+   "kana": "ようし",
+   "meaning": "要旨",
+   "pos": "名詞",
+   "example": "論文の要旨を一枚にまとめます。",
+   "exampleKana": "ろんぶんのようしをいちまいにまとめます。",
+   "exampleMeaning": "把論文要旨整理成一頁。"
+  },
+  {
+   "id": "n1-v-0055",
+   "kanji": "本質的",
+   "kana": "ほんしつてき",
+   "meaning": "本質上的",
+   "pos": "名詞",
+   "example": "本質的な解決にはなっていません。",
+   "exampleKana": "ほんしつてきなかいけつにはなっていません。",
+   "exampleMeaning": "沒有從根本上解決。"
+  },
+  {
+   "id": "n1-v-0056",
+   "kanji": "矛盾",
+   "kana": "むじゅん",
+   "meaning": "矛盾",
+   "pos": "名詞",
+   "example": "制度そのものに矛盾を抱えています。",
+   "exampleKana": "せいどそのものにむじゅんをかかえています。",
+   "exampleMeaning": "制度本身就存在矛盾。"
+  },
+  {
+   "id": "n1-v-0057",
+   "kanji": "根底",
+   "kana": "こんてい",
+   "meaning": "根本、基礎",
+   "pos": "名詞",
+   "example": "その考えを根底から覆す発見でした。",
+   "exampleKana": "そのかんがえをこんていからくつがえすはっけんでした。",
+   "exampleMeaning": "是徹底推翻那個想法的發現。"
+  },
+  {
+   "id": "n1-v-0058",
+   "kanji": "枠組み",
+   "kana": "わくぐみ",
+   "meaning": "框架",
+   "pos": "名詞",
+   "example": "新しい制度の枠組みを作ります。",
+   "exampleKana": "あたらしいせいどのわくぐみをつくります。",
+   "exampleMeaning": "建立新制度的框架。"
+  },
+  {
+   "id": "n1-v-0059",
+   "kanji": "体系",
+   "kana": "たいけい",
+   "meaning": "體系",
+   "pos": "名詞",
+   "example": "知識を体系的に整理します。",
+   "exampleKana": "ちしきをたいけいてきにせいりします。",
+   "exampleMeaning": "有系統地整理知識。"
+  },
+  {
+   "id": "n1-v-0060",
+   "kanji": "概念上",
+   "kana": "がいねんじょう",
+   "meaning": "概念上",
+   "pos": "名詞",
+   "example": "概念上は理解できても、実践は難しい。",
+   "exampleKana": "がいねんじょうはりかいできても、じっせんはむずかしい。",
+   "exampleMeaning": "概念上懂了，實踐仍難。"
+  },
+  {
+   "id": "n1-v-0061",
+   "kanji": "定義",
+   "kana": "ていぎ",
+   "meaning": "定義",
+   "pos": "名詞",
+   "example": "言葉の定義をはっきりさせます。",
+   "exampleKana": "ことばのていぎをはっきりさせます。",
+   "exampleMeaning": "明確界定詞語的定義。"
+  },
+  {
+   "id": "n1-v-0062",
+   "kanji": "象徴",
+   "kana": "しょうちょう",
+   "meaning": "象徵",
+   "pos": "名詞",
+   "example": "鳩は平和の象徴です。",
+   "exampleKana": "はとはへいわのしょうちょうです。",
+   "exampleMeaning": "鴿子是和平的象徵。"
+  },
+  {
+   "id": "n1-v-0063",
+   "kanji": "動向",
+   "kana": "どうこう",
+   "meaning": "動向",
+   "pos": "名詞",
+   "example": "市場の動向を注視しています。",
+   "exampleKana": "しじょうのどうこうをちゅうしています。",
+   "exampleMeaning": "密切關注市場動向。"
+  },
+  {
+   "id": "n1-v-0064",
+   "kanji": "情勢",
+   "kana": "じょうせい",
+   "meaning": "情勢",
+   "pos": "名詞",
+   "example": "国際情勢は不安定です。",
+   "exampleKana": "こくさいじょうせいはふあんていです。",
+   "exampleMeaning": "國際情勢不穩定。"
+  },
+  {
+   "id": "n1-v-0065",
+   "kanji": "局面",
+   "kana": "きょくめん",
+   "meaning": "局面",
+   "pos": "名詞",
+   "example": "交渉は新たな局面を迎えました。",
+   "exampleKana": "こうしょうはあらたなきょくめんをむかえました。",
+   "exampleMeaning": "談判進入新局面。"
+  },
+  {
+   "id": "n1-v-0066",
+   "kanji": "過渡期",
+   "kana": "かとき",
+   "meaning": "過渡期",
+   "pos": "名詞",
+   "example": "業界は今、過渡期にあります。",
+   "exampleKana": "ぎょうかいはいま、かときにあります。",
+   "exampleMeaning": "業界正處於過渡期。"
+  },
+  {
+   "id": "n1-v-0067",
+   "kanji": "転換",
+   "kana": "てんかん",
+   "meaning": "轉變、轉換",
+   "pos": "名詞",
+   "example": "発想の転換が必要です。",
+   "exampleKana": "はっそうのてんかんがひつようです。",
+   "exampleMeaning": "需要轉換思維。"
+  },
+  {
+   "id": "n1-v-0068",
+   "kanji": "基調",
+   "kana": "きちょう",
+   "meaning": "基調",
+   "pos": "名詞",
+   "example": "会議は協調を基調に進みました。",
+   "exampleKana": "かいぎはきょうちょうをきちょうにすすみました。",
+   "exampleMeaning": "會議以協調為基調進行。"
+  },
+  {
+   "id": "n1-v-0069",
+   "kanji": "是非",
+   "kana": "ぜひ",
+   "meaning": "是非、可否",
+   "pos": "名詞",
+   "example": "計画の是非を慎重に議論します。",
+   "exampleKana": "けいかくのぜひをしんちょうにぎろんします。",
+   "exampleMeaning": "慎重討論計畫的可否。"
+  },
+  {
+   "id": "n1-v-0070",
+   "kanji": "格差",
+   "kana": "かくさ",
+   "meaning": "差距、落差",
+   "pos": "名詞",
+   "example": "都市と地方の格差が広がっています。",
+   "exampleKana": "としとちほうのかくさがひろがっています。",
+   "exampleMeaning": "城鄉差距在擴大。"
+  },
+  {
+   "id": "n1-v-0071",
+   "kanji": "偏り",
+   "kana": "かたより",
+   "meaning": "偏頗、不均",
+   "pos": "名詞",
+   "example": "報道に偏りがあると批判されました。",
+   "exampleKana": "ほうどうにかたよりがあるとひはんされました。",
+   "exampleMeaning": "報導被批評有失偏頗。"
+  },
+  {
+   "id": "n1-v-0072",
+   "kanji": "恩恵",
+   "kana": "おんけい",
+   "meaning": "恩惠、好處",
+   "pos": "名詞",
+   "example": "技術の進歩の恩恵を受けています。",
+   "exampleKana": "ぎじゅつのしんぽのおんけいをうけています。",
+   "exampleMeaning": "享受著技術進步的好處。"
+  },
+  {
+   "id": "n1-v-0073",
+   "kanji": "代償",
+   "kana": "だいしょう",
+   "meaning": "代價",
+   "pos": "名詞",
+   "example": "成功には大きな代償が伴いました。",
+   "exampleKana": "せいこうにはおおきなだいしょうがともないました。",
+   "exampleMeaning": "成功伴隨著巨大代價。"
+  },
+  {
+   "id": "n1-v-0074",
+   "kanji": "犠牲",
+   "kana": "ぎせい",
+   "meaning": "犧牲",
+   "pos": "名詞",
+   "example": "家族との時間を犠牲にしてきました。",
+   "exampleKana": "かぞくとのじかんをぎせいにしてきました。",
+   "exampleMeaning": "一直犧牲與家人相處的時間。"
+  },
+  {
+   "id": "n1-v-0075",
+   "kanji": "負担",
+   "kana": "ふたん",
+   "meaning": "負擔",
+   "pos": "名詞",
+   "example": "制度改正で国民の負担が増えます。",
+   "exampleKana": "せいどかいせいでこくみんのふたんがふえます。",
+   "exampleMeaning": "制度修改使國民負擔加重。"
+  },
+  {
+   "id": "n1-v-0076",
+   "kanji": "需給",
+   "kana": "じゅきゅう",
+   "meaning": "供需",
+   "pos": "名詞",
+   "example": "電力の需給が逼迫しています。",
+   "exampleKana": "でんりょくのじゅきゅうがひっぱくしています。",
+   "exampleMeaning": "電力供需吃緊。"
+  },
+  {
+   "id": "n1-v-0077",
+   "kanji": "均衡",
+   "kana": "きんこう",
+   "meaning": "均衡",
+   "pos": "名詞",
+   "example": "財政の均衡を保つ努力をします。",
+   "exampleKana": "ざいせいのきんこうをたもつどりょくをします。",
+   "exampleMeaning": "努力維持財政均衡。"
+  },
+  {
+   "id": "n1-v-0078",
+   "kanji": "枠",
+   "kana": "わく",
+   "meaning": "框、限額",
+   "pos": "名詞",
+   "example": "予算の枠内で収めます。",
+   "exampleKana": "よさんのわくないでおさめます。",
+   "exampleMeaning": "控制在預算範圍內。"
+  },
+  {
+   "id": "n1-v-0079",
+   "kanji": "水準",
+   "kana": "すいじゅん",
+   "meaning": "水準",
+   "pos": "名詞",
+   "example": "生活水準が大きく向上しました。",
+   "exampleKana": "せいかつすいじゅんがおおきくこうじょうしました。",
+   "exampleMeaning": "生活水準大幅提升。"
+  },
+  {
+   "id": "n1-v-0080",
+   "kanji": "図る",
+   "kana": "はかる",
+   "meaning": "謀求、力圖",
+   "pos": "動詞",
+   "example": "業務の効率化を図ります。",
+   "exampleKana": "ぎょうむのこうりつかをはかります。",
+   "exampleMeaning": "力求業務效率化。"
+  },
+  {
+   "id": "n1-v-0081",
+   "kanji": "講じる",
+   "kana": "こうじる",
+   "meaning": "採取（措施）",
+   "pos": "動詞",
+   "example": "安全対策を講じる必要があります。",
+   "exampleKana": "あんぜんたいさくをこうじるひつようがあります。",
+   "exampleMeaning": "有必要採取安全措施。"
+  },
+  {
+   "id": "n1-v-0082",
+   "kanji": "臨む",
+   "kana": "のぞむ",
+   "meaning": "面臨、出席",
+   "pos": "動詞",
+   "example": "万全の準備で試験に臨みます。",
+   "exampleKana": "ばんぜんのじゅんびでしけんにのぞみます。",
+   "exampleMeaning": "以萬全準備應考。"
+  },
+  {
+   "id": "n1-v-0083",
+   "kanji": "掲げる",
+   "kana": "かかげる",
+   "meaning": "揭示、標榜",
+   "pos": "動詞",
+   "example": "環境保護を目標に掲げています。",
+   "exampleKana": "かんきょうほごをもくひょうにかかげています。",
+   "exampleMeaning": "標榜以環境保護為目標。"
+  },
+  {
+   "id": "n1-v-0084",
+   "kanji": "唱える",
+   "kana": "となえる",
+   "meaning": "提倡、主張",
+   "pos": "動詞",
+   "example": "学者が新しい説を唱えました。",
+   "exampleKana": "がくしゃがあたらしいせつをとなえました。",
+   "exampleMeaning": "學者提出了新學說。"
+  },
+  {
+   "id": "n1-v-0085",
+   "kanji": "問う",
+   "kana": "とう",
+   "meaning": "質問、追究",
+   "pos": "動詞",
+   "example": "責任の所在を問います。",
+   "exampleKana": "せきにんのしょざいをといます。",
+   "exampleMeaning": "追究責任的歸屬。"
+  },
+  {
+   "id": "n1-v-0086",
+   "kanji": "募る",
+   "kana": "つのる",
+   "meaning": "加劇、募集",
+   "pos": "動詞",
+   "example": "不安が日ごとに募ります。",
+   "exampleKana": "ふあんがひごとにつのります。",
+   "exampleMeaning": "不安一天天加劇。"
+  },
+  {
+   "id": "n1-v-0087",
+   "kanji": "補完する",
+   "kana": "ほかんする",
+   "meaning": "補足、補全",
+   "pos": "動詞",
+   "example": "資料を補完して再提出します。",
+   "exampleKana": "しりょうをほかんしてさいていしゅつします。",
+   "exampleMeaning": "補全資料後重新提交。"
+  },
+  {
+   "id": "n1-v-0088",
+   "kanji": "是正する",
+   "kana": "ぜせいする",
+   "meaning": "糾正",
+   "pos": "動詞",
+   "example": "不均衡を是正する措置を取ります。",
+   "exampleKana": "ふきんこうをぜせいするそちをとります。",
+   "exampleMeaning": "採取糾正失衡的措施。"
+  },
+  {
+   "id": "n1-v-0089",
+   "kanji": "遂げる",
+   "kana": "とげる",
+   "meaning": "達成、完成",
+   "pos": "動詞",
+   "example": "彼は目覚ましい成長を遂げました。",
+   "exampleKana": "かれはめざましいせいちょうをとげました。",
+   "exampleMeaning": "他取得了驚人的成長。"
+  },
+  {
+   "id": "n1-v-0090",
+   "kanji": "極める",
+   "kana": "きわめる",
+   "meaning": "達到極致、鑽研",
+   "pos": "動詞",
+   "example": "その道を極めた職人です。",
+   "exampleKana": "そのみちをきわめたしょくにんです。",
+   "exampleMeaning": "是鑽研該領域到極致的匠人。"
+  },
+  {
+   "id": "n1-v-0091",
+   "kanji": "及ぼす",
+   "kana": "およぼす",
+   "meaning": "波及、造成",
+   "pos": "動詞",
+   "example": "地域経済に深刻な影響を及ぼします。",
+   "exampleKana": "ちいきけいざいにしんこくなえいきょうをおよぼします。",
+   "exampleMeaning": "對地方經濟造成嚴重影響。"
+  },
+  {
+   "id": "n1-v-0092",
+   "kanji": "伴う",
+   "kana": "ともなう",
+   "meaning": "伴隨",
+   "pos": "動詞",
+   "example": "改革には痛みが伴います。",
+   "exampleKana": "かいかくにはいたみがともないます。",
+   "exampleMeaning": "改革伴隨著陣痛。"
+  },
+  {
+   "id": "n1-v-0093",
+   "kanji": "帯びる",
+   "kana": "おびる",
+   "meaning": "帶有、負有",
+   "pos": "動詞",
+   "example": "議論が現実味を帯びてきました。",
+   "exampleKana": "ぎろんがげんじつみをおびてきました。",
+   "exampleMeaning": "討論開始有了現實感。"
+  },
+  {
+   "id": "n1-v-0094",
+   "kanji": "即す",
+   "kana": "そくす",
+   "meaning": "依照、切合",
+   "pos": "動詞",
+   "example": "実情に即した対応を求めます。",
+   "exampleKana": "じつじょうにそくしたたいおうをもとめます。",
+   "exampleMeaning": "要求切合實情的應對。"
+  },
+  {
+   "id": "n1-v-0095",
+   "kanji": "基づける",
+   "kana": "もとづける",
+   "meaning": "使基於",
+   "pos": "動詞",
+   "example": "判断を客観的な事実に基づけます。",
+   "exampleKana": "はんだんをきゃっかんてきなじじつにもとづけます。",
+   "exampleMeaning": "讓判斷以客觀事實為依據。"
+  },
+  {
+   "id": "n1-v-0096",
+   "kanji": "見極める",
+   "kana": "みきわめる",
+   "meaning": "看清、判明",
+   "pos": "動詞",
+   "example": "相手の真意を見極めます。",
+   "exampleKana": "あいてのしんいをみきわめます。",
+   "exampleMeaning": "看清對方的真意。"
+  },
+  {
+   "id": "n1-v-0097",
+   "kanji": "見据える",
+   "kana": "みすえる",
+   "meaning": "著眼、正視",
+   "pos": "動詞",
+   "example": "十年先を見据えて計画を立てます。",
+   "exampleKana": "じゅうねんさきをみすえてけいかくをたてます。",
+   "exampleMeaning": "著眼十年後來制定計畫。"
+  },
+  {
+   "id": "n1-v-0098",
+   "kanji": "踏まえる",
+   "kana": "ふまえる",
+   "meaning": "根據、依據",
+   "pos": "動詞",
+   "example": "前回の反省を踏まえて改善します。",
+   "exampleKana": "ぜんかいのはんせいをふまえてかいぜんします。",
+   "exampleMeaning": "根據上次的檢討加以改善。"
+  },
+  {
+   "id": "n1-v-0099",
+   "kanji": "見合わせる",
+   "kana": "みあわせる",
+   "meaning": "暫緩、對看",
+   "pos": "動詞",
+   "example": "悪天候のため出発を見合わせます。",
+   "exampleKana": "あくてんこうのためしゅっぱつをみあわせます。",
+   "exampleMeaning": "因天候不佳暫緩出發。"
+  },
+  {
+   "id": "n1-v-0100",
+   "kanji": "取り計らう",
+   "kana": "とりはからう",
+   "meaning": "妥善安排",
+   "pos": "動詞",
+   "example": "ご希望に沿うよう取り計らいます。",
+   "exampleKana": "ごきぼうにそうようとりはからいます。",
+   "exampleMeaning": "會設法配合您的要求。"
+  },
+  {
+   "id": "n1-v-0101",
+   "kanji": "差し支える",
+   "kana": "さしつかえる",
+   "meaning": "有妨礙、不方便",
+   "pos": "動詞",
+   "example": "明日の業務に差し支えます。",
+   "exampleKana": "あしたのぎょうむにさしつかえます。",
+   "exampleMeaning": "會影響明天的工作。"
+  },
+  {
+   "id": "n1-v-0102",
+   "kanji": "和らげる",
+   "kana": "やわらげる",
+   "meaning": "緩和、減輕",
+   "pos": "動詞",
+   "example": "薬で痛みを和らげます。",
+   "exampleKana": "くすりでいたみをやわらげます。",
+   "exampleMeaning": "用藥緩解疼痛。"
+  },
+  {
+   "id": "n1-v-0103",
+   "kanji": "強いられる",
+   "kana": "しいられる",
+   "meaning": "被迫",
+   "pos": "動詞",
+   "example": "長時間の待機を強いられました。",
+   "exampleKana": "ちょうじかんのたいきをしいられました。",
+   "exampleMeaning": "被迫長時間待命。"
+  },
+  {
+   "id": "n1-v-0104",
+   "kanji": "差し迫る",
+   "kana": "さしせまる",
+   "meaning": "迫近",
+   "pos": "動詞",
+   "example": "締め切りが差し迫っています。",
+   "exampleKana": "しめきりがさしせまっています。",
+   "exampleMeaning": "截止日迫在眉睫。"
+  },
+  {
+   "id": "n1-v-0105",
+   "kanji": "食い違う",
+   "kana": "くいちがう",
+   "meaning": "有出入、不一致",
+   "pos": "動詞",
+   "example": "二人の証言が食い違っています。",
+   "exampleKana": "ふたりのしょうげんがくいちがっています。",
+   "exampleMeaning": "兩人的證詞有出入。"
+  },
+  {
+   "id": "n1-v-0106",
+   "kanji": "噛み合う",
+   "kana": "かみあう",
+   "meaning": "相互契合、對上",
+   "pos": "動詞",
+   "example": "議論がなかなか噛み合いません。",
+   "exampleKana": "ぎろんがなかなかかみあいません。",
+   "exampleMeaning": "討論一直對不上焦點。"
+  },
+  {
+   "id": "n1-v-0107",
+   "kanji": "食い止める",
+   "kana": "くいとめる",
+   "meaning": "遏止、阻止",
+   "pos": "動詞",
+   "example": "被害の拡大を食い止めました。",
+   "exampleKana": "ひがいのかくだいをくいとめました。",
+   "exampleMeaning": "遏止了災情擴大。"
+  },
+  {
+   "id": "n1-v-0108",
+   "kanji": "乗り越える",
+   "kana": "のりこえる",
+   "meaning": "克服、跨越",
+   "pos": "動詞",
+   "example": "数々の困難を乗り越えてきました。",
+   "exampleKana": "かずかずのこんなんをのりこえてきました。",
+   "exampleMeaning": "克服了重重困難。"
+  },
+  {
+   "id": "n1-v-0109",
+   "kanji": "浮き彫りにする",
+   "kana": "うきぼりにする",
+   "meaning": "使凸顯",
+   "pos": "動詞",
+   "example": "調査は問題点を浮き彫りにしました。",
+   "exampleKana": "ちょうさはもんだいてんをうきぼりにしました。",
+   "exampleMeaning": "調查凸顯了問題點。"
+  },
+  {
+   "id": "n1-v-0110",
+   "kanji": "好ましい",
+   "kana": "このましい",
+   "meaning": "理想的、可取的",
+   "pos": "形容詞（い形）",
+   "example": "早期の解決が好ましいです。",
+   "exampleKana": "そうきのかいけつがこのましいです。",
+   "exampleMeaning": "及早解決比較好。"
+  },
+  {
+   "id": "n1-v-0111",
+   "kanji": "乏しい",
+   "kana": "とぼしい",
+   "meaning": "匱乏的",
+   "pos": "形容詞（い形）",
+   "example": "資源に乏しい国です。",
+   "exampleKana": "しげんにとぼしいくにです。",
+   "exampleMeaning": "是資源匱乏的國家。"
+  },
+  {
+   "id": "n1-v-0112",
+   "kanji": "根強い",
+   "kana": "ねづよい",
+   "meaning": "根深蒂固的",
+   "pos": "形容詞（い形）",
+   "example": "古い慣習が根強く残っています。",
+   "exampleKana": "ふるいかんしゅうがねづよくのこっています。",
+   "exampleMeaning": "舊習俗根深蒂固地留存著。"
+  },
+  {
+   "id": "n1-v-0113",
+   "kanji": "名高い",
+   "kana": "なだかい",
+   "meaning": "有名的",
+   "pos": "形容詞（い形）",
+   "example": "職人技で名高い町です。",
+   "exampleKana": "しょくにんわざでなだかいまちです。",
+   "exampleMeaning": "是以工匠技藝聞名的城鎮。"
+  },
+  {
+   "id": "n1-v-0114",
+   "kanji": "そっけない",
+   "kana": "そっけない",
+   "meaning": "冷淡的",
+   "pos": "形容詞（い形）",
+   "example": "そっけない返事にがっかりしました。",
+   "exampleKana": "そっけないへんじにがっかりしました。",
+   "exampleMeaning": "對冷淡的回覆感到失望。"
+  },
+  {
+   "id": "n1-v-0115",
+   "kanji": "柔軟",
+   "kana": "じゅうなん",
+   "meaning": "靈活",
+   "pos": "形容動詞（な形）",
+   "example": "柔軟な対応が求められます。",
+   "exampleKana": "じゅうなんなたいおうがもとめられます。",
+   "exampleMeaning": "需要靈活的應對。"
+  },
+  {
+   "id": "n1-v-0116",
+   "kanji": "厳密",
+   "kana": "げんみつ",
+   "meaning": "嚴密、嚴格",
+   "pos": "形容動詞（な形）",
+   "example": "厳密に言うと、それは正しくありません。",
+   "exampleKana": "げんみつにいうと、それはただしくありません。",
+   "exampleMeaning": "嚴格來說，那並不正確。"
+  },
+  {
+   "id": "n1-v-0117",
+   "kanji": "不可解",
+   "kana": "ふかかい",
+   "meaning": "費解、莫名其妙",
+   "pos": "形容動詞（な形）",
+   "example": "彼の行動は不可解です。",
+   "exampleKana": "かれのこうどうはふかかいです。",
+   "exampleMeaning": "他的行為令人費解。"
+  },
+  {
+   "id": "n1-v-0118",
+   "kanji": "妥当",
+   "kana": "だとう",
+   "meaning": "妥當",
+   "pos": "形容動詞（な形）",
+   "example": "妥当な結論に落ち着きました。",
+   "exampleKana": "だとうなけつろんにおちつきました。",
+   "exampleMeaning": "得出了妥當的結論。"
+  },
+  {
+   "id": "n1-v-0119",
+   "kanji": "理不尽",
+   "kana": "りふじん",
+   "meaning": "不講理、無理",
+   "pos": "形容動詞（な形）",
+   "example": "理不尽な要求は断ります。",
+   "exampleKana": "りふじんなようきゅうはことわります。",
+   "exampleMeaning": "拒絕無理的要求。"
+  },
+  {
+   "id": "n1-v-0120",
+   "kanji": "綿密",
+   "kana": "めんみつ",
+   "meaning": "縝密",
+   "pos": "形容動詞（な形）",
+   "example": "綿密な計画を立てました。",
+   "exampleKana": "めんみつなけいかくをたてました。",
+   "exampleMeaning": "制定了縝密的計畫。"
+  },
+  {
+   "id": "n1-v-0121",
+   "kanji": "概して",
+   "kana": "がいして",
+   "meaning": "大體上",
+   "pos": "副詞",
+   "example": "今年の作物は概して出来がいいです。",
+   "exampleKana": "ことしのさくもつはがいしてできがいいです。",
+   "exampleMeaning": "今年的作物大體上收成不錯。"
+  },
+  {
+   "id": "n1-v-0122",
+   "kanji": "総じて",
+   "kana": "そうじて",
+   "meaning": "總的來說",
+   "pos": "副詞",
+   "example": "総じて評価は高かったです。",
+   "exampleKana": "そうじてひょうかはたかかったです。",
+   "exampleMeaning": "總的來說評價很高。"
+  },
+  {
+   "id": "n1-v-0123",
+   "kanji": "ひたすら",
+   "kana": "ひたすら",
+   "meaning": "一味地、拼命",
+   "pos": "副詞",
+   "example": "ひたすら完成を目指しました。",
+   "exampleKana": "ひたすらかんせいをめざしました。",
+   "exampleMeaning": "一心一意朝完成邁進。"
+  },
+  {
+   "id": "n1-v-0124",
+   "kanji": "ことのほか",
+   "kana": "ことのほか",
+   "meaning": "格外、意外地",
+   "pos": "副詞",
+   "example": "今年の冬はことのほか寒いです。",
+   "exampleKana": "ことしのふゆはことのほかさむいです。",
+   "exampleMeaning": "今年冬天格外冷。"
+  },
+  {
+   "id": "n1-v-0125",
+   "kanji": "かねてより",
+   "kana": "かねてより",
+   "meaning": "事先、老早",
+   "pos": "副詞",
+   "example": "かねてよりの計画をついに実行します。",
+   "exampleKana": "かねてよりのけいかくをついにじっこうします。",
+   "exampleMeaning": "終於要執行醞釀已久的計畫。"
+  },
+  {
+   "id": "n1-v-0126",
+   "kanji": "とかく",
+   "kana": "とかく",
+   "meaning": "動輒、往往",
+   "pos": "副詞",
+   "example": "人はとかく他人と比べたがります。",
+   "exampleKana": "ひとはとかくたにんとくらべたがります。",
+   "exampleMeaning": "人往往愛跟別人比較。"
+  },
+  {
+   "id": "n1-v-0127",
+   "kanji": "なにしろ",
+   "kana": "なにしろ",
+   "meaning": "畢竟、總之",
+   "pos": "副詞",
+   "example": "なにしろ経験がないので不安です。",
+   "exampleKana": "なにしろけいけんがないのでふあんです。",
+   "exampleMeaning": "畢竟沒經驗，很不安。"
+  },
+  {
+   "id": "n1-v-0128",
+   "kanji": "いかにも",
+   "kana": "いかにも",
+   "meaning": "的確、實在",
+   "pos": "副詞",
+   "example": "いかにも彼らしい答えです。",
+   "exampleKana": "いかにもかれらしいこたえです。",
+   "exampleMeaning": "這回答實在很有他的風格。"
+  },
+  {
+   "id": "n1-v-0129",
+   "kanji": "ひとまず",
+   "kana": "ひとまず",
+   "meaning": "暫且",
+   "pos": "副詞",
+   "example": "ひとまずここで休憩しましょう。",
+   "exampleKana": "ひとまずここできゅうけいしましょう。",
+   "exampleMeaning": "暫且在這裡休息吧。"
+  },
+  {
+   "id": "n1-v-0130",
+   "kanji": "あたかも",
+   "kana": "あたかも",
+   "meaning": "宛如",
+   "pos": "副詞",
+   "example": "あたかも自分が体験したかのように話す。",
+   "exampleKana": "あたかもじぶんがたいけんしたかのようにはなす。",
+   "exampleMeaning": "說得宛如自己親身經歷過。"
+  },
+  {
+   "id": "n1-v-0131",
+   "kanji": "発足",
+   "kana": "ほっそく",
+   "meaning": "成立、啟動",
+   "pos": "名詞",
+   "example": "新しい委員会が発足しました。",
+   "exampleKana": "あたらしいいいんかいがほっそくしました。",
+   "exampleMeaning": "新的委員會成立了。"
+  },
+  {
+   "id": "n1-v-0132",
+   "kanji": "着手",
+   "kana": "ちゃくしゅ",
+   "meaning": "著手",
+   "pos": "名詞",
+   "example": "工事は来春に着手する予定です。",
+   "exampleKana": "こうじはらいしゅんにちゃくしゅするよていです。",
+   "exampleMeaning": "工程預計明年春天動工。"
+  },
+  {
+   "id": "n1-v-0133",
+   "kanji": "定着",
+   "kana": "ていちゃく",
+   "meaning": "定型、固定下來",
+   "pos": "名詞",
+   "example": "在宅勤務が社会に定着しました。",
+   "exampleKana": "ざいたくきんむがしゃかいにていちゃくしました。",
+   "exampleMeaning": "居家辦公在社會上定型了。"
+  },
+  {
+   "id": "n1-v-0134",
+   "kanji": "浸透",
+   "kana": "しんとう",
+   "meaning": "滲透、普及",
+   "pos": "名詞",
+   "example": "新しい価値観が若者に浸透しています。",
+   "exampleKana": "あたらしいかちかんがわかものにしんとうしています。",
+   "exampleMeaning": "新的價值觀正滲透到年輕人之間。"
+  },
+  {
+   "id": "n1-v-0135",
+   "kanji": "普及",
+   "kana": "ふきゅう",
+   "meaning": "普及",
+   "pos": "名詞",
+   "example": "スマホの普及で生活が変わりました。",
+   "exampleKana": "スマホのふきゅうでせいかつがかわりました。",
+   "exampleMeaning": "智慧型手機的普及改變了生活。"
+  },
+  {
+   "id": "n1-v-0136",
+   "kanji": "促進",
+   "kana": "そくしん",
+   "meaning": "促進",
+   "pos": "名詞",
+   "example": "輸出の促進策を打ち出しました。",
+   "exampleKana": "ゆしゅつのそくしんさくをうちだしました。",
+   "exampleMeaning": "提出了促進出口的方案。"
+  },
+  {
+   "id": "n1-v-0137",
+   "kanji": "抑制",
+   "kana": "よくせい",
+   "meaning": "抑制",
+   "pos": "名詞",
+   "example": "感染の抑制に全力を挙げます。",
+   "exampleKana": "かんせんのよくせいにぜんりょくをあげます。",
+   "exampleMeaning": "全力抑制疫情。"
+  },
+  {
+   "id": "n1-v-0138",
+   "kanji": "緩和",
+   "kana": "かんわ",
+   "meaning": "緩和、放寬",
+   "pos": "名詞",
+   "example": "規制の緩和が議論されています。",
+   "exampleKana": "きせいのかんわがぎろんされています。",
+   "exampleMeaning": "正在討論放寬管制。"
+  },
+  {
+   "id": "n1-v-0139",
+   "kanji": "是認",
+   "kana": "ぜにん",
+   "meaning": "認可、承認",
+   "pos": "名詞",
+   "example": "その行為を是認するわけにはいきません。",
+   "exampleKana": "そのこういをぜにんするわけにはいきません。",
+   "exampleMeaning": "不能認可那種行為。"
+  },
+  {
+   "id": "n1-v-0140",
+   "kanji": "容認",
+   "kana": "ようにん",
+   "meaning": "容許、默許",
+   "pos": "名詞",
+   "example": "例外の容認は慎重にすべきです。",
+   "exampleKana": "れいがいのようにんはしんちょうにすべきです。",
+   "exampleMeaning": "應慎重看待例外的容許。"
+  },
+  {
+   "id": "n1-v-0141",
+   "kanji": "排除",
+   "kana": "はいじょ",
+   "meaning": "排除",
+   "pos": "名詞",
+   "example": "あらゆる偏見の排除を目指します。",
+   "exampleKana": "あらゆるへんけんのはいじょをめざします。",
+   "exampleMeaning": "力求排除一切偏見。"
+  },
+  {
+   "id": "n1-v-0142",
+   "kanji": "干渉",
+   "kana": "かんしょう",
+   "meaning": "干涉",
+   "pos": "名詞",
+   "example": "他国への干渉は控えるべきです。",
+   "exampleKana": "たこくへのかんしょうはひかえるべきです。",
+   "exampleMeaning": "應避免干涉他國。"
+  },
+  {
+   "id": "n1-v-0143",
+   "kanji": "束縛",
+   "kana": "そくばく",
+   "meaning": "束縛",
+   "pos": "名詞",
+   "example": "時間の束縛が少ない仕事です。",
+   "exampleKana": "じかんのそくばくがすくないしごとです。",
+   "exampleMeaning": "是時間束縛少的工作。"
+  },
+  {
+   "id": "n1-v-0144",
+   "kanji": "妥結",
+   "kana": "だけつ",
+   "meaning": "達成協議",
+   "pos": "名詞",
+   "example": "交渉は深夜に妥結しました。",
+   "exampleKana": "こうしょうはしんやにだけつしました。",
+   "exampleMeaning": "談判在深夜達成協議。"
+  },
+  {
+   "id": "n1-v-0145",
+   "kanji": "決裂",
+   "kana": "けつれつ",
+   "meaning": "破裂、談崩",
+   "pos": "名詞",
+   "example": "交渉は決裂に終わりました。",
+   "exampleKana": "こうしょうはけつれつにおわりました。",
+   "exampleMeaning": "談判以破裂收場。"
+  },
+  {
+   "id": "n1-v-0146",
+   "kanji": "譲歩",
+   "kana": "じょうほ",
+   "meaning": "讓步",
+   "pos": "名詞",
+   "example": "双方が譲歩して合意しました。",
+   "exampleKana": "そうほうがじょうほしてごういしました。",
+   "exampleMeaning": "雙方讓步達成了共識。"
+  },
+  {
+   "id": "n1-v-0147",
+   "kanji": "発端",
+   "kana": "ほったん",
+   "meaning": "開端、起因",
+   "pos": "名詞",
+   "example": "ささいな誤解が争いの発端でした。",
+   "exampleKana": "ささいなごかいがあらそいのほったんでした。",
+   "exampleMeaning": "小小的誤會是爭執的起因。"
+  },
+  {
+   "id": "n1-v-0148",
+   "kanji": "経緯",
+   "kana": "けいい",
+   "meaning": "來龍去脈、經過",
+   "pos": "名詞",
+   "example": "事件の経緯を詳しく説明します。",
+   "exampleKana": "じけんのけいいをくわしくせつめいします。",
+   "exampleMeaning": "詳細說明事件的來龍去脈。"
+  },
+  {
+   "id": "n1-v-0149",
+   "kanji": "顛末",
+   "kana": "てんまつ",
+   "meaning": "始末、原委",
+   "pos": "名詞",
+   "example": "事の顛末を報告書にまとめました。",
+   "exampleKana": "もののてんまつをほうこくしょにまとめました。",
+   "exampleMeaning": "把事情的原委寫成報告。"
+  },
+  {
+   "id": "n1-v-0150",
+   "kanji": "帰結",
+   "kana": "きけつ",
+   "meaning": "結果、歸結",
+   "pos": "名詞",
+   "example": "それは当然の帰結と言えます。",
+   "exampleKana": "それはとうぜんのきけつといえます。",
+   "exampleMeaning": "可以說那是理所當然的結果。"
+  },
+  {
+   "id": "n1-v-0151",
+   "kanji": "波及",
+   "kana": "はきゅう",
+   "meaning": "波及",
+   "pos": "名詞",
+   "example": "影響は他業界にも波及しました。",
+   "exampleKana": "えいきょうはたぎょうかいにもはきゅうしました。",
+   "exampleMeaning": "影響波及到其他業界。"
+  },
+  {
+   "id": "n1-v-0152",
+   "kanji": "連鎖",
+   "kana": "れんさ",
+   "meaning": "連鎖",
+   "pos": "名詞",
+   "example": "倒産の連鎖が心配されます。",
+   "exampleKana": "とうさんのれんさがしんぱいされます。",
+   "exampleMeaning": "令人擔心倒閉的連鎖效應。"
+  },
+  {
+   "id": "n1-v-0153",
+   "kanji": "相乗効果",
+   "kana": "そうじょうこうか",
+   "meaning": "加乘效果",
+   "pos": "名詞",
+   "example": "二つの施策の相乗効果を狙います。",
+   "exampleKana": "ふたつのしさくのそうじょうこうかをねらいます。",
+   "exampleMeaning": "期待兩項措施的加乘效果。"
+  },
+  {
+   "id": "n1-v-0154",
+   "kanji": "兼ね合い",
+   "kana": "かねあい",
+   "meaning": "平衡、拿捏",
+   "pos": "名詞",
+   "example": "安全と効率の兼ね合いが難しいです。",
+   "exampleKana": "あんぜんとこうりつのかねあいがむずかしいです。",
+   "exampleMeaning": "安全與效率的拿捏很難。"
+  },
+  {
+   "id": "n1-v-0155",
+   "kanji": "折り合い",
+   "kana": "おりあい",
+   "meaning": "妥協、相處",
+   "pos": "名詞",
+   "example": "双方が折り合いをつけました。",
+   "exampleKana": "そうほうがおりあいをつけました。",
+   "exampleMeaning": "雙方達成了妥協。"
+  },
+  {
+   "id": "n1-v-0156",
+   "kanji": "歩み寄り",
+   "kana": "あゆみより",
+   "meaning": "相互靠攏、讓步",
+   "pos": "名詞",
+   "example": "解決には双方の歩み寄りが必要です。",
+   "exampleKana": "かいけつにはそうほうのあゆみよりがひつようです。",
+   "exampleMeaning": "解決需要雙方各退一步。"
+  },
+  {
+   "id": "n1-v-0157",
+   "kanji": "足並み",
+   "kana": "あしなみ",
+   "meaning": "步調",
+   "pos": "名詞",
+   "example": "参加国の足並みがそろいません。",
+   "exampleKana": "さんかこくのあしなみがそろいません。",
+   "exampleMeaning": "參與國步調不一致。"
+  },
+  {
+   "id": "n1-v-0158",
+   "kanji": "布石",
+   "kana": "ふせき",
+   "meaning": "事前部署、鋪路",
+   "pos": "名詞",
+   "example": "これは次の展開への布石です。",
+   "exampleKana": "これはつぎのてんかいへのふせきです。",
+   "exampleMeaning": "這是為下一步鋪的路。"
+  },
+  {
+   "id": "n1-v-0159",
+   "kanji": "糸口",
+   "kana": "いとぐち",
+   "meaning": "線索、頭緒",
+   "pos": "名詞",
+   "example": "解決の糸口がようやく見えてきました。",
+   "exampleKana": "かいけつのいとぐちがようやくみえてきました。",
+   "exampleMeaning": "終於看到解決的頭緒。"
+  },
+  {
+   "id": "n1-v-0160",
+   "kanji": "突破口",
+   "kana": "とっぱこう",
+   "meaning": "突破口",
+   "pos": "名詞",
+   "example": "新技術が問題の突破口になりました。",
+   "exampleKana": "しんぎじゅつがもんだいのとっぱこうになりました。",
+   "exampleMeaning": "新技術成了問題的突破口。"
+  },
+  {
+   "id": "n1-v-0161",
+   "kanji": "岐路",
+   "kana": "きろ",
+   "meaning": "岔路、關鍵時刻",
+   "pos": "名詞",
+   "example": "会社は今、大きな岐路に立っています。",
+   "exampleKana": "かいしゃはいま、おおきなきろにたっています。",
+   "exampleMeaning": "公司正處於重大的十字路口。"
+  },
+  {
+   "id": "n1-v-0162",
+   "kanji": "節目",
+   "kana": "ふしめ",
+   "meaning": "階段、轉折點",
+   "pos": "名詞",
+   "example": "創立五十周年という節目を迎えます。",
+   "exampleKana": "そうりつごじゅっしゅうねんというふしめをむかえます。",
+   "exampleMeaning": "迎來創立五十週年的里程碑。"
+  },
+  {
+   "id": "n1-v-0163",
+   "kanji": "土台",
+   "kana": "どだい",
+   "meaning": "地基、基礎",
+   "pos": "名詞",
+   "example": "信頼が協力関係の土台です。",
+   "exampleKana": "しんらいがきょうりょくかんけいのどだいです。",
+   "exampleMeaning": "信任是合作關係的基礎。"
+  },
+  {
+   "id": "n1-v-0164",
+   "kanji": "柱",
+   "kana": "はしら",
+   "meaning": "支柱、核心",
+   "pos": "名詞",
+   "example": "観光がこの町の経済の柱です。",
+   "exampleKana": "かんこうがこのまちのけいざいのはしらです。",
+   "exampleMeaning": "觀光是這座城鎮經濟的支柱。"
+  },
+  {
+   "id": "n1-v-0165",
+   "kanji": "軸",
+   "kana": "じく",
+   "meaning": "軸心、核心",
+   "pos": "名詞",
+   "example": "環境を軸に政策を組み立てます。",
+   "exampleKana": "かんきょうをじくにせいさくをくみたてます。",
+   "exampleMeaning": "以環境為核心制定政策。"
+  },
+  {
+   "id": "n1-v-0166",
+   "kanji": "築く",
+   "kana": "きずく",
+   "meaning": "建立、構築",
+   "pos": "動詞",
+   "example": "長い年月をかけて信頼を築きました。",
+   "exampleKana": "ながいねんげつをかけてしんらいをきずきました。",
+   "exampleMeaning": "花了很長時間建立信任。"
+  },
+  {
+   "id": "n1-v-0167",
+   "kanji": "担う",
+   "kana": "になう",
+   "meaning": "承擔、擔負",
+   "pos": "動詞",
+   "example": "次の世代を担う人材を育てます。",
+   "exampleKana": "つぎのせだいをになうじんざいをそだてます。",
+   "exampleMeaning": "培養承擔下一代的人才。"
+  },
+  {
+   "id": "n1-v-0168",
+   "kanji": "委ねる",
+   "kana": "ゆだねる",
+   "meaning": "委託、託付",
+   "pos": "動詞",
+   "example": "判断は現場に委ねます。",
+   "exampleKana": "はんだんはげんばにゆだねます。",
+   "exampleMeaning": "把判斷交給現場。"
+  },
+  {
+   "id": "n1-v-0169",
+   "kanji": "託す",
+   "kana": "たくす",
+   "meaning": "託付",
+   "pos": "動詞",
+   "example": "夢を次の世代に託します。",
+   "exampleKana": "ゆめをつぎのせだいにたくします。",
+   "exampleMeaning": "把夢想託付給下一代。"
+  },
+  {
+   "id": "n1-v-0170",
+   "kanji": "還元する",
+   "kana": "かんげんする",
+   "meaning": "回饋",
+   "pos": "動詞",
+   "example": "利益を社会に還元します。",
+   "exampleKana": "りえきをしゃかいにかんげんします。",
+   "exampleMeaning": "把利潤回饋社會。"
+  },
+  {
+   "id": "n1-v-0171",
+   "kanji": "甘んじる",
+   "kana": "あまんじる",
+   "meaning": "甘於、忍受",
+   "pos": "動詞",
+   "example": "現状に甘んじるつもりはありません。",
+   "exampleKana": "げんじょうにあまんじるつもりはありません。",
+   "exampleMeaning": "我不打算安於現狀。"
+  },
+  {
+   "id": "n1-v-0172",
+   "kanji": "値する",
+   "kana": "あたいする",
+   "meaning": "值得",
+   "pos": "動詞",
+   "example": "その功績は称賛に値します。",
+   "exampleKana": "そのこうせきはしょうさんにあたいします。",
+   "exampleMeaning": "那份功績值得讚揚。"
+  },
+  {
+   "id": "n1-v-0173",
+   "kanji": "準ずる",
+   "kana": "じゅんずる",
+   "meaning": "比照、依照",
+   "pos": "動詞",
+   "example": "待遇は正社員に準じます。",
+   "exampleKana": "たいぐうはせいしゃいんにじゅんじます。",
+   "exampleMeaning": "待遇比照正職員工。"
+  },
+  {
+   "id": "n1-v-0174",
+   "kanji": "先立つ",
+   "kana": "さきだつ",
+   "meaning": "先於、事先",
+   "pos": "動詞",
+   "example": "開会に先立ち、黙祷を捧げます。",
+   "exampleKana": "かいかいにさきだち、もくとうをささげます。",
+   "exampleMeaning": "開會前先默哀。"
+  },
+  {
+   "id": "n1-v-0175",
+   "kanji": "相次ぐ",
+   "kana": "あいつぐ",
+   "meaning": "接連發生",
+   "pos": "動詞",
+   "example": "事故が相次いで起きました。",
+   "exampleKana": "じこがあいついでおきました。",
+   "exampleMeaning": "事故接連發生。"
+  },
+  {
+   "id": "n1-v-0176",
+   "kanji": "偏る",
+   "kana": "かたよる",
+   "meaning": "偏頗、偏向",
+   "pos": "動詞",
+   "example": "栄養が偏らないよう気をつけます。",
+   "exampleKana": "えいようがかたよらないようきをつけます。",
+   "exampleMeaning": "注意營養不要偏頗。"
+  },
+  {
+   "id": "n1-v-0177",
+   "kanji": "隔てる",
+   "kana": "へだてる",
+   "meaning": "隔開、相隔",
+   "pos": "動詞",
+   "example": "二国は海を隔てて向かい合っています。",
+   "exampleKana": "にこくはうみをへだててむかいあっています。",
+   "exampleMeaning": "兩國隔海相望。"
+  },
+  {
+   "id": "n1-v-0178",
+   "kanji": "遮る",
+   "kana": "さえぎる",
+   "meaning": "遮擋、打斷",
+   "pos": "動詞",
+   "example": "話を遮って申し訳ありません。",
+   "exampleKana": "はなしをさえぎってもうしわけありません。",
+   "exampleMeaning": "抱歉打斷你的話。"
+  },
+  {
+   "id": "n1-v-0179",
+   "kanji": "覆う",
+   "kana": "おおう",
+   "meaning": "覆蓋、籠罩",
+   "pos": "動詞",
+   "example": "濃い霧が街全体を覆いました。",
+   "exampleKana": "こいきりがまちぜんたいをおおいました。",
+   "exampleMeaning": "濃霧籠罩了整座城市。"
+  },
+  {
+   "id": "n1-v-0180",
+   "kanji": "染みる",
+   "kana": "しみる",
+   "meaning": "滲入、刺痛",
+   "pos": "動詞",
+   "example": "親切が身に染みました。",
+   "exampleKana": "しんせつがみにしみました。",
+   "exampleMeaning": "那份善意深深打動了我。"
+  },
+  {
+   "id": "n1-v-0181",
+   "kanji": "潜む",
+   "kana": "ひそむ",
+   "meaning": "潛藏",
+   "pos": "動詞",
+   "example": "便利さの陰に危険が潜んでいます。",
+   "exampleKana": "べんりさのかげにきけんがひそんでいます。",
+   "exampleMeaning": "便利的背後潛藏著危險。"
+  },
+  {
+   "id": "n1-v-0182",
+   "kanji": "秘める",
+   "kana": "ひめる",
+   "meaning": "隱藏、蘊含",
+   "pos": "動詞",
+   "example": "彼は大きな可能性を秘めています。",
+   "exampleKana": "かれはおおきなかのうせいをひめています。",
+   "exampleMeaning": "他蘊含著巨大的潛力。"
+  },
+  {
+   "id": "n1-v-0183",
+   "kanji": "募らせる",
+   "kana": "つのらせる",
+   "meaning": "使加劇",
+   "pos": "動詞",
+   "example": "返事がなく不信感を募らせました。",
+   "exampleKana": "へんじがなくふしんかんをつのらせました。",
+   "exampleMeaning": "沒有回覆，加深了不信任感。"
+  },
+  {
+   "id": "n1-v-0184",
+   "kanji": "和む",
+   "kana": "なごむ",
+   "meaning": "平靜、緩和",
+   "pos": "動詞",
+   "example": "子供の笑顔に心が和みます。",
+   "exampleKana": "こどものえがおにこころがなごみます。",
+   "exampleMeaning": "孩子的笑容讓人心情平靜。"
+  },
+  {
+   "id": "n1-v-0185",
+   "kanji": "弾む",
+   "kana": "はずむ",
+   "meaning": "彈跳、（談話）熱絡",
+   "pos": "動詞",
+   "example": "久しぶりに会って話が弾みました。",
+   "exampleKana": "ひさしぶりにあってはなしがはずみました。",
+   "exampleMeaning": "久別重逢，聊得很起勁。"
+  },
+  {
+   "id": "n1-v-0186",
+   "kanji": "茂る",
+   "kana": "しげる",
+   "meaning": "茂盛",
+   "pos": "動詞",
+   "example": "夏になると木々が青々と茂ります。",
+   "exampleKana": "なつになるときぎがあおあおとしげります。",
+   "exampleMeaning": "一到夏天樹木鬱鬱蔥蔥。"
+  },
+  {
+   "id": "n1-v-0187",
+   "kanji": "食い込む",
+   "kana": "くいこむ",
+   "meaning": "深入、擠入",
+   "pos": "動詞",
+   "example": "上位三位に食い込みました。",
+   "exampleKana": "じょういさんいにくいこみました。",
+   "exampleMeaning": "擠進了前三名。"
+  },
+  {
+   "id": "n1-v-0188",
+   "kanji": "及び腰になる",
+   "kana": "およびごしになる",
+   "meaning": "畏縮、退縮",
+   "pos": "動詞",
+   "example": "責任を問われて及び腰になりました。",
+   "exampleKana": "せきにんをとわれておよびごしになりました。",
+   "exampleMeaning": "被追究責任就退縮了。"
+  },
+  {
+   "id": "n1-v-0189",
+   "kanji": "歯止めをかける",
+   "kana": "はどめをかける",
+   "meaning": "踩剎車、遏止",
+   "pos": "動詞",
+   "example": "少子化に歯止めをかけたいです。",
+   "exampleKana": "しょうしかにはどめをかけたいです。",
+   "exampleMeaning": "想遏止少子化。"
+  },
+  {
+   "id": "n1-v-0190",
+   "kanji": "拍車をかける",
+   "kana": "はくしゃをかける",
+   "meaning": "加速、助長",
+   "pos": "動詞",
+   "example": "円安が物価高に拍車をかけました。",
+   "exampleKana": "えんやすがぶっかだかにはくしゃをかけました。",
+   "exampleMeaning": "日圓貶值加劇了物價上漲。"
+  },
+  {
+   "id": "n1-v-0191",
+   "kanji": "軌道に乗る",
+   "kana": "きどうにのる",
+   "meaning": "上軌道",
+   "pos": "動詞",
+   "example": "事業がようやく軌道に乗りました。",
+   "exampleKana": "じぎょうがようやくきどうにのりました。",
+   "exampleMeaning": "事業終於上了軌道。"
+  },
+  {
+   "id": "n1-v-0192",
+   "kanji": "著しい",
+   "kana": "いちじるしい",
+   "meaning": "顯著的",
+   "pos": "形容詞（い形）",
+   "example": "品質に著しい改善が見られます。",
+   "exampleKana": "ひんしつにいちじるしいかいぜんがみられます。",
+   "exampleMeaning": "品質有顯著的改善。"
+  },
+  {
+   "id": "n1-v-0193",
+   "kanji": "めまぐるしい",
+   "kana": "めまぐるしい",
+   "meaning": "瞬息萬變的",
+   "pos": "形容詞（い形）",
+   "example": "変化のめまぐるしい時代です。",
+   "exampleKana": "へんかのめまぐるしいじだいです。",
+   "exampleMeaning": "是變化瞬息萬變的時代。"
+  },
+  {
+   "id": "n1-v-0194",
+   "kanji": "はかない",
+   "kana": "はかない",
+   "meaning": "短暫的、虛幻的",
+   "pos": "形容詞（い形）",
+   "example": "桜のはかない美しさに惹かれます。",
+   "exampleKana": "さくらのはかないうつくしさにひかれます。",
+   "exampleMeaning": "為櫻花短暫的美所吸引。"
+  },
+  {
+   "id": "n1-v-0195",
+   "kanji": "心強い",
+   "kana": "こころづよい",
+   "meaning": "有依靠的、放心的",
+   "pos": "形容詞（い形）",
+   "example": "経験者がいると心強いです。",
+   "exampleKana": "けいけんしゃがいるとこころづよいです。",
+   "exampleMeaning": "有經驗的人在就令人安心。"
+  },
+  {
+   "id": "n1-v-0196",
+   "kanji": "待ち遠しい",
+   "kana": "まちどおしい",
+   "meaning": "期盼已久的",
+   "pos": "形容詞（い形）",
+   "example": "夏休みが待ち遠しいです。",
+   "exampleKana": "なつやすみがまちどおしいです。",
+   "exampleMeaning": "好期待暑假。"
+  },
+  {
+   "id": "n1-v-0197",
+   "kanji": "一律",
+   "kana": "いちりつ",
+   "meaning": "一律",
+   "pos": "形容動詞（な形）",
+   "example": "料金は一律千円です。",
+   "exampleKana": "りょうきんはいちりつせんえんです。",
+   "exampleMeaning": "費用一律一千日圓。"
+  },
+  {
+   "id": "n1-v-0198",
+   "kanji": "不当",
+   "kana": "ふとう",
+   "meaning": "不當、不合理",
+   "pos": "形容動詞（な形）",
+   "example": "不当な扱いに抗議します。",
+   "exampleKana": "ふとうなあつかいにこうぎします。",
+   "exampleMeaning": "對不當的對待提出抗議。"
+  },
+  {
+   "id": "n1-v-0199",
+   "kanji": "正当",
+   "kana": "せいとう",
+   "meaning": "正當",
+   "pos": "形容動詞（な形）",
+   "example": "正当な理由があれば認められます。",
+   "exampleKana": "せいとうなりゆうがあればみとめられます。",
+   "exampleMeaning": "有正當理由就會被認可。"
+  },
+  {
+   "id": "n1-v-0200",
+   "kanji": "不可避",
+   "kana": "ふかひ",
+   "meaning": "無法避免",
+   "pos": "形容動詞（な形）",
+   "example": "値上げは不可避の状況です。",
+   "exampleKana": "ねあげはふかひのじょうきょうです。",
+   "exampleMeaning": "漲價是無法避免的狀況。"
+  },
+  {
+   "id": "n1-v-0201",
+   "kanji": "一方的",
+   "kana": "いっぽうてき",
+   "meaning": "單方面的",
+   "pos": "形容動詞（な形）",
+   "example": "一方的な主張では説得できません。",
+   "exampleKana": "いっぽうてきなしゅちょうではせっとくできません。",
+   "exampleMeaning": "單方面的主張無法說服人。"
+  },
+  {
+   "id": "n1-v-0202",
+   "kanji": "対等",
+   "kana": "たいとう",
+   "meaning": "對等",
+   "pos": "形容動詞（な形）",
+   "example": "対等な立場で話し合います。",
+   "exampleKana": "たいとうなたちばではなしあいます。",
+   "exampleMeaning": "以對等的立場協商。"
+  },
+  {
+   "id": "n1-v-0203",
+   "kanji": "密接",
+   "kana": "みっせつ",
+   "meaning": "密切",
+   "pos": "形容動詞（な形）",
+   "example": "経済と環境は密接に関係しています。",
+   "exampleKana": "けいざいとかんきょうはみっせつにかんけいしています。",
+   "exampleMeaning": "經濟與環境密切相關。"
+  },
+  {
+   "id": "n1-v-0204",
+   "kanji": "希薄",
+   "kana": "きはく",
+   "meaning": "稀薄、淡薄",
+   "pos": "形容動詞（な形）",
+   "example": "若者の政治への関心が希薄です。",
+   "exampleKana": "わかもののせいじへのかんしんがきはくです。",
+   "exampleMeaning": "年輕人對政治的關心淡薄。"
+  },
+  {
+   "id": "n1-v-0205",
+   "kanji": "過剰",
+   "kana": "かじょう",
+   "meaning": "過剩、過度",
+   "pos": "形容動詞（な形）",
+   "example": "過剰なサービスはかえって負担です。",
+   "exampleKana": "かじょうなサービスはかえってふたんです。",
+   "exampleMeaning": "過度的服務反而是負擔。"
+  },
+  {
+   "id": "n1-v-0206",
+   "kanji": "潤沢",
+   "kana": "じゅんたく",
+   "meaning": "充裕",
+   "pos": "形容動詞（な形）",
+   "example": "資金は潤沢とは言えません。",
+   "exampleKana": "しきんはじゅんたくとはいえません。",
+   "exampleMeaning": "資金稱不上充裕。"
+  },
+  {
+   "id": "n1-v-0207",
+   "kanji": "もはや",
+   "kana": "もはや",
+   "meaning": "已經、為時",
+   "pos": "副詞",
+   "example": "もはや後戻りはできません。",
+   "exampleKana": "もはやあともどりはできません。",
+   "exampleMeaning": "已經無法回頭了。"
+  },
+  {
+   "id": "n1-v-0208",
+   "kanji": "いまだに",
+   "kana": "いまだに",
+   "meaning": "至今仍",
+   "pos": "副詞",
+   "example": "原因はいまだに不明です。",
+   "exampleKana": "げんいんはいまだにふめいです。",
+   "exampleMeaning": "原因至今不明。"
+  },
+  {
+   "id": "n1-v-0209",
+   "kanji": "ひとえに",
+   "kana": "ひとえに",
+   "meaning": "完全、全靠",
+   "pos": "副詞",
+   "example": "成功はひとえに皆様のおかげです。",
+   "exampleKana": "せいこうはひとえにみなさまのおかげです。",
+   "exampleMeaning": "成功全靠各位。"
+  },
+  {
+   "id": "n1-v-0210",
+   "kanji": "ともすると",
+   "kana": "ともすると",
+   "meaning": "動不動就、往往",
+   "pos": "副詞",
+   "example": "ともすると細部にこだわりすぎます。",
+   "exampleKana": "ともするとさいぶにこだわりすぎます。",
+   "exampleMeaning": "往往過於拘泥細節。"
+  },
+  {
+   "id": "n1-v-0211",
+   "kanji": "なんだかんだ",
+   "kana": "なんだかんだ",
+   "meaning": "說這說那、種種",
+   "pos": "副詞",
+   "example": "なんだかんだで一日が終わりました。",
+   "exampleKana": "なんだかんだでいちにちがおわりました。",
+   "exampleMeaning": "忙這忙那一天就結束了。"
+  },
+  {
+   "id": "n1-v-0212",
+   "kanji": "うすうす",
+   "kana": "うすうす",
+   "meaning": "隱約、多少",
+   "pos": "副詞",
+   "example": "結果はうすうす気づいていました。",
+   "exampleKana": "けっかはうすうすきづいていました。",
+   "exampleMeaning": "對結果多少有所察覺。"
+  },
+  {
+   "id": "n1-v-0213",
+   "kanji": "いやが応でも",
+   "kana": "いやがおうでも",
+   "meaning": "不管願不願意",
+   "pos": "副詞",
+   "example": "締め切りが近づき、いやが応でも集中します。",
+   "exampleKana": "しめきりがちかづき、いやがおうでもしゅうちゅうします。",
+   "exampleMeaning": "截止日逼近，不由得專注起來。"
+  },
+  {
+   "id": "n1-v-0214",
+   "kanji": "どうにか",
+   "kana": "どうにか",
+   "meaning": "好歹、設法",
+   "pos": "副詞",
+   "example": "どうにか間に合いました。",
+   "exampleKana": "どうにかまにあいました。",
+   "exampleMeaning": "好歹趕上了。"
+  },
+  {
+   "id": "n1-v-0215",
+   "kanji": "かろうじて",
+   "kana": "かろうじて",
+   "meaning": "勉強、好不容易",
+   "pos": "副詞",
+   "example": "かろうじて終電に乗れました。",
+   "exampleKana": "かろうじてしゅうでんにのれました。",
+   "exampleMeaning": "勉強趕上了末班車。"
+  },
+  {
+   "id": "n1-v-0216",
+   "kanji": "まちまち",
+   "kana": "まちまち",
+   "meaning": "各不相同",
+   "pos": "形容動詞（な形）",
+   "example": "意見はまちまちでした。",
+   "exampleKana": "いけんはまちまちでした。",
+   "exampleMeaning": "意見各不相同。"
+  },
+  {
+   "id": "n1-v-0217",
+   "kanji": "おおむね",
+   "kana": "おおむね",
+   "meaning": "大致",
+   "pos": "副詞",
+   "example": "計画はおおむね順調です。",
+   "exampleKana": "けいかくはおおむねじゅんちょうです。",
+   "exampleMeaning": "計畫大致順利。"
+  },
+  {
+   "id": "n1-v-0218",
+   "kanji": "かねて",
+   "kana": "かねて",
+   "meaning": "事先、老早",
+   "pos": "副詞",
+   "example": "かねて申し上げた通りです。",
+   "exampleKana": "かねてもうしあげたとおりです。",
+   "exampleMeaning": "正如先前所說。"
+  },
+  {
+   "id": "n1-v-0219",
+   "kanji": "これといって",
+   "kana": "これといって",
+   "meaning": "（後接否定）特別",
+   "pos": "副詞",
+   "example": "これといった問題はありません。",
+   "exampleKana": "これといったもんだいはありません。",
+   "exampleMeaning": "沒什麼特別的問題。"
+  },
+  {
+   "id": "n1-v-0220",
+   "kanji": "所以",
+   "kana": "ゆえん",
+   "meaning": "緣由、原因",
+   "pos": "名詞",
+   "example": "彼が信頼される所以がよく分かります。",
+   "exampleKana": "かれがしんらいされるゆえんがよくわかります。",
+   "exampleMeaning": "很能理解他被信賴的緣由。"
+  },
+  {
+   "id": "n1-v-0221",
+   "kanji": "真髄",
+   "kana": "しんずい",
+   "meaning": "精髓",
+   "pos": "名詞",
+   "example": "職人技の真髄に触れました。",
+   "exampleKana": "しょくにんわざのしんずいにふれました。",
+   "exampleMeaning": "領略了匠人技藝的精髓。"
+  },
+  {
+   "id": "n1-v-0222",
+   "kanji": "極み",
+   "kana": "きわみ",
+   "meaning": "極致",
+   "pos": "名詞",
+   "example": "それは贅沢の極みです。",
+   "exampleKana": "それはぜいたくのきわみです。",
+   "exampleMeaning": "那是奢華的極致。"
+  },
+  {
+   "id": "n1-v-0223",
+   "kanji": "賜物",
+   "kana": "たまもの",
+   "meaning": "成果、賜予",
+   "pos": "名詞",
+   "example": "優勝は努力の賜物です。",
+   "exampleKana": "ゆうしょうはどりょくのたまものです。",
+   "exampleMeaning": "奪冠是努力的成果。"
+  },
+  {
+   "id": "n1-v-0224",
+   "kanji": "偉業",
+   "kana": "いぎょう",
+   "meaning": "偉業",
+   "pos": "名詞",
+   "example": "前人未到の偉業を成し遂げました。",
+   "exampleKana": "ぜんじんみとうのいぎょうをなしとげました。",
+   "exampleMeaning": "完成了前人未至的偉業。"
+  },
+  {
+   "id": "n1-v-0225",
+   "kanji": "功績",
+   "kana": "こうせき",
+   "meaning": "功績",
+   "pos": "名詞",
+   "example": "長年の功績が認められました。",
+   "exampleKana": "ながねんのこうせきがみとめられました。",
+   "exampleMeaning": "長年的功績受到肯定。"
+  },
+  {
+   "id": "n1-v-0226",
+   "kanji": "名誉",
+   "kana": "めいよ",
+   "meaning": "名譽",
+   "pos": "名詞",
+   "example": "それは我が校の名誉です。",
+   "exampleKana": "それはわがこうのめいよです。",
+   "exampleMeaning": "那是本校的榮譽。"
+  },
+  {
+   "id": "n1-v-0227",
+   "kanji": "恥",
+   "kana": "はじ",
+   "meaning": "恥辱",
+   "pos": "名詞",
+   "example": "失敗を恥だとは思いません。",
+   "exampleKana": "しっぱいをはじだとはおもいません。",
+   "exampleMeaning": "我不認為失敗是恥辱。"
+  },
+  {
+   "id": "n1-v-0228",
+   "kanji": "自負",
+   "kana": "じふ",
+   "meaning": "自負、自豪",
+   "pos": "名詞",
+   "example": "誰にも負けないという自負があります。",
+   "exampleKana": "だれにもまけないというじふがあります。",
+   "exampleMeaning": "我自豪絕不輸給任何人。"
+  },
+  {
+   "id": "n1-v-0229",
+   "kanji": "覚悟",
+   "kana": "かくご",
+   "meaning": "覺悟、決心",
+   "pos": "名詞",
+   "example": "批判される覚悟はできています。",
+   "exampleKana": "ひはんされるかくごはできています。",
+   "exampleMeaning": "已有被批評的心理準備。"
+  },
+  {
+   "id": "n1-v-0230",
+   "kanji": "決意",
+   "kana": "けつい",
+   "meaning": "決意",
+   "pos": "名詞",
+   "example": "独立する決意を固めました。",
+   "exampleKana": "どくりつするけついをかためました。",
+   "exampleMeaning": "下定了獨立的決心。"
+  },
+  {
+   "id": "n1-v-0231",
+   "kanji": "執念",
+   "kana": "しゅうねん",
+   "meaning": "執念",
+   "pos": "名詞",
+   "example": "完成への執念が実を結びました。",
+   "exampleKana": "かんせいへのしゅうねんがみをむすびました。",
+   "exampleMeaning": "對完成的執著開花結果。"
+  },
+  {
+   "id": "n1-v-0232",
+   "kanji": "未練",
+   "kana": "みれん",
+   "meaning": "留戀、不捨",
+   "pos": "名詞",
+   "example": "過去に未練はありません。",
+   "exampleKana": "かこにみれんはありません。",
+   "exampleMeaning": "對過去沒有留戀。"
+  },
+  {
+   "id": "n1-v-0233",
+   "kanji": "名残",
+   "kana": "なごり",
+   "meaning": "殘餘、依依不捨",
+   "pos": "名詞",
+   "example": "町には古い城下町の名残があります。",
+   "exampleKana": "まちにはふるいじょうかまちのなごりがあります。",
+   "exampleMeaning": "城裡留有舊城下町的痕跡。"
+  },
+  {
+   "id": "n1-v-0234",
+   "kanji": "面影",
+   "kana": "おもかげ",
+   "meaning": "面貌、影子",
+   "pos": "名詞",
+   "example": "彼には父親の面影があります。",
+   "exampleKana": "かれにはちちおやのおもかげがあります。",
+   "exampleMeaning": "他有父親的影子。"
+  },
+  {
+   "id": "n1-v-0235",
+   "kanji": "成し遂げる",
+   "kana": "なしとげる",
+   "meaning": "完成、達成",
+   "pos": "動詞",
+   "example": "困難な任務を成し遂げました。",
+   "exampleKana": "こんなんなにんむをなしとげました。",
+   "exampleMeaning": "完成了艱難的任務。"
+  },
+  {
+   "id": "n1-v-0236",
+   "kanji": "やり遂げる",
+   "kana": "やりとげる",
+   "meaning": "做到底",
+   "pos": "動詞",
+   "example": "最後までやり遂げる決意です。",
+   "exampleKana": "さいごまでやりとげるけついです。",
+   "exampleMeaning": "決心堅持到最後。"
+  },
+  {
+   "id": "n1-v-0237",
+   "kanji": "成り立つ",
+   "kana": "なりたつ",
+   "meaning": "成立、構成",
+   "pos": "動詞",
+   "example": "この理論はいくつかの前提で成り立っています。",
+   "exampleKana": "このりろんはいくつかのぜんていでなりたっています。",
+   "exampleMeaning": "這個理論建立在幾個前提上。"
+  },
+  {
+   "id": "n1-v-0238",
+   "kanji": "突き止める",
+   "kana": "つきとめる",
+   "meaning": "查明、找出",
+   "pos": "動詞",
+   "example": "原因をついに突き止めました。",
+   "exampleKana": "げんいんをついにつきとめました。",
+   "exampleMeaning": "終於查明了原因。"
+  },
+  {
+   "id": "n1-v-0239",
+   "kanji": "見落とす",
+   "kana": "みおとす",
+   "meaning": "看漏",
+   "pos": "動詞",
+   "example": "重要な点を見落としていました。",
+   "exampleKana": "じゅうようなてんをみおとしていました。",
+   "exampleMeaning": "漏看了重要的一點。"
+  },
+  {
+   "id": "n1-v-0240",
+   "kanji": "取りこぼす",
+   "kana": "とりこぼす",
+   "meaning": "失分、遺漏",
+   "pos": "動詞",
+   "example": "簡単な問題を取りこぼしました。",
+   "exampleKana": "かんたんなもんだいをとりこぼしました。",
+   "exampleMeaning": "簡單的題目失了分。"
+  },
+  {
+   "id": "n1-v-0241",
+   "kanji": "裏付ける",
+   "kana": "うらづける",
+   "meaning": "佐證、印證",
+   "pos": "動詞",
+   "example": "データが仮説を裏付けています。",
+   "exampleKana": "データがかせつをうらづけています。",
+   "exampleMeaning": "數據佐證了假設。"
+  },
+  {
+   "id": "n1-v-0242",
+   "kanji": "仕切る",
+   "kana": "しきる",
+   "meaning": "主持、隔開",
+   "pos": "動詞",
+   "example": "会議は彼が仕切りました。",
+   "exampleKana": "かいぎはかれがしきりました。",
+   "exampleMeaning": "會議由他主持。"
+  },
+  {
+   "id": "n1-v-0243",
+   "kanji": "束ねる",
+   "kana": "たばねる",
+   "meaning": "捆、統率",
+   "pos": "動詞",
+   "example": "大きなチームを束ねています。",
+   "exampleKana": "おおきなチームをたばねています。",
+   "exampleMeaning": "統率著一支大團隊。"
+  },
+  {
+   "id": "n1-v-0244",
+   "kanji": "率いる",
+   "kana": "ひきいる",
+   "meaning": "率領",
+   "pos": "動詞",
+   "example": "代表チームを率いて出場します。",
+   "exampleKana": "だいひょうチームをひきいてしゅつじょうします。",
+   "exampleMeaning": "率領代表隊出賽。"
+  },
+  {
+   "id": "n1-v-0245",
+   "kanji": "仰ぐ",
+   "kana": "あおぐ",
+   "meaning": "仰望、請求",
+   "pos": "動詞",
+   "example": "上司の指示を仰ぎます。",
+   "exampleKana": "じょうしのしじをあおぎます。",
+   "exampleMeaning": "請示上司的指示。"
+  },
+  {
+   "id": "n1-v-0246",
+   "kanji": "授かる",
+   "kana": "さずかる",
+   "meaning": "獲賜、得到",
+   "pos": "動詞",
+   "example": "貴重な機会を授かりました。",
+   "exampleKana": "きちょうなきかいをさずかりました。",
+   "exampleMeaning": "得到了寶貴的機會。"
+  },
+  {
+   "id": "n1-v-0247",
+   "kanji": "報いる",
+   "kana": "むくいる",
+   "meaning": "報答、回報",
+   "pos": "動詞",
+   "example": "期待に報いる働きをします。",
+   "exampleKana": "きたいにむくいるはたらきをします。",
+   "exampleMeaning": "做出不負期待的表現。"
+  },
+  {
+   "id": "n1-v-0248",
+   "kanji": "名だたる",
+   "kana": "なだたる",
+   "meaning": "著名的",
+   "pos": "連體詞",
+   "example": "名だたる企業が集まる展示会です。",
+   "exampleKana": "なだたるきぎょうがあつまるてんじかいです。",
+   "exampleMeaning": "是知名企業齊聚的展覽會。"
+  },
+  {
+   "id": "n1-v-0249",
+   "kanji": "いわゆる",
+   "kana": "いわゆる",
+   "meaning": "所謂的",
+   "pos": "連體詞",
+   "example": "それがいわゆる「働き方改革」です。",
+   "exampleKana": "それがいわゆる「はたらきかたかいかく」です。",
+   "exampleMeaning": "那就是所謂的「工作方式改革」。"
+  },
+  {
+   "id": "n1-v-0250",
+   "kanji": "たゆまぬ",
+   "kana": "たゆまぬ",
+   "meaning": "不懈的",
+   "pos": "連體詞",
+   "example": "たゆまぬ努力が結果につながりました。",
+   "exampleKana": "たゆまぬどりょくがけっかにつながりました。",
+   "exampleMeaning": "不懈的努力帶來了成果。"
+  },
+  {
+   "id": "n1-v-0251",
+   "kanji": "華々しい",
+   "kana": "はなばなしい",
+   "meaning": "輝煌的、盛大的",
+   "pos": "形容詞（い形）",
+   "example": "華々しい活躍が期待されます。",
+   "exampleKana": "はなばなしいかつやくがきたいされます。",
+   "exampleMeaning": "令人期待亮眼的表現。"
+  },
+  {
+   "id": "n1-v-0252",
+   "kanji": "そぐわない",
+   "kana": "そぐわない",
+   "meaning": "不合、不相稱",
+   "pos": "形容詞（い形）",
+   "example": "場にそぐわない服装でした。",
+   "exampleKana": "ばにそぐわないふくそうでした。",
+   "exampleMeaning": "是與場合不相稱的穿著。"
+  },
+  {
+   "id": "n1-v-0253",
+   "kanji": "おぼつかない",
+   "kana": "おぼつかない",
+   "meaning": "靠不住的、不穩的",
+   "pos": "形容詞（い形）",
+   "example": "先行きはおぼつかないです。",
+   "exampleKana": "さきゆきはおぼつかないです。",
+   "exampleMeaning": "前景不明朗。"
+  },
+  {
+   "id": "n1-v-0254",
+   "kanji": "入念",
+   "kana": "にゅうねん",
+   "meaning": "仔細、周到",
+   "pos": "形容動詞（な形）",
+   "example": "入念な下調べをしました。",
+   "exampleKana": "にゅうねんなしたしらべをしました。",
+   "exampleMeaning": "做了周詳的事前調查。"
+  },
+  {
+   "id": "n1-v-0255",
+   "kanji": "不審",
+   "kana": "ふしん",
+   "meaning": "可疑",
+   "pos": "形容動詞（な形）",
+   "example": "不審な人物を見かけました。",
+   "exampleKana": "ふしんなじんぶつをみかけました。",
+   "exampleMeaning": "看到可疑人物。"
+  },
+  {
+   "id": "n1-v-0256",
+   "kanji": "巧妙",
+   "kana": "こうみょう",
+   "meaning": "巧妙",
+   "pos": "形容動詞（な形）",
+   "example": "巧妙な手口にだまされました。",
+   "exampleKana": "こうみょうなてぐちにだまされました。",
+   "exampleMeaning": "被巧妙的手法騙了。"
+  },
+  {
+   "id": "n1-v-0257",
+   "kanji": "壮大",
+   "kana": "そうだい",
+   "meaning": "宏大、壯闊",
+   "pos": "形容動詞（な形）",
+   "example": "壮大な計画に胸が躍ります。",
+   "exampleKana": "そうだいなけいかくにむねがおどります。",
+   "exampleMeaning": "為宏大的計畫感到興奮。"
+  },
+  {
+   "id": "n1-v-0258",
+   "kanji": "なめらか",
+   "kana": "なめらか",
+   "meaning": "流暢、光滑",
+   "pos": "形容動詞（な形）",
+   "example": "彼の日本語はなめらかです。",
+   "exampleKana": "かれのにほんごはなめらかです。",
+   "exampleMeaning": "他的日語很流暢。"
+  },
+  {
+   "id": "n1-v-0259",
+   "kanji": "往々にして",
+   "kana": "おうおうにして",
+   "meaning": "往往",
+   "pos": "副詞",
+   "example": "焦ると往々にして失敗します。",
+   "exampleKana": "あせるとおうおうにしてしっぱいします。",
+   "exampleMeaning": "一急往往就會失敗。"
+  },
+  {
+   "id": "n1-v-0260",
+   "kanji": "軒並み",
+   "kana": "のきなみ",
+   "meaning": "全都、一律",
+   "pos": "副詞",
+   "example": "各社の株価が軒並み下がりました。",
+   "exampleKana": "かくしゃのかぶかがのきなみさがりました。",
+   "exampleMeaning": "各家公司股價全面下跌。"
+  },
+  {
+   "id": "n1-v-0261",
+   "kanji": "えてして",
+   "kana": "えてして",
+   "meaning": "往往、容易",
+   "pos": "副詞",
+   "example": "期待が大きいとえてして失望も大きい。",
+   "exampleKana": "きたいがおおきいとえてしてしつぼうもおおきい。",
+   "exampleMeaning": "期待越大往往失望也越大。"
+  },
+  {
+   "id": "n1-v-0262",
+   "kanji": "やたらに",
+   "kana": "やたらに",
+   "meaning": "胡亂、非常",
+   "pos": "副詞",
+   "example": "やたらに口を出さないでください。",
+   "exampleKana": "やたらにくちをださないでください。",
+   "exampleMeaning": "請不要隨便插嘴。"
+  },
+  {
+   "id": "n1-v-0263",
+   "kanji": "くまなく",
+   "kana": "くまなく",
+   "meaning": "到處、徹底",
+   "pos": "副詞",
+   "example": "部屋をくまなく探しました。",
+   "exampleKana": "へやをくまなくさがしました。",
+   "exampleMeaning": "把房間找了個遍。"
+  }
+ ]
+}

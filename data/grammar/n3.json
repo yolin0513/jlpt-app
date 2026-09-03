@@ -1,0 +1,547 @@
+{
+ "level": "N3",
+ "type": "grammar",
+ "count": 54,
+ "items": [
+  {
+   "id": "n3-g-0001",
+   "pattern": "～ようになる",
+   "reading": "",
+   "meaning": "「變得～」表示能力或習慣的變化",
+   "structure": "動詞辭書形／可能形＋ようになる",
+   "example": "最近、朝早く起きられるようになった。",
+   "exampleKana": "さいきん、あさはやくおきられるようになった。",
+   "exampleMeaning": "最近變得能早起了。"
+  },
+  {
+   "id": "n3-g-0002",
+   "pattern": "～ように",
+   "reading": "",
+   "meaning": "「為了能～、以便～」（無意志動詞・可能形）",
+   "structure": "動詞辭書形／ない形＋ように",
+   "example": "忘れないようにメモします。",
+   "exampleKana": "わすれないようにメモします。",
+   "exampleMeaning": "為了不忘記而做筆記。"
+  },
+  {
+   "id": "n3-g-0003",
+   "pattern": "～たらどうですか",
+   "reading": "",
+   "meaning": "「～的話如何？」委婉建議",
+   "structure": "動詞た形＋らどうですか",
+   "example": "医者に相談したらどうですか。",
+   "exampleKana": "いしゃにそうだんしたらどうですか。",
+   "exampleMeaning": "去找醫生商量如何？"
+  },
+  {
+   "id": "n3-g-0004",
+   "pattern": "～ば～ほど",
+   "reading": "",
+   "meaning": "「越～就越～」",
+   "structure": "動詞ば形＋辭書形＋ほど",
+   "example": "練習すればするほど上手になります。",
+   "exampleKana": "れんしゅうすればするほどじょうずになります。",
+   "exampleMeaning": "越練習就越厲害。"
+  },
+  {
+   "id": "n3-g-0005",
+   "pattern": "～たび（に）",
+   "reading": "",
+   "meaning": "「每當～就～」",
+   "structure": "動詞辭書形／名詞＋の＋たびに",
+   "example": "この写真を見るたびに、故郷を思い出す。",
+   "exampleKana": "このしゃしんをみるたびに、こきょうをおもいだす。",
+   "exampleMeaning": "每次看到這張照片就想起故鄉。"
+  },
+  {
+   "id": "n3-g-0006",
+   "pattern": "～おかげで",
+   "reading": "",
+   "meaning": "「多虧～」（正面結果）",
+   "structure": "普通形（な形＋な／名詞＋の）＋おかげで",
+   "example": "先生のおかげで合格できました。",
+   "exampleKana": "せんせいのおかげでごうかくできました。",
+   "exampleMeaning": "多虧老師才能考上。"
+  },
+  {
+   "id": "n3-g-0007",
+   "pattern": "～せいで",
+   "reading": "",
+   "meaning": "「都怪～、由於～」（負面結果）",
+   "structure": "普通形（な形＋な／名詞＋の）＋せいで",
+   "example": "雨のせいで試合が中止になった。",
+   "exampleKana": "あめのせいでしあいがちゅうしになった。",
+   "exampleMeaning": "都因為下雨比賽取消了。"
+  },
+  {
+   "id": "n3-g-0008",
+   "pattern": "～によって",
+   "reading": "",
+   "meaning": "「根據～、依～而不同、透過～」",
+   "structure": "名詞＋によって",
+   "example": "国によって習慣が違います。",
+   "exampleKana": "くにによってしゅうかんがちがいます。",
+   "exampleMeaning": "依國家不同習慣也不同。"
+  },
+  {
+   "id": "n3-g-0009",
+   "pattern": "～に対して",
+   "reading": "～にたいして",
+   "meaning": "「對於～、針對～」",
+   "structure": "名詞＋に対して",
+   "example": "質問に対して丁寧に答えた。",
+   "exampleKana": "しつもんにたいしてていねいにこたえた。",
+   "exampleMeaning": "針對問題仔細地回答。"
+  },
+  {
+   "id": "n3-g-0010",
+   "pattern": "～について",
+   "reading": "",
+   "meaning": "「關於～」",
+   "structure": "名詞＋について",
+   "example": "日本の歴史について調べています。",
+   "exampleKana": "にほんのれきしについてしらべています。",
+   "exampleMeaning": "正在查關於日本歷史的資料。"
+  },
+  {
+   "id": "n3-g-0011",
+   "pattern": "～とか～とか",
+   "reading": "",
+   "meaning": "「～啦～啦」（舉例）",
+   "structure": "名詞／動詞辭書形＋とか",
+   "example": "週末は掃除するとか買い物するとかで忙しい。",
+   "exampleKana": "しゅうまつはそうじするとかかいものするとかでいそがしい。",
+   "exampleMeaning": "週末又打掃又購物很忙。"
+  },
+  {
+   "id": "n3-g-0012",
+   "pattern": "～かどうか",
+   "reading": "",
+   "meaning": "「是否～」",
+   "structure": "普通形（な形・名詞は語幹）＋かどうか",
+   "example": "彼が来るかどうか分かりません。",
+   "exampleKana": "かれがくるかどうかわかりません。",
+   "exampleMeaning": "不知道他會不會來。"
+  },
+  {
+   "id": "n3-g-0013",
+   "pattern": "～ば～のに／～たらいいのに",
+   "reading": "",
+   "meaning": "「要是～就好了」（帶惋惜的假設）",
+   "structure": "動詞ば形／た形＋いいのに",
+   "example": "もっと早く言ってくれればよかったのに。",
+   "exampleKana": "もっとはやくいってくれればよかったのに。",
+   "exampleMeaning": "你早點說就好了。"
+  },
+  {
+   "id": "n3-g-0014",
+   "pattern": "～ところだ",
+   "reading": "",
+   "meaning": "「正要／正在／剛～」（動作的階段）",
+   "structure": "動詞辭書形／ている／た形＋ところだ",
+   "example": "今から出かけるところです。",
+   "exampleKana": "いまからでかけるところです。",
+   "exampleMeaning": "正要出門。"
+  },
+  {
+   "id": "n3-g-0015",
+   "pattern": "～ばかり",
+   "reading": "",
+   "meaning": "「淨是～、老是～」",
+   "structure": "動詞て形＋ばかり／名詞＋ばかり",
+   "example": "弟はゲームばかりしている。",
+   "exampleKana": "おとうとはゲームばかりしている。",
+   "exampleMeaning": "弟弟老是在打電動。"
+  },
+  {
+   "id": "n3-g-0016",
+   "pattern": "～たばかり",
+   "reading": "",
+   "meaning": "「剛～不久」",
+   "structure": "動詞た形＋ばかり",
+   "example": "日本に来たばかりで、まだ慣れません。",
+   "exampleKana": "にほんにきたばかりで、まだなれません。",
+   "exampleMeaning": "剛來日本還不習慣。"
+  },
+  {
+   "id": "n3-g-0017",
+   "pattern": "～ているところに／ところへ",
+   "reading": "",
+   "meaning": "「正當～的時候」",
+   "structure": "動詞ている＋ところに",
+   "example": "出かけようとしているところに、電話が来た。",
+   "exampleKana": "でかけようとしているところに、でんわがきた。",
+   "exampleMeaning": "正要出門時電話來了。"
+  },
+  {
+   "id": "n3-g-0018",
+   "pattern": "～まま",
+   "reading": "",
+   "meaning": "「保持～的狀態」",
+   "structure": "動詞た形／ない形／名詞の＋まま",
+   "example": "電気をつけたまま寝てしまった。",
+   "exampleKana": "でんきをつけたままねてしまった。",
+   "exampleMeaning": "開著燈就睡著了。"
+  },
+  {
+   "id": "n3-g-0019",
+   "pattern": "～きる／～きれない",
+   "reading": "",
+   "meaning": "「完全～完／～不完」",
+   "structure": "動詞ます形＋きる",
+   "example": "量が多くて食べきれない。",
+   "exampleKana": "りょうがおおくてたべきれない。",
+   "exampleMeaning": "量太多吃不完。"
+  },
+  {
+   "id": "n3-g-0020",
+   "pattern": "～はじめる／～おわる／～つづける",
+   "reading": "",
+   "meaning": "複合動詞：開始／結束／持續做～",
+   "structure": "動詞ます形＋はじめる等",
+   "example": "三年前から日本語を習いはじめた。",
+   "exampleKana": "さんねんまえからにほんごをならいはじめた。",
+   "exampleMeaning": "三年前開始學日語。"
+  },
+  {
+   "id": "n3-g-0021",
+   "pattern": "～がる",
+   "reading": "",
+   "meaning": "「（第三人稱）表現出～的樣子」",
+   "structure": "形容詞語幹＋がる",
+   "example": "子供が犬を怖がっている。",
+   "exampleKana": "こどもがいぬをこわがっている。",
+   "exampleMeaning": "小孩怕狗。"
+  },
+  {
+   "id": "n3-g-0022",
+   "pattern": "～がする",
+   "reading": "",
+   "meaning": "「感覺到～（味道・聲音・氣味）」",
+   "structure": "名詞＋がする",
+   "example": "台所からいい匂いがする。",
+   "exampleKana": "だいどころからいいにおいがする。",
+   "exampleMeaning": "廚房飄來香味。"
+  },
+  {
+   "id": "n3-g-0023",
+   "pattern": "～ことになっている",
+   "reading": "",
+   "meaning": "「規定為～、按慣例～」",
+   "structure": "動詞辭書形／ない形＋ことになっている",
+   "example": "校内では日本語を話すことになっている。",
+   "exampleKana": "こうないではにほんごをはなすことになっている。",
+   "exampleMeaning": "校內規定要說日語。"
+  },
+  {
+   "id": "n3-g-0024",
+   "pattern": "～わけだ",
+   "reading": "",
+   "meaning": "「難怪～、也就是說～」（推導出的結論）",
+   "structure": "普通形＋わけだ",
+   "example": "道理で寒いわけだ、雪が降っている。",
+   "exampleKana": "どうりでさむいわけだ、ゆきがふっている。",
+   "exampleMeaning": "難怪這麼冷，下雪了。"
+  },
+  {
+   "id": "n3-g-0025",
+   "pattern": "～わけではない",
+   "reading": "",
+   "meaning": "「並不是～」（部分否定）",
+   "structure": "普通形＋わけではない",
+   "example": "嫌いなわけではないが、あまり食べない。",
+   "exampleKana": "きらいなわけではないが、あまりたべない。",
+   "exampleMeaning": "並不是討厭，只是不太吃。"
+  },
+  {
+   "id": "n3-g-0026",
+   "pattern": "～はずがない",
+   "reading": "",
+   "meaning": "「不可能～」",
+   "structure": "普通形（な形＋な／名詞＋の）＋はずがない",
+   "example": "彼がそんなことを言うはずがない。",
+   "exampleKana": "かれがそんなことをいうはずがない。",
+   "exampleMeaning": "他不可能說那種話。"
+  },
+  {
+   "id": "n3-g-0027",
+   "pattern": "～に違いない",
+   "reading": "～にちがいない",
+   "meaning": "「一定是～」（強烈確信）",
+   "structure": "普通形＋に違いない",
+   "example": "あの様子では、合格したに違いない。",
+   "exampleKana": "あのようすでは、ごうかくしたにちがいない。",
+   "exampleMeaning": "看那樣子一定是考上了。"
+  },
+  {
+   "id": "n3-g-0028",
+   "pattern": "～みたいに／～みたいな",
+   "reading": "",
+   "meaning": "「像～一樣」",
+   "structure": "名詞＋みたいな＋名詞",
+   "example": "彼は子供みたいに笑った。",
+   "exampleKana": "かれはこどもみたいにわらった。",
+   "exampleMeaning": "他像孩子一樣笑了。"
+  },
+  {
+   "id": "n3-g-0029",
+   "pattern": "～として",
+   "reading": "",
+   "meaning": "「作為～、以～身分」",
+   "structure": "名詞＋として",
+   "example": "留学生として日本に来ました。",
+   "exampleKana": "りゅうがくせいとしてにほんにきました。",
+   "exampleMeaning": "以留學生身分來到日本。"
+  },
+  {
+   "id": "n3-g-0030",
+   "pattern": "～ばかりでなく／～だけでなく",
+   "reading": "",
+   "meaning": "「不僅～而且～」",
+   "structure": "名詞／普通形＋ばかりでなく",
+   "example": "彼は英語だけでなく中国語も話せる。",
+   "exampleKana": "かれはえいごだけでなくちゅうごくごもはなせる。",
+   "exampleMeaning": "他不只會英語還會中文。"
+  },
+  {
+   "id": "n3-g-0031",
+   "pattern": "～という",
+   "reading": "",
+   "meaning": "「叫做～、聽說～」",
+   "structure": "名詞＋という＋名詞／普通形＋という",
+   "example": "田中という人から電話がありました。",
+   "exampleKana": "たなかというひとからでんわがありました。",
+   "exampleMeaning": "有位叫田中的人來電。"
+  },
+  {
+   "id": "n3-g-0032",
+   "pattern": "～ということだ",
+   "reading": "",
+   "meaning": "「據說～、意思是說～」",
+   "structure": "普通形＋ということだ",
+   "example": "天気予報によると、明日は晴れるということだ。",
+   "exampleKana": "てんきよほうによると、あしたははれるということだ。",
+   "exampleMeaning": "氣象預報說明天會放晴。"
+  },
+  {
+   "id": "n3-g-0033",
+   "pattern": "～ようとする",
+   "reading": "",
+   "meaning": "「試圖～、正要～」",
+   "structure": "動詞意向形＋とする",
+   "example": "ドアを開けようとしたが、鍵がかかっていた。",
+   "exampleKana": "ドアをあけようとしたが、かぎがかかっていた。",
+   "exampleMeaning": "正想開門，門卻鎖著。"
+  },
+  {
+   "id": "n3-g-0034",
+   "pattern": "～ずに／～ないで",
+   "reading": "",
+   "meaning": "「不～（而做別的）、沒有～就～」",
+   "structure": "動詞ない形（去ない）＋ずに",
+   "example": "朝ご飯を食べずに家を出た。",
+   "exampleKana": "あさごはんをたべずにいえをでた。",
+   "exampleMeaning": "沒吃早餐就出門了。"
+  },
+  {
+   "id": "n3-g-0035",
+   "pattern": "～しかない",
+   "reading": "",
+   "meaning": "「只能～、只好～」",
+   "structure": "動詞辭書形＋しかない",
+   "example": "バスがないので、歩くしかない。",
+   "exampleKana": "バスがないので、あるくしかない。",
+   "exampleMeaning": "沒有公車，只好走路。"
+  },
+  {
+   "id": "n3-g-0036",
+   "pattern": "～うちに",
+   "reading": "",
+   "meaning": "「趁著～的時候、在～之間」",
+   "structure": "動詞辭書形／ている／ない形＋うちに",
+   "example": "熱いうちに食べてください。",
+   "exampleKana": "あついうちにたべてください。",
+   "exampleMeaning": "請趁熱吃。"
+  },
+  {
+   "id": "n3-g-0037",
+   "pattern": "～によると",
+   "reading": "",
+   "meaning": "「根據～（消息來源）」",
+   "structure": "名詞＋によると",
+   "example": "新聞によると、来週から値上げされるそうだ。",
+   "exampleKana": "しんぶんによると、らいしゅうからねあげされるそうだ。",
+   "exampleMeaning": "據報載下週起要漲價。"
+  },
+  {
+   "id": "n3-g-0038",
+   "pattern": "～ものだ",
+   "reading": "",
+   "meaning": "「（本來就）～、～真是啊」（一般常理・感慨）",
+   "structure": "動詞・形容詞普通形＋ものだ",
+   "example": "年を取ると、昔のことをよく思い出すものだ。",
+   "exampleKana": "としをとると、むかしのことをよくおもいだすものだ。",
+   "exampleMeaning": "上了年紀就容易想起往事。"
+  },
+  {
+   "id": "n3-g-0039",
+   "pattern": "～くらい／～ほど",
+   "reading": "",
+   "meaning": "「～到那種程度」",
+   "structure": "動詞・名詞＋くらい／ほど",
+   "example": "立てないほど疲れた。",
+   "exampleKana": "たてないほどつかれた。",
+   "exampleMeaning": "累到站不起來。"
+  },
+  {
+   "id": "n3-g-0040",
+   "pattern": "～たとたん（に）",
+   "reading": "",
+   "meaning": "「一～就立刻（意外地）」",
+   "structure": "動詞た形＋とたん",
+   "example": "家を出たとたん、雨が降ってきた。",
+   "exampleKana": "いえをでたとたん、あめがふってきた。",
+   "exampleMeaning": "一出門就下起雨來。"
+  },
+  {
+   "id": "n3-g-0041",
+   "pattern": "～かけ／～かけの",
+   "reading": "",
+   "meaning": "「做到一半的～」",
+   "structure": "動詞ます形＋かけ",
+   "example": "読みかけの本が机の上にある。",
+   "exampleKana": "よみかけのほんがつくえのうえにある。",
+   "exampleMeaning": "桌上有本讀到一半的書。"
+  },
+  {
+   "id": "n3-g-0042",
+   "pattern": "～っぱなし",
+   "reading": "",
+   "meaning": "「一直～著（放任不管）」",
+   "structure": "動詞ます形＋っぱなし",
+   "example": "電気をつけっぱなしで出かけた。",
+   "exampleKana": "でんきをつけっぱなしででかけた。",
+   "exampleMeaning": "開著燈就出門了。"
+  },
+  {
+   "id": "n3-g-0043",
+   "pattern": "～向け",
+   "reading": "～むけ",
+   "meaning": "「面向～、以～為對象」",
+   "structure": "名詞＋向け",
+   "example": "これは子供向けの番組です。",
+   "exampleKana": "これはこどもむけのばんぐみです。",
+   "exampleMeaning": "這是給小孩看的節目。"
+  },
+  {
+   "id": "n3-g-0044",
+   "pattern": "～向き",
+   "reading": "～むき",
+   "meaning": "「適合～、朝向～」",
+   "structure": "名詞＋向き",
+   "example": "この仕事は初心者向きです。",
+   "exampleKana": "このしごとはしょしんしゃむきです。",
+   "exampleMeaning": "這份工作適合新手。"
+  },
+  {
+   "id": "n3-g-0045",
+   "pattern": "～だらけ",
+   "reading": "",
+   "meaning": "「滿是～」（多為負面）",
+   "structure": "名詞＋だらけ",
+   "example": "子供の服が泥だらけになった。",
+   "exampleKana": "こどものふくがどろだらけになった。",
+   "exampleMeaning": "小孩的衣服沾滿了泥。"
+  },
+  {
+   "id": "n3-g-0046",
+   "pattern": "～ふりをする",
+   "reading": "",
+   "meaning": "「裝作～的樣子」",
+   "structure": "動詞・形容詞普通形／名詞＋の＋ふりをする",
+   "example": "知っているのに知らないふりをした。",
+   "exampleKana": "しっているのにしらないふりをした。",
+   "exampleMeaning": "明明知道卻裝作不知道。"
+  },
+  {
+   "id": "n3-g-0047",
+   "pattern": "～せいか",
+   "reading": "",
+   "meaning": "「也許是因為～」",
+   "structure": "普通形（な形＋な／名詞＋の）＋せいか",
+   "example": "寝不足のせいか、頭が痛い。",
+   "exampleKana": "ねぶそくのせいか、あたまがいたい。",
+   "exampleMeaning": "也許是睡眠不足，頭很痛。"
+  },
+  {
+   "id": "n3-g-0048",
+   "pattern": "～気がする",
+   "reading": "～きがする",
+   "meaning": "「總覺得～」",
+   "structure": "普通形＋気がする",
+   "example": "どこかで会ったような気がする。",
+   "exampleKana": "どこかであったようなきがする。",
+   "exampleMeaning": "總覺得在哪裡見過。"
+  },
+  {
+   "id": "n3-g-0049",
+   "pattern": "～に比べて",
+   "reading": "～にくらべて",
+   "meaning": "「與～相比」",
+   "structure": "名詞＋に比べて",
+   "example": "去年に比べて売上が伸びた。",
+   "exampleKana": "きょねんにくらべてうりあげがのびた。",
+   "exampleMeaning": "與去年相比業績成長了。"
+  },
+  {
+   "id": "n3-g-0050",
+   "pattern": "～ついでに",
+   "reading": "",
+   "meaning": "「順便～」",
+   "structure": "動詞辭書形／た形／名詞＋の＋ついでに",
+   "example": "買い物のついでに、郵便局に寄った。",
+   "exampleKana": "かいもののついでに、ゆうびんきょくによった。",
+   "exampleMeaning": "購物順便去了郵局。"
+  },
+  {
+   "id": "n3-g-0051",
+   "pattern": "～代わりに",
+   "reading": "～かわりに",
+   "meaning": "「代替～、作為～的交換」",
+   "structure": "動詞辭書形／名詞＋の＋代わりに",
+   "example": "部長の代わりに私が出席します。",
+   "exampleKana": "ぶちょうのかわりにわたしがしゅっせきします。",
+   "exampleMeaning": "我代替部長出席。"
+  },
+  {
+   "id": "n3-g-0052",
+   "pattern": "～てからでないと",
+   "reading": "",
+   "meaning": "「不先～就不能～」",
+   "structure": "動詞て形＋からでないと",
+   "example": "許可をもらってからでないと、始められない。",
+   "exampleKana": "きょかをもらってからでないと、はじめられない。",
+   "exampleMeaning": "不先取得許可就不能開始。"
+  },
+  {
+   "id": "n3-g-0053",
+   "pattern": "～ようとしない",
+   "reading": "",
+   "meaning": "「不願意～、不肯～」",
+   "structure": "動詞意向形＋としない",
+   "example": "彼は誰の話も聞こうとしない。",
+   "exampleKana": "かれはだれのはなしもきこうとしない。",
+   "exampleMeaning": "他不肯聽任何人的話。"
+  },
+  {
+   "id": "n3-g-0054",
+   "pattern": "～最中に",
+   "reading": "～さいちゅうに",
+   "meaning": "「正在～的時候」",
+   "structure": "動詞ている／名詞＋の＋最中に",
+   "example": "発表の最中に停電した。",
+   "exampleKana": "はっぴょうのさいちゅうにていでんした。",
+   "exampleMeaning": "報告到一半停電了。"
+  }
+ ]
+}

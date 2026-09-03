@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#1f6feb" />
+  <meta name="description" content="JLPT 日文檢定練習工具 — N1~N5 單字與文法，閃卡、測驗、間隔重複、錯題本、學習統計。" />
+  <title>JLPT 練習｜日文檢定 N1-N5</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="JLPT 練習" />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <header id="topbar">
+      <button id="backBtn" class="icon-btn" aria-label="返回" hidden>‹</button>
+      <h1 id="topTitle">JLPT 練習</h1>
+      <button id="searchBtn" class="icon-btn" aria-label="搜尋">🔍</button>
+      <button id="themeBtn" class="icon-btn" aria-label="切換深淺色">◐</button>
+    </header>
+
+    <main id="view" aria-live="polite"></main>
+
+    <nav id="tabbar">
+      <a href="#/home" class="tab" data-tab="home"><span class="ti">🏠</span><span>首頁</span></a>
+      <a href="#/learn" class="tab" data-tab="learn"><span class="ti">📚</span><span>學習</span></a>
+      <a href="#/review" class="tab" data-tab="review"><span class="ti">🔁</span><span>複習</span></a>
+      <a href="#/mistakes" class="tab" data-tab="mistakes"><span class="ti">❗</span><span>錯題本</span></a>
+      <a href="#/stats" class="tab" data-tab="stats"><span class="ti">📊</span><span>統計</span></a>
+    </nav>
+  </div>
+
+  <div id="toast" role="status"></div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

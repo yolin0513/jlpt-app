@@ -1,0 +1,110 @@
+{
+ "app": "JLPT 練習",
+ "generated": true,
+ "levels": [
+  "N5",
+  "N4",
+  "N3",
+  "N2",
+  "N1"
+ ],
+ "types": [
+  {
+   "key": "vocab",
+   "label": "單字"
+  },
+  {
+   "key": "grammar",
+   "label": "文法"
+  }
+ ],
+ "totalItems": 1628,
+ "sets": [
+  {
+   "type": "grammar",
+   "level": "N5",
+   "file": "grammar/n5.json",
+   "count": 46
+  },
+  {
+   "type": "grammar",
+   "level": "N4",
+   "file": "grammar/n4.json",
+   "count": 55
+  },
+  {
+   "type": "grammar",
+   "level": "N3",
+   "file": "grammar/n3.json",
+   "count": 54
+  },
+  {
+   "type": "grammar",
+   "level": "N2",
+   "file": "grammar/n2.json",
+   "count": 52
+  },
+  {
+   "type": "grammar",
+   "level": "N1",
+   "file": "grammar/n1.json",
+   "count": 47
+  },
+  {
+   "type": "vocab",
+   "level": "N5",
+   "file": "vocab/n5.json",
+   "count": 269
+  },
+  {
+   "type": "vocab",
+   "level": "N4",
+   "file": "vocab/n4.json",
+   "count": 308
+  },
+  {
+   "type": "vocab",
+   "level": "N3",
+   "file": "vocab/n3.json",
+   "count": 274
+  },
+  {
+   "type": "vocab",
+   "level": "N2",
+   "file": "vocab/n2.json",
+   "count": 260
+  },
+  {
+   "type": "vocab",
+   "level": "N1",
+   "file": "vocab/n1.json",
+   "count": 263
+  }
+ ],
+ "travel": {
+  "total": 266,
+  "sets": [
+   {
+    "cat": "phrases",
+    "label": "情境會話",
+    "icon": "💬",
+    "file": "travel/phrases.json",
+    "count": 142
+   },
+   {
+    "cat": "usage",
+    "label": "日本人這樣說",
+    "icon": "🗣️",
+    "file": "travel/usage.json",
+    "count": 54
+   },
+   {
+    "cat": "kanji",
+    "label": "中日漢字大不同",
+    "icon": "🀄",
+    "file": "travel/kanji.json",
+    "count": 70
+   }
+  ]
+ }
+}

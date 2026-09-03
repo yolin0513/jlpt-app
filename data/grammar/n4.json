@@ -1,0 +1,557 @@
+{
+ "level": "N4",
+ "type": "grammar",
+ "count": 55,
+ "items": [
+  {
+   "id": "n4-g-0001",
+   "pattern": "～たことがあります",
+   "reading": "",
+   "meaning": "「曾經～過」表示經驗",
+   "structure": "動詞た形＋ことがあります",
+   "example": "富士山に登ったことがあります。",
+   "exampleKana": "ふじさんにのぼったことがあります。",
+   "exampleMeaning": "曾經爬過富士山。"
+  },
+  {
+   "id": "n4-g-0002",
+   "pattern": "～ことができます",
+   "reading": "",
+   "meaning": "「能夠～、會～」表示能力或可能",
+   "structure": "動詞辭書形＋ことができます",
+   "example": "私はピアノを弾くことができます。",
+   "exampleKana": "わたしはピアノをひくことができます。",
+   "exampleMeaning": "我會彈鋼琴。"
+  },
+  {
+   "id": "n4-g-0003",
+   "pattern": "～可能形（読める等）",
+   "reading": "～かのうけい",
+   "meaning": "動詞可能形「能～」",
+   "structure": "五段：語尾e＋る／一段：る→られる",
+   "example": "辛いものが食べられません。",
+   "exampleKana": "からいものがたべられません。",
+   "exampleMeaning": "不敢吃辣的東西。"
+  },
+  {
+   "id": "n4-g-0004",
+   "pattern": "～つもりです",
+   "reading": "",
+   "meaning": "「打算～」表示意志・計畫",
+   "structure": "動詞辭書形／ない形＋つもりです",
+   "example": "来年、留学するつもりです。",
+   "exampleKana": "らいねん、りゅうがくするつもりです。",
+   "exampleMeaning": "打算明年去留學。"
+  },
+  {
+   "id": "n4-g-0005",
+   "pattern": "～予定です",
+   "reading": "～よていです",
+   "meaning": "「預定～」表示既定安排",
+   "structure": "動詞辭書形／名詞＋の＋予定です",
+   "example": "会議は三時に始まる予定です。",
+   "exampleKana": "かいぎはさんじにはじまるよていです。",
+   "exampleMeaning": "會議預定三點開始。"
+  },
+  {
+   "id": "n4-g-0006",
+   "pattern": "～と思います",
+   "reading": "～とおもいます",
+   "meaning": "「我覺得／我認為～」",
+   "structure": "普通形＋と思います",
+   "example": "彼は来ないと思います。",
+   "exampleKana": "かれはこないとおもいます。",
+   "exampleMeaning": "我想他不會來。"
+  },
+  {
+   "id": "n4-g-0007",
+   "pattern": "～と言いました",
+   "reading": "～といいました",
+   "meaning": "「說了～」引用他人的話",
+   "structure": "普通形＋と言いました",
+   "example": "田中さんは行くと言いました。",
+   "exampleKana": "たなかさんはいくといいました。",
+   "exampleMeaning": "田中先生說要去。"
+  },
+  {
+   "id": "n4-g-0008",
+   "pattern": "～でしょう？／～だろう",
+   "reading": "",
+   "meaning": "「～對吧？」尋求同意／推測",
+   "structure": "普通形＋でしょう",
+   "example": "この問題は難しいでしょう。",
+   "exampleKana": "このもんだいはむずかしいでしょう。",
+   "exampleMeaning": "這題很難吧。"
+  },
+  {
+   "id": "n4-g-0009",
+   "pattern": "～かもしれません",
+   "reading": "",
+   "meaning": "「也許～、可能～」低確信推測",
+   "structure": "普通形＋かもしれません",
+   "example": "午後、雨が降るかもしれません。",
+   "exampleKana": "ごご、あめがふるかもしれません。",
+   "exampleMeaning": "下午可能會下雨。"
+  },
+  {
+   "id": "n4-g-0010",
+   "pattern": "～はずです",
+   "reading": "",
+   "meaning": "「應該～」有根據的推斷",
+   "structure": "普通形（な形＋な／名詞＋の）＋はずです",
+   "example": "彼はもう着いているはずです。",
+   "exampleKana": "かれはもうついているはずです。",
+   "exampleMeaning": "他應該已經到了。"
+  },
+  {
+   "id": "n4-g-0011",
+   "pattern": "～なければならない",
+   "reading": "",
+   "meaning": "「必須～」（書面・普通形）",
+   "structure": "動詞ない形（去ない）＋なければならない",
+   "example": "規則を守らなければならない。",
+   "exampleKana": "きそくをまもらなければならない。",
+   "exampleMeaning": "必須遵守規則。"
+  },
+  {
+   "id": "n4-g-0012",
+   "pattern": "～なくてはいけない",
+   "reading": "",
+   "meaning": "「不～不行、必須～」",
+   "structure": "動詞ない形（去ない）＋なくてはいけない",
+   "example": "もっと野菜を食べなくてはいけない。",
+   "exampleKana": "もっとやさいをたべなくてはいけない。",
+   "exampleMeaning": "必須多吃蔬菜。"
+  },
+  {
+   "id": "n4-g-0013",
+   "pattern": "～たほうがいいです",
+   "reading": "",
+   "meaning": "「最好～」表示建議",
+   "structure": "動詞た形＋ほうがいいです",
+   "example": "早く寝たほうがいいですよ。",
+   "exampleKana": "はやくねたほうがいいですよ。",
+   "exampleMeaning": "你最好早點睡。"
+  },
+  {
+   "id": "n4-g-0014",
+   "pattern": "～ないほうがいいです",
+   "reading": "",
+   "meaning": "「最好不要～」",
+   "structure": "動詞ない形＋ほうがいいです",
+   "example": "無理をしないほうがいいです。",
+   "exampleKana": "むりをしないほうがいいです。",
+   "exampleMeaning": "最好別勉強。"
+  },
+  {
+   "id": "n4-g-0015",
+   "pattern": "～てみます",
+   "reading": "",
+   "meaning": "「試著～看看」",
+   "structure": "動詞て形＋みます",
+   "example": "この服を着てみます。",
+   "exampleKana": "このふくをきてみます。",
+   "exampleMeaning": "試穿這件衣服看看。"
+  },
+  {
+   "id": "n4-g-0016",
+   "pattern": "～ておきます",
+   "reading": "",
+   "meaning": "「事先～、先～好」",
+   "structure": "動詞て形＋おきます",
+   "example": "旅行の前に切符を買っておきます。",
+   "exampleKana": "りょこうのまえにきっぷをかっておきます。",
+   "exampleMeaning": "旅行前先買好票。"
+  },
+  {
+   "id": "n4-g-0017",
+   "pattern": "～てしまいます",
+   "reading": "",
+   "meaning": "「～完了／不小心～了」（完成・遺憾）",
+   "structure": "動詞て形＋しまいます",
+   "example": "宿題を全部やってしまいました。",
+   "exampleKana": "しゅくだいをぜんぶやってしまいました。",
+   "exampleMeaning": "把作業全做完了。"
+  },
+  {
+   "id": "n4-g-0018",
+   "pattern": "～てあります",
+   "reading": "",
+   "meaning": "「（有人做了而）處於～的狀態」",
+   "structure": "他動詞て形＋あります",
+   "example": "壁に地図が貼ってあります。",
+   "exampleKana": "かべにちずがはってあります。",
+   "exampleMeaning": "牆上貼著地圖。"
+  },
+  {
+   "id": "n4-g-0019",
+   "pattern": "～ていく／～てくる",
+   "reading": "",
+   "meaning": "「～下去／～以來」表示變化的方向",
+   "structure": "動詞て形＋いく／くる",
+   "example": "だんだん暖かくなってきました。",
+   "exampleKana": "だんだんあたたかくなってきました。",
+   "exampleMeaning": "漸漸變暖了。"
+  },
+  {
+   "id": "n4-g-0020",
+   "pattern": "～ながら",
+   "reading": "",
+   "meaning": "「一邊～一邊～」（同時進行）",
+   "structure": "動詞ます形＋ながら",
+   "example": "テレビを見ながら食事します。",
+   "exampleKana": "テレビをみながらしょくじします。",
+   "exampleMeaning": "一邊看電視一邊吃飯。"
+  },
+  {
+   "id": "n4-g-0021",
+   "pattern": "～すぎます",
+   "reading": "",
+   "meaning": "「太過～」",
+   "structure": "動詞ます形／形容詞語幹＋すぎます",
+   "example": "昨日は飲みすぎました。",
+   "exampleKana": "きのうはのみすぎました。",
+   "exampleMeaning": "昨天喝太多了。"
+  },
+  {
+   "id": "n4-g-0022",
+   "pattern": "～やすい／～にくい",
+   "reading": "",
+   "meaning": "「容易～／難以～」",
+   "structure": "動詞ます形＋やすい／にくい",
+   "example": "このペンは書きやすいです。",
+   "exampleKana": "このペンはかきやすいです。",
+   "exampleMeaning": "這支筆很好寫。"
+  },
+  {
+   "id": "n4-g-0023",
+   "pattern": "～方",
+   "reading": "～かた",
+   "meaning": "「～的方法、做法」",
+   "structure": "動詞ます形＋方",
+   "example": "漢字の読み方が分かりません。",
+   "exampleKana": "かんじのよみかたがわかりません。",
+   "exampleMeaning": "不知道漢字的讀法。"
+  },
+  {
+   "id": "n4-g-0024",
+   "pattern": "～ようになります",
+   "reading": "",
+   "meaning": "「變得會～、變得能～」表示變化",
+   "structure": "動詞辭書形／可能形＋ようになります",
+   "example": "日本語が話せるようになりました。",
+   "exampleKana": "にほんごがはなせるようになりました。",
+   "exampleMeaning": "變得能說日語了。"
+  },
+  {
+   "id": "n4-g-0025",
+   "pattern": "～ようにします",
+   "reading": "",
+   "meaning": "「盡量做到～、養成～的習慣」",
+   "structure": "動詞辭書形／ない形＋ようにします",
+   "example": "毎日運動するようにしています。",
+   "exampleKana": "まいにちうんどうするようにしています。",
+   "exampleMeaning": "我盡量每天運動。"
+  },
+  {
+   "id": "n4-g-0026",
+   "pattern": "～ために",
+   "reading": "",
+   "meaning": "「為了～」表示目的",
+   "structure": "動詞辭書形／名詞＋の＋ために",
+   "example": "健康のために野菜を食べます。",
+   "exampleKana": "けんこうのためにやさいをたべます。",
+   "exampleMeaning": "為了健康而吃蔬菜。"
+  },
+  {
+   "id": "n4-g-0027",
+   "pattern": "～のに",
+   "reading": "",
+   "meaning": "「明明～卻～」（逆接・帶不滿）",
+   "structure": "普通形（な形＋な／名詞＋な）＋のに",
+   "example": "薬を飲んだのに、治りません。",
+   "exampleKana": "くすりをのんだのに、なおりません。",
+   "exampleMeaning": "明明吃了藥卻沒好。"
+  },
+  {
+   "id": "n4-g-0028",
+   "pattern": "～ので",
+   "reading": "",
+   "meaning": "「因為～」（客觀理由，語氣較柔）",
+   "structure": "普通形（な形＋な／名詞＋な）＋ので",
+   "example": "熱があるので、休みます。",
+   "exampleKana": "ねつがあるので、やすみます。",
+   "exampleMeaning": "因為發燒所以請假。"
+  },
+  {
+   "id": "n4-g-0029",
+   "pattern": "～し、～し",
+   "reading": "",
+   "meaning": "「又～又～」列舉理由",
+   "structure": "普通形＋し",
+   "example": "安いし、おいしいし、この店が好きです。",
+   "exampleKana": "やすいし、おいしいし、このみせがすきです。",
+   "exampleMeaning": "又便宜又好吃，我喜歡這家店。"
+  },
+  {
+   "id": "n4-g-0030",
+   "pattern": "～たり～たりします",
+   "reading": "",
+   "meaning": "「又是～又是～」列舉部分動作",
+   "structure": "動詞た形＋り＋動詞た形＋り＋します",
+   "example": "休みの日は掃除したり洗濯したりします。",
+   "exampleKana": "やすみのひはそうじしたりせんたくしたりします。",
+   "exampleMeaning": "假日又是打掃又是洗衣。"
+  },
+  {
+   "id": "n4-g-0031",
+   "pattern": "～と（條件）",
+   "reading": "",
+   "meaning": "「一～就～」（必然・自然結果）",
+   "structure": "動詞・形容詞普通形＋と",
+   "example": "このボタンを押すと、ドアが開きます。",
+   "exampleKana": "このボタンをおすと、ドアがひらきます。",
+   "exampleMeaning": "一按這個鈕，門就會開。"
+  },
+  {
+   "id": "n4-g-0032",
+   "pattern": "～ば（假定）",
+   "reading": "",
+   "meaning": "「如果～就～」",
+   "structure": "動詞ば形／い形（去い）＋ければ",
+   "example": "安ければ買います。",
+   "exampleKana": "やすければかいます。",
+   "exampleMeaning": "如果便宜就買。"
+  },
+  {
+   "id": "n4-g-0033",
+   "pattern": "～たら",
+   "reading": "",
+   "meaning": "「如果～、～之後」",
+   "structure": "動詞・形容詞・名詞た形＋ら",
+   "example": "家に着いたら、電話します。",
+   "exampleKana": "いえについたら、でんわします。",
+   "exampleMeaning": "到家後打電話給你。"
+  },
+  {
+   "id": "n4-g-0034",
+   "pattern": "～なら",
+   "reading": "",
+   "meaning": "「如果是～的話」（針對話題提建議）",
+   "structure": "名詞／普通形＋なら",
+   "example": "日本語を勉強するなら、この本がいいです。",
+   "exampleKana": "にほんごをべんきょうするなら、このほんがいいです。",
+   "exampleMeaning": "要學日語的話，這本書不錯。"
+  },
+  {
+   "id": "n4-g-0035",
+   "pattern": "～場合は",
+   "reading": "～ばあいは",
+   "meaning": "「～的情況下」",
+   "structure": "動詞・名詞の＋場合は",
+   "example": "遅れる場合は連絡してください。",
+   "exampleKana": "おくれるばあいはれんらくしてください。",
+   "exampleMeaning": "遲到的話請聯絡。"
+  },
+  {
+   "id": "n4-g-0036",
+   "pattern": "～てあげます／～てくれます／～てもらいます",
+   "reading": "",
+   "meaning": "授受表現：為別人做／別人為我做／請別人做",
+   "structure": "動詞て形＋あげます／くれます／もらいます",
+   "example": "友達が手伝ってくれました。",
+   "exampleKana": "ともだちがてつだってくれました。",
+   "exampleMeaning": "朋友幫了我。"
+  },
+  {
+   "id": "n4-g-0037",
+   "pattern": "～受身形（～される）",
+   "reading": "～うけみけい",
+   "meaning": "被動「被～」",
+   "structure": "五段：a＋れる／一段：られる",
+   "example": "先生に褒められました。",
+   "exampleKana": "せんせいにほめられました。",
+   "exampleMeaning": "被老師稱讚了。"
+  },
+  {
+   "id": "n4-g-0038",
+   "pattern": "～使役形（～させる）",
+   "reading": "～しえきけい",
+   "meaning": "使役「讓／使～」",
+   "structure": "五段：a＋せる／一段：させる",
+   "example": "母は弟に部屋を掃除させました。",
+   "exampleKana": "はははおとうとにへやをそうじさせました。",
+   "exampleMeaning": "媽媽讓弟弟打掃房間。"
+  },
+  {
+   "id": "n4-g-0039",
+   "pattern": "～なさい",
+   "reading": "",
+   "meaning": "「給我～」（長輩對晚輩的命令）",
+   "structure": "動詞ます形＋なさい",
+   "example": "早く起きなさい。",
+   "exampleKana": "はやくおきなさい。",
+   "exampleMeaning": "快點起床。"
+  },
+  {
+   "id": "n4-g-0040",
+   "pattern": "～そうです（樣態）",
+   "reading": "",
+   "meaning": "「看起來～、快要～」根據外觀判斷",
+   "structure": "動詞ます形／形容詞語幹＋そうです",
+   "example": "雨が降りそうです。",
+   "exampleKana": "あめがふりそうです。",
+   "exampleMeaning": "看起來要下雨了。"
+  },
+  {
+   "id": "n4-g-0041",
+   "pattern": "～そうです（傳聞）",
+   "reading": "",
+   "meaning": "「聽說～」轉述所聞",
+   "structure": "普通形＋そうです",
+   "example": "田中さんは来月結婚するそうです。",
+   "exampleKana": "たなかさんはらいげつけっこんするそうです。",
+   "exampleMeaning": "聽說田中先生下個月結婚。"
+  },
+  {
+   "id": "n4-g-0042",
+   "pattern": "～ようです／～みたいです",
+   "reading": "",
+   "meaning": "「好像～」根據觀察的推測",
+   "structure": "普通形（な形＋な／名詞＋の）＋ようです",
+   "example": "誰かいるようです。",
+   "exampleKana": "だれかいるようです。",
+   "exampleMeaning": "好像有人在。"
+  },
+  {
+   "id": "n4-g-0043",
+   "pattern": "～らしいです",
+   "reading": "",
+   "meaning": "「聽說～、似乎～」根據外部訊息",
+   "structure": "普通形＋らしいです",
+   "example": "あの店は今日休みらしいです。",
+   "exampleKana": "あのみせはきょうやすみらしいです。",
+   "exampleMeaning": "那家店今天好像沒開。"
+  },
+  {
+   "id": "n4-g-0044",
+   "pattern": "～てほしいです",
+   "reading": "",
+   "meaning": "「希望（某人）～」",
+   "structure": "動詞て形＋ほしいです",
+   "example": "もっと早く来てほしかったです。",
+   "exampleKana": "もっとはやくきてほしかったです。",
+   "exampleMeaning": "真希望你早點來。"
+  },
+  {
+   "id": "n4-g-0045",
+   "pattern": "～のがすきです",
+   "reading": "",
+   "meaning": "「喜歡做～」",
+   "structure": "動詞辭書形＋のが＋好きです",
+   "example": "私は本を読むのが好きです。",
+   "exampleKana": "わたしはほんをよむのがすきです。",
+   "exampleMeaning": "我喜歡看書。"
+  },
+  {
+   "id": "n4-g-0046",
+   "pattern": "～ことにします",
+   "reading": "",
+   "meaning": "「決定～」（說話者自己的決定）",
+   "structure": "動詞辭書形／ない形＋ことにします",
+   "example": "毎朝走ることにしました。",
+   "exampleKana": "まいあさはしることにしました。",
+   "exampleMeaning": "我決定每天早上跑步。"
+  },
+  {
+   "id": "n4-g-0047",
+   "pattern": "～ことになります",
+   "reading": "",
+   "meaning": "「（非個人決定而）決定為～」",
+   "structure": "動詞辭書形／ない形＋ことになります",
+   "example": "来月、大阪に転勤することになりました。",
+   "exampleKana": "らいげつ、おおさかにてんきんすることになりました。",
+   "exampleMeaning": "下個月要調職到大阪。"
+  },
+  {
+   "id": "n4-g-0048",
+   "pattern": "～たがる",
+   "reading": "",
+   "meaning": "「（第三人稱）想要～」",
+   "structure": "動詞ます形＋たがる",
+   "example": "弟は何でも自分でやりたがる。",
+   "exampleKana": "おとうとはなんでもじぶんでやりたがる。",
+   "exampleMeaning": "弟弟什麼都想自己做。"
+  },
+  {
+   "id": "n4-g-0049",
+   "pattern": "～てくれませんか",
+   "reading": "",
+   "meaning": "「能不能為我～？」（客氣請求）",
+   "structure": "動詞て形＋くれませんか",
+   "example": "ちょっと手伝ってくれませんか。",
+   "exampleKana": "ちょっとてつだってくれませんか。",
+   "exampleMeaning": "能不能幫我一下？"
+  },
+  {
+   "id": "n4-g-0050",
+   "pattern": "～てもらえませんか",
+   "reading": "",
+   "meaning": "「能否請你～？」（更客氣的請求）",
+   "structure": "動詞て形＋もらえませんか",
+   "example": "道を教えてもらえませんか。",
+   "exampleKana": "みちをおしえてもらえませんか。",
+   "exampleMeaning": "能否請你告訴我路怎麼走？"
+  },
+  {
+   "id": "n4-g-0051",
+   "pattern": "～させてください",
+   "reading": "",
+   "meaning": "「請讓我～」",
+   "structure": "動詞使役て形＋ください",
+   "example": "ぜひ私に説明させてください。",
+   "exampleKana": "ぜひわたしにせつめいさせてください。",
+   "exampleMeaning": "請務必讓我來說明。"
+  },
+  {
+   "id": "n4-g-0052",
+   "pattern": "お～ください",
+   "reading": "",
+   "meaning": "「請～」（尊敬的請求）",
+   "structure": "お＋動詞ます形＋ください",
+   "example": "こちらにお座りください。",
+   "exampleKana": "こちらにおすわりください。",
+   "exampleMeaning": "請坐這邊。"
+  },
+  {
+   "id": "n4-g-0053",
+   "pattern": "～てもいい？",
+   "reading": "",
+   "meaning": "「可以～嗎？」（口語許可）",
+   "structure": "動詞て形＋もいい",
+   "example": "この席、座ってもいいですか。",
+   "exampleKana": "このせき、すわってもいいですか。",
+   "exampleMeaning": "這位子可以坐嗎？"
+  },
+  {
+   "id": "n4-g-0054",
+   "pattern": "～のように／～のような",
+   "reading": "",
+   "meaning": "「像～一樣」",
+   "structure": "名詞＋の＋ように／ような",
+   "example": "彼女は花のように笑う。",
+   "exampleKana": "かのじょははなのようにわらう。",
+   "exampleMeaning": "她笑得像花一樣。"
+  },
+  {
+   "id": "n4-g-0055",
+   "pattern": "～まだ～ていません",
+   "reading": "",
+   "meaning": "「還沒～」",
+   "structure": "まだ＋動詞て形＋いません",
+   "example": "昼ご飯はまだ食べていません。",
+   "exampleKana": "ひるごはんはまだたべていません。",
+   "exampleMeaning": "還沒吃午餐。"
+  }
+ ]
+}

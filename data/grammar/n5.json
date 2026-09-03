@@ -1,0 +1,467 @@
+{
+ "level": "N5",
+ "type": "grammar",
+ "count": 46,
+ "items": [
+  {
+   "id": "n5-g-0001",
+   "pattern": "～は～です",
+   "reading": "",
+   "meaning": "「～是～」（斷定句）",
+   "structure": "名詞＋は＋名詞＋です",
+   "example": "わたしは学生です。",
+   "exampleKana": "わたしはがくせいです。",
+   "exampleMeaning": "我是學生。"
+  },
+  {
+   "id": "n5-g-0002",
+   "pattern": "～は～ではありません",
+   "reading": "",
+   "meaning": "「～不是～」（否定斷定）",
+   "structure": "名詞＋は＋名詞＋ではありません",
+   "example": "これは私のではありません。",
+   "exampleKana": "これはわたしのではありません。",
+   "exampleMeaning": "這不是我的。"
+  },
+  {
+   "id": "n5-g-0003",
+   "pattern": "～は～ですか",
+   "reading": "",
+   "meaning": "「～是～嗎？」（疑問）",
+   "structure": "名詞＋は＋名詞＋ですか",
+   "example": "あの人は先生ですか。",
+   "exampleKana": "あのひとはせんせいですか。",
+   "exampleMeaning": "那個人是老師嗎？"
+  },
+  {
+   "id": "n5-g-0004",
+   "pattern": "～も",
+   "reading": "",
+   "meaning": "「也」",
+   "structure": "名詞＋も",
+   "example": "私も日本語を勉強しています。",
+   "exampleKana": "わたしもにほんごをべんきょうしています。",
+   "exampleMeaning": "我也在學日語。"
+  },
+  {
+   "id": "n5-g-0005",
+   "pattern": "～の～",
+   "reading": "",
+   "meaning": "「的」（所屬・修飾）",
+   "structure": "名詞＋の＋名詞",
+   "example": "これは日本語の本です。",
+   "exampleKana": "これはにほんごのほんです。",
+   "exampleMeaning": "這是日語的書。"
+  },
+  {
+   "id": "n5-g-0006",
+   "pattern": "～を＋他動詞",
+   "reading": "",
+   "meaning": "標示動作的受詞",
+   "structure": "名詞＋を＋他動詞",
+   "example": "ご飯を食べます。",
+   "exampleKana": "ごはんをたべます。",
+   "exampleMeaning": "吃飯。"
+  },
+  {
+   "id": "n5-g-0007",
+   "pattern": "～が＋自動詞／存在",
+   "reading": "",
+   "meaning": "標示主語",
+   "structure": "名詞＋が＋動詞",
+   "example": "雨が降っています。",
+   "exampleKana": "あめがふっています。",
+   "exampleMeaning": "正在下雨。"
+  },
+  {
+   "id": "n5-g-0008",
+   "pattern": "～に（時間）",
+   "reading": "",
+   "meaning": "表示動作發生的時間點",
+   "structure": "時間＋に",
+   "example": "七時に起きます。",
+   "exampleKana": "しちじにおきます。",
+   "exampleMeaning": "七點起床。"
+  },
+  {
+   "id": "n5-g-0009",
+   "pattern": "～へ／～に（方向）",
+   "reading": "",
+   "meaning": "「往、去」表示移動方向",
+   "structure": "場所＋へ／に＋行きます・来ます・帰ります",
+   "example": "学校へ行きます。",
+   "exampleKana": "がっこうへいきます。",
+   "exampleMeaning": "去學校。"
+  },
+  {
+   "id": "n5-g-0010",
+   "pattern": "～で（場所）",
+   "reading": "",
+   "meaning": "表示動作進行的場所",
+   "structure": "場所＋で＋動詞",
+   "example": "図書館で勉強します。",
+   "exampleKana": "としょかんでべんきょうします。",
+   "exampleMeaning": "在圖書館唸書。"
+  },
+  {
+   "id": "n5-g-0011",
+   "pattern": "～で（手段）",
+   "reading": "",
+   "meaning": "「用、搭乘」表示方法或交通工具",
+   "structure": "名詞＋で",
+   "example": "バスで行きます。",
+   "exampleKana": "バスでいきます。",
+   "exampleMeaning": "搭公車去。"
+  },
+  {
+   "id": "n5-g-0012",
+   "pattern": "～と（共同）",
+   "reading": "",
+   "meaning": "「和～一起」",
+   "structure": "名詞＋と＋動詞",
+   "example": "友達と映画を見ます。",
+   "exampleKana": "ともだちとえいがをみます。",
+   "exampleMeaning": "和朋友看電影。"
+  },
+  {
+   "id": "n5-g-0013",
+   "pattern": "～から～まで",
+   "reading": "",
+   "meaning": "「從～到～」",
+   "structure": "名詞＋から＋名詞＋まで",
+   "example": "九時から五時まで働きます。",
+   "exampleKana": "くじからごじまではたらきます。",
+   "exampleMeaning": "從九點工作到五點。"
+  },
+  {
+   "id": "n5-g-0014",
+   "pattern": "～ています",
+   "reading": "",
+   "meaning": "表示正在進行或狀態的持續",
+   "structure": "動詞て形＋います",
+   "example": "今、新聞を読んでいます。",
+   "exampleKana": "いま、しんぶんをよんでいます。",
+   "exampleMeaning": "現在正在看報。"
+  },
+  {
+   "id": "n5-g-0015",
+   "pattern": "～てください",
+   "reading": "",
+   "meaning": "「請～」（請求・指示）",
+   "structure": "動詞て形＋ください",
+   "example": "ここに名前を書いてください。",
+   "exampleKana": "ここになまえをかいてください。",
+   "exampleMeaning": "請在這裡寫名字。"
+  },
+  {
+   "id": "n5-g-0016",
+   "pattern": "～ないでください",
+   "reading": "",
+   "meaning": "「請不要～」",
+   "structure": "動詞ない形＋でください",
+   "example": "ここで写真を撮らないでください。",
+   "exampleKana": "ここでしゃしんをとらないでください。",
+   "exampleMeaning": "請不要在這裡拍照。"
+  },
+  {
+   "id": "n5-g-0017",
+   "pattern": "～たいです",
+   "reading": "",
+   "meaning": "「想要～」（說話者的願望）",
+   "structure": "動詞ます形＋たいです",
+   "example": "日本へ行きたいです。",
+   "exampleKana": "にほんへいきたいです。",
+   "exampleMeaning": "想去日本。"
+  },
+  {
+   "id": "n5-g-0018",
+   "pattern": "～ましょう",
+   "reading": "",
+   "meaning": "「一起～吧」（邀約）",
+   "structure": "動詞ます形＋ましょう",
+   "example": "一緒に昼ご飯を食べましょう。",
+   "exampleKana": "いっしょにひるごはんをたべましょう。",
+   "exampleMeaning": "一起吃午餐吧。"
+  },
+  {
+   "id": "n5-g-0019",
+   "pattern": "～ませんか",
+   "reading": "",
+   "meaning": "「要不要～？」（邀請）",
+   "structure": "動詞ます形＋ませんか",
+   "example": "週末、公園へ行きませんか。",
+   "exampleKana": "しゅうまつ、こうえんへいきませんか。",
+   "exampleMeaning": "週末要不要去公園？"
+  },
+  {
+   "id": "n5-g-0020",
+   "pattern": "～が欲しいです",
+   "reading": "～がほしいです",
+   "meaning": "「想要～（東西）」",
+   "structure": "名詞＋が欲しいです",
+   "example": "新しい傘が欲しいです。",
+   "exampleKana": "あたらしいかさがほしいです。",
+   "exampleMeaning": "想要一把新傘。"
+  },
+  {
+   "id": "n5-g-0021",
+   "pattern": "～があります／います",
+   "reading": "",
+   "meaning": "「有～」（無生命／有生命的存在）",
+   "structure": "名詞＋が＋あります（物）／います（人・動物）",
+   "example": "机の上に本があります。",
+   "exampleKana": "つくえのうえにほんがあります。",
+   "exampleMeaning": "桌上有書。"
+  },
+  {
+   "id": "n5-g-0022",
+   "pattern": "～は～があります",
+   "reading": "",
+   "meaning": "「～有～」表示所有",
+   "structure": "名詞１＋は＋名詞２＋があります",
+   "example": "私は車があります。",
+   "exampleKana": "わたしはくるまがあります。",
+   "exampleMeaning": "我有車。"
+  },
+  {
+   "id": "n5-g-0023",
+   "pattern": "～より～のほうが",
+   "reading": "",
+   "meaning": "「比起～，～比較…」",
+   "structure": "名詞１＋より＋名詞２＋のほうが＋形容詞",
+   "example": "電車よりバスのほうが安いです。",
+   "exampleKana": "でんしゃよりバスのほうがやすいです。",
+   "exampleMeaning": "比起電車，公車比較便宜。"
+  },
+  {
+   "id": "n5-g-0024",
+   "pattern": "～の中で～が一番",
+   "reading": "～のなかで～がいちばん",
+   "meaning": "「在～之中，～最…」",
+   "structure": "名詞＋の中で＋名詞＋が一番＋形容詞",
+   "example": "果物の中でりんごが一番好きです。",
+   "exampleKana": "くだもののなかでりんごがいちばんすきです。",
+   "exampleMeaning": "水果之中最喜歡蘋果。"
+  },
+  {
+   "id": "n5-g-0025",
+   "pattern": "形容詞＋名詞",
+   "reading": "",
+   "meaning": "い形容詞・な形容詞修飾名詞",
+   "structure": "い形容詞＋名詞／な形容詞＋な＋名詞",
+   "example": "大きい犬と静かな町。",
+   "exampleKana": "おおきいいぬとしずかなまち。",
+   "exampleMeaning": "大狗和安靜的城鎮。"
+  },
+  {
+   "id": "n5-g-0026",
+   "pattern": "～くない／～くありません",
+   "reading": "",
+   "meaning": "い形容詞的否定",
+   "structure": "い形容詞（去い）＋くないです",
+   "example": "この部屋は広くないです。",
+   "exampleKana": "このへやはひろくないです。",
+   "exampleMeaning": "這房間不大。"
+  },
+  {
+   "id": "n5-g-0027",
+   "pattern": "～かった／～くなかった",
+   "reading": "",
+   "meaning": "い形容詞的過去式與過去否定",
+   "structure": "い形容詞（去い）＋かったです／くなかったです",
+   "example": "旅行は楽しかったです。",
+   "exampleKana": "りょこうはたのしかったです。",
+   "exampleMeaning": "旅行很開心。"
+  },
+  {
+   "id": "n5-g-0028",
+   "pattern": "～でした／～ではありませんでした",
+   "reading": "",
+   "meaning": "名詞・な形容詞的過去與過去否定",
+   "structure": "名詞／な形容詞＋でした",
+   "example": "昨日は休みでした。",
+   "exampleKana": "きのうはやすみでした。",
+   "exampleMeaning": "昨天是假日。"
+  },
+  {
+   "id": "n5-g-0029",
+   "pattern": "～ました／～ませんでした",
+   "reading": "",
+   "meaning": "動詞的過去與過去否定",
+   "structure": "動詞ます形＋ました／ませんでした",
+   "example": "昨日、映画を見ました。",
+   "exampleKana": "きのう、えいがをみました。",
+   "exampleMeaning": "昨天看了電影。"
+  },
+  {
+   "id": "n5-g-0030",
+   "pattern": "～ませんでした",
+   "reading": "",
+   "meaning": "動詞過去否定「（過去）沒有～」",
+   "structure": "動詞ます形＋ませんでした",
+   "example": "朝ご飯を食べませんでした。",
+   "exampleKana": "あさごはんをたべませんでした。",
+   "exampleMeaning": "沒吃早餐。"
+  },
+  {
+   "id": "n5-g-0031",
+   "pattern": "～ながら",
+   "reading": "",
+   "meaning": "「一邊～一邊～」",
+   "structure": "動詞ます形＋ながら",
+   "example": "音楽を聞きながら勉強します。",
+   "exampleKana": "おんがくをききながらべんきょうします。",
+   "exampleMeaning": "一邊聽音樂一邊唸書。"
+  },
+  {
+   "id": "n5-g-0032",
+   "pattern": "～てから",
+   "reading": "",
+   "meaning": "「～之後（再）～」",
+   "structure": "動詞て形＋から",
+   "example": "ご飯を食べてから、出かけます。",
+   "exampleKana": "ごはんをたべてから、でかけます。",
+   "exampleMeaning": "吃完飯後再出門。"
+  },
+  {
+   "id": "n5-g-0033",
+   "pattern": "～前に",
+   "reading": "～まえに",
+   "meaning": "「在～之前」",
+   "structure": "動詞辭書形／名詞＋の＋前に",
+   "example": "寝る前に歯を磨きます。",
+   "exampleKana": "ねるまえにはをみがきます。",
+   "exampleMeaning": "睡前刷牙。"
+  },
+  {
+   "id": "n5-g-0034",
+   "pattern": "～後で",
+   "reading": "～あとで",
+   "meaning": "「在～之後」",
+   "structure": "動詞た形／名詞＋の＋後で",
+   "example": "仕事の後で買い物します。",
+   "exampleKana": "しごとのあとでかいものします。",
+   "exampleMeaning": "下班後去買東西。"
+  },
+  {
+   "id": "n5-g-0035",
+   "pattern": "～とき",
+   "reading": "",
+   "meaning": "「～的時候」",
+   "structure": "動詞・形容詞・名詞の＋とき",
+   "example": "子供のとき、よく泳ぎました。",
+   "exampleKana": "こどものとき、およぎました。",
+   "exampleMeaning": "小時候常游泳。"
+  },
+  {
+   "id": "n5-g-0036",
+   "pattern": "～てもいいです",
+   "reading": "",
+   "meaning": "「可以～」（許可）",
+   "structure": "動詞て形＋もいいです",
+   "example": "ここに座ってもいいですか。",
+   "exampleKana": "ここにすわってもいいですか。",
+   "exampleMeaning": "可以坐這裡嗎？"
+  },
+  {
+   "id": "n5-g-0037",
+   "pattern": "～てはいけません",
+   "reading": "",
+   "meaning": "「不可以～」（禁止）",
+   "structure": "動詞て形＋はいけません",
+   "example": "ここでタバコを吸ってはいけません。",
+   "exampleKana": "ここでタバコをすってはいけません。",
+   "exampleMeaning": "這裡不可以抽菸。"
+  },
+  {
+   "id": "n5-g-0038",
+   "pattern": "～なければなりません",
+   "reading": "",
+   "meaning": "「必須～」（義務）",
+   "structure": "動詞ない形（去ない）＋なければなりません",
+   "example": "明日までに出さなければなりません。",
+   "exampleKana": "あしたまでにださなければなりません。",
+   "exampleMeaning": "明天前必須交出。"
+  },
+  {
+   "id": "n5-g-0039",
+   "pattern": "～なくてもいいです",
+   "reading": "",
+   "meaning": "「不～也可以」",
+   "structure": "動詞ない形（去ない）＋なくてもいいです",
+   "example": "今日は来なくてもいいです。",
+   "exampleKana": "きょうはこなくてもいいです。",
+   "exampleMeaning": "今天不來也沒關係。"
+  },
+  {
+   "id": "n5-g-0040",
+   "pattern": "～が、～",
+   "reading": "",
+   "meaning": "「雖然～但是～」（逆接）",
+   "structure": "句子＋が、＋句子",
+   "example": "高いですが、おいしいです。",
+   "exampleKana": "たかいですが、おいしいです。",
+   "exampleMeaning": "雖然貴，但很好吃。"
+  },
+  {
+   "id": "n5-g-0041",
+   "pattern": "～から（原因）",
+   "reading": "",
+   "meaning": "「因為～」表示理由",
+   "structure": "句子（普通形・です／ます）＋から",
+   "example": "寒いから、窓を閉めます。",
+   "exampleKana": "さむいから、まどをしめます。",
+   "exampleMeaning": "因為冷，所以關窗。"
+  },
+  {
+   "id": "n5-g-0042",
+   "pattern": "～ね",
+   "reading": "",
+   "meaning": "「～吧、～呢」表示確認或同意",
+   "structure": "句子＋ね",
+   "example": "今日はいい天気ですね。",
+   "exampleKana": "きょうはいいてんきですね。",
+   "exampleMeaning": "今天天氣真好呢。"
+  },
+  {
+   "id": "n5-g-0043",
+   "pattern": "～よ",
+   "reading": "",
+   "meaning": "「～喔」表示提醒或告知新資訊",
+   "structure": "句子＋よ",
+   "example": "もう時間ですよ。",
+   "exampleKana": "もうじかんですよ。",
+   "exampleMeaning": "已經到時間囉。"
+  },
+  {
+   "id": "n5-g-0044",
+   "pattern": "～でしょう",
+   "reading": "",
+   "meaning": "「～吧」表示推測",
+   "structure": "名詞・形容詞・動詞普通形＋でしょう",
+   "example": "明日は雨でしょう。",
+   "exampleKana": "あしたはあめでしょう。",
+   "exampleMeaning": "明天大概會下雨吧。"
+  },
+  {
+   "id": "n5-g-0045",
+   "pattern": "まだ～ていません",
+   "reading": "",
+   "meaning": "「還沒～」",
+   "structure": "まだ＋動詞て形＋いません",
+   "example": "まだ宿題をしていません。",
+   "exampleKana": "まだしゅくだいをしていません。",
+   "exampleMeaning": "還沒寫作業。"
+  },
+  {
+   "id": "n5-g-0046",
+   "pattern": "もう～ました",
+   "reading": "",
+   "meaning": "「已經～了」",
+   "structure": "もう＋動詞ました",
+   "example": "もう昼ご飯を食べました。",
+   "exampleKana": "もうひるごはんをたべました。",
+   "exampleMeaning": "已經吃過午餐了。"
+  }
+ ]
+}

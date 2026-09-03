@@ -1,0 +1,17 @@
+{
+  "name": "jlpt_app",
+  "version": "1.0.0",
+  "description": "手機優先的 **PWA**（漸進式網頁應用程式），用來練習 JLPT N1～N5 的**單字**與**文法**， 另附一組與級別無關的**生活旅行用語**（情境會話、日本人實際用法、中日漢字差異）。 可加到手機主畫面、支援離線使用，所有學習資料只存在你的瀏覽器裡，不需要註冊、不需要後端伺服器。",
+  "main": "sw.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "puppeteer": "^25.9.0",
+    "puppeteer-core": "^25.9.0"
+  }
+}

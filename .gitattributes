@@ -1,0 +1,4 @@
+# 統一以 LF 儲存文字檔，避免跨平台換行差異
+* text=auto eol=lf
+*.png binary
+*.ico binary

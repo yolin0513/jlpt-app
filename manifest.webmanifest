@@ -1,0 +1,17 @@
+{
+  "name": "JLPT 練習 — 日文檢定 N1-N5",
+  "short_name": "JLPT 練習",
+  "description": "N1~N5 單字與文法練習：閃卡、四選一測驗、間隔重複、錯題本、學習統計。",
+  "lang": "zh-Hant",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d1117",
+  "theme_color": "#1f6feb",
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

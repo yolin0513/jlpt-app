@@ -1,0 +1,477 @@
+{
+ "level": "N1",
+ "type": "grammar",
+ "count": 47,
+ "items": [
+  {
+   "id": "n1-g-0001",
+   "pattern": "～をもって",
+   "reading": "",
+   "meaning": "「以～、憑藉～；於～（時間）」（正式）",
+   "structure": "名詞＋をもって",
+   "example": "本日をもって閉店いたします。",
+   "exampleKana": "ほんじつをもってへいてんいたします。",
+   "exampleMeaning": "本店於今日結束營業。"
+  },
+  {
+   "id": "n1-g-0002",
+   "pattern": "～をよそに",
+   "reading": "",
+   "meaning": "「無視～、不顧～」",
+   "structure": "名詞＋をよそに",
+   "example": "親の心配をよそに、彼は旅に出た。",
+   "exampleKana": "おやのしんぱいをよそに、かれはたびにでた。",
+   "exampleMeaning": "他不顧父母擔心就去旅行了。"
+  },
+  {
+   "id": "n1-g-0003",
+   "pattern": "～を余儀なくされる",
+   "reading": "～をよぎなくされる",
+   "meaning": "「被迫～、不得不～」",
+   "structure": "名詞＋を余儀なくされる",
+   "example": "資金不足で計画の中止を余儀なくされた。",
+   "exampleKana": "しきんぶそくでけいかくのちゅうしをよぎなくされた。",
+   "exampleMeaning": "因資金不足被迫中止計畫。"
+  },
+  {
+   "id": "n1-g-0004",
+   "pattern": "～ならではの",
+   "reading": "",
+   "meaning": "「只有～才有的」",
+   "structure": "名詞＋ならではの",
+   "example": "プロならではの技術だ。",
+   "exampleKana": "プロならではのぎじゅつだ。",
+   "exampleMeaning": "這是專家才有的技術。"
+  },
+  {
+   "id": "n1-g-0005",
+   "pattern": "～いかんによらず／～いかんにかかわらず",
+   "reading": "",
+   "meaning": "「無論～如何」（正式）",
+   "structure": "名詞（＋の）＋いかんによらず",
+   "example": "理由のいかんによらず、遅刻は認めない。",
+   "exampleKana": "りゆうのいかんによらず、ちこくはみとめない。",
+   "exampleMeaning": "不論理由為何都不接受遲到。"
+  },
+  {
+   "id": "n1-g-0006",
+   "pattern": "～をものともせず",
+   "reading": "",
+   "meaning": "「不畏～、不把～當一回事」",
+   "structure": "名詞＋をものともせず",
+   "example": "荒天をものともせず出港した。",
+   "exampleKana": "こうてんをものともせずしゅっこうした。",
+   "exampleMeaning": "不畏惡劣天候出港了。"
+  },
+  {
+   "id": "n1-g-0007",
+   "pattern": "～にひきかえ",
+   "reading": "",
+   "meaning": "「與～相反、相較之下」",
+   "structure": "名詞（＋の）／普通形＋の＋にひきかえ",
+   "example": "兄の慎重さにひきかえ、弟は大胆だ。",
+   "exampleKana": "あにのしんちょうさにひきかえ、おとうとはだいたんだ。",
+   "exampleMeaning": "相較於哥哥的謹慎，弟弟很大膽。"
+  },
+  {
+   "id": "n1-g-0008",
+   "pattern": "～きらいがある",
+   "reading": "",
+   "meaning": "「有～的傾向」（多為負面）",
+   "structure": "動詞辭書形／名詞＋の＋きらいがある",
+   "example": "彼は物事を悲観的に見るきらいがある。",
+   "exampleKana": "かれはものごとをひかんてきにみるきらいがある。",
+   "exampleMeaning": "他有把事情看得悲觀的傾向。"
+  },
+  {
+   "id": "n1-g-0009",
+   "pattern": "～に足る",
+   "reading": "～にたる",
+   "meaning": "「值得～」",
+   "structure": "動詞辭書形／名詞＋に足る",
+   "example": "信頼するに足る人物だ。",
+   "exampleKana": "しんらいするにたるじんぶつだ。",
+   "exampleMeaning": "是值得信賴的人。"
+  },
+  {
+   "id": "n1-g-0010",
+   "pattern": "～すら",
+   "reading": "",
+   "meaning": "「連～都」（極端例子）",
+   "structure": "名詞＋すら",
+   "example": "専門家すら答えられない問題だ。",
+   "exampleKana": "せんもんかすらこたえられないもんだいだ。",
+   "exampleMeaning": "連專家都答不出的問題。"
+  },
+  {
+   "id": "n1-g-0011",
+   "pattern": "～だに",
+   "reading": "",
+   "meaning": "「連～也（不）；光是～就」",
+   "structure": "動詞辭書形／名詞＋だに",
+   "example": "そんなことは想像だにしなかった。",
+   "exampleKana": "そんなことはそうぞうだにしなかった。",
+   "exampleMeaning": "那種事我連想都沒想過。"
+  },
+  {
+   "id": "n1-g-0012",
+   "pattern": "～ともなると／～ともなれば",
+   "reading": "",
+   "meaning": "「一旦到了～的地步」",
+   "structure": "名詞／動詞辭書形＋ともなると",
+   "example": "管理職ともなると、責任も重い。",
+   "exampleKana": "かんりしょくともなると、せきにんもおもい。",
+   "exampleMeaning": "一旦當上主管，責任也重。"
+  },
+  {
+   "id": "n1-g-0013",
+   "pattern": "～を皮切りに",
+   "reading": "～をかわきりに",
+   "meaning": "「以～為開端」",
+   "structure": "名詞＋を皮切りに",
+   "example": "東京を皮切りに全国ツアーが始まった。",
+   "exampleKana": "とうきょうをかわきりにぜんこくツアーがはじまった。",
+   "exampleMeaning": "以東京為起點展開全國巡演。"
+  },
+  {
+   "id": "n1-g-0014",
+   "pattern": "～べく",
+   "reading": "",
+   "meaning": "「為了～」（正式・書面）",
+   "structure": "動詞辭書形＋べく",
+   "example": "真相を確かめるべく調査を始めた。",
+   "exampleKana": "しんそうをたしかめるべくちょうさをはじめた。",
+   "exampleMeaning": "為查明真相而展開調查。"
+  },
+  {
+   "id": "n1-g-0015",
+   "pattern": "～んがために",
+   "reading": "",
+   "meaning": "「為了～」（強烈目的・文語）",
+   "structure": "動詞ない形（去ない）＋んがために",
+   "example": "勝たんがために手段を選ばない。",
+   "exampleKana": "かたんがためにしゅだんをえらばない。",
+   "exampleMeaning": "為求勝不擇手段。"
+  },
+  {
+   "id": "n1-g-0016",
+   "pattern": "～や否や",
+   "reading": "～やいなや",
+   "meaning": "「一～就立刻～」",
+   "structure": "動詞辭書形＋や否や",
+   "example": "ベルが鳴るや否や、生徒は教室を飛び出した。",
+   "exampleKana": "ベルがなるやいなや、せいとはきょうしつをとびだした。",
+   "exampleMeaning": "鐘一響學生就衝出教室。"
+  },
+  {
+   "id": "n1-g-0017",
+   "pattern": "～が早いか",
+   "reading": "～がはやいか",
+   "meaning": "「剛一～就～」",
+   "structure": "動詞辭書形／た形＋が早いか",
+   "example": "席に着くが早いか、彼は話し始めた。",
+   "exampleKana": "せきにつくがはやいか、かれははなしはじめた。",
+   "exampleMeaning": "他一坐下就開始說話。"
+  },
+  {
+   "id": "n1-g-0018",
+   "pattern": "～なり",
+   "reading": "",
+   "meaning": "「一～就立刻～」（同主語・意外行為）",
+   "structure": "動詞辭書形＋なり",
+   "example": "彼は帰ってくるなり、部屋に閉じこもった。",
+   "exampleKana": "かれはかえってくるなり、へやにとじこもった。",
+   "exampleMeaning": "他一回來就把自己關在房裡。"
+  },
+  {
+   "id": "n1-g-0019",
+   "pattern": "～ところを",
+   "reading": "",
+   "meaning": "「正當～的時候（打擾了）」（客套）",
+   "structure": "動詞辭書形／ている＋ところを",
+   "example": "お忙しいところを恐縮です。",
+   "exampleKana": "おいそがしいところをきょうしゅくです。",
+   "exampleMeaning": "百忙之中打擾，實在抱歉。"
+  },
+  {
+   "id": "n1-g-0020",
+   "pattern": "～とはいえ",
+   "reading": "",
+   "meaning": "「雖說～，但～」",
+   "structure": "普通形／名詞＋とはいえ",
+   "example": "春とはいえ、まだ肌寒い。",
+   "exampleKana": "はるとはいえ、まだはだざむい。",
+   "exampleMeaning": "雖說是春天，還是有點冷。"
+  },
+  {
+   "id": "n1-g-0021",
+   "pattern": "～まじき",
+   "reading": "",
+   "meaning": "「不該有的～」（強烈譴責）",
+   "structure": "動詞辭書形＋まじき＋名詞",
+   "example": "教師にあるまじき行為だ。",
+   "exampleKana": "きょうしにあるまじきこういだ。",
+   "exampleMeaning": "是教師不該有的行為。"
+  },
+  {
+   "id": "n1-g-0022",
+   "pattern": "～ならいざ知らず",
+   "reading": "～ならいざしらず",
+   "meaning": "「若是～還說得過去，但～」",
+   "structure": "名詞／普通形＋ならいざ知らず",
+   "example": "新人ならいざ知らず、ベテランがこのミスとは。",
+   "exampleKana": "しんじんならいざしらず、ベテランがこのミスとは。",
+   "exampleMeaning": "若是新人也就罷了，老手竟犯這種錯。"
+  },
+  {
+   "id": "n1-g-0023",
+   "pattern": "～に至っては",
+   "reading": "～にいたっては",
+   "meaning": "「至於～更是～」",
+   "structure": "名詞＋に至っては",
+   "example": "弟に至っては、返事すらしない。",
+   "exampleKana": "おとうとにいたっては、へんじすらしない。",
+   "exampleMeaning": "至於弟弟，連回應都沒有。"
+  },
+  {
+   "id": "n1-g-0024",
+   "pattern": "～きわまりない",
+   "reading": "",
+   "meaning": "「極其～、～至極」",
+   "structure": "な形容詞語幹（＋なこと）＋きわまりない",
+   "example": "危険極まりない運転だった。",
+   "exampleKana": "きけんきわまりないうんてんだった。",
+   "exampleMeaning": "是極其危險的駕駛。"
+  },
+  {
+   "id": "n1-g-0025",
+   "pattern": "～ずにはおかない",
+   "reading": "",
+   "meaning": "「必定會～、不～不罷休」",
+   "structure": "動詞ない形（去ない）＋ずにはおかない",
+   "example": "その映画は観る者を感動させずにはおかない。",
+   "exampleKana": "そのえいがはみるものをかんどうさせずにはおかない。",
+   "exampleMeaning": "那部電影必定會讓觀眾感動。"
+  },
+  {
+   "id": "n1-g-0026",
+   "pattern": "～ずにはいられない",
+   "reading": "",
+   "meaning": "「不禁～、忍不住～」",
+   "structure": "動詞ない形（去ない）＋ずにはいられない",
+   "example": "あの光景を見て、涙を流さずにはいられなかった。",
+   "exampleKana": "あのこうけいをみて、なみだをながさずにはいられなかった。",
+   "exampleMeaning": "看到那幕，不禁落淚。"
+  },
+  {
+   "id": "n1-g-0027",
+   "pattern": "～を禁じ得ない",
+   "reading": "～をきんじえない",
+   "meaning": "「不禁感到～」（書面）",
+   "structure": "名詞＋を禁じ得ない",
+   "example": "その知らせに驚きを禁じ得ない。",
+   "exampleKana": "そのしらせにおどろきをきんじえない。",
+   "exampleMeaning": "對那個消息不禁感到震驚。"
+  },
+  {
+   "id": "n1-g-0028",
+   "pattern": "～に堪えない",
+   "reading": "～にたえない",
+   "meaning": "「不堪～、不勝～」",
+   "structure": "名詞／動詞辭書形＋に堪えない",
+   "example": "その報道は見るに堪えない。",
+   "exampleKana": "そのほうどうはみるにたえない。",
+   "exampleMeaning": "那則報導令人不忍卒睹。"
+  },
+  {
+   "id": "n1-g-0029",
+   "pattern": "～に堪える",
+   "reading": "～にたえる",
+   "meaning": "「經得起～、值得～」",
+   "structure": "名詞／動詞辭書形＋に堪える",
+   "example": "大人の鑑賞に堪える作品だ。",
+   "exampleKana": "おとなのかんしょうにたえるさくひんだ。",
+   "exampleMeaning": "是經得起成人品味的作品。"
+  },
+  {
+   "id": "n1-g-0030",
+   "pattern": "～を余儀なくさせる",
+   "reading": "～をよぎなくさせる",
+   "meaning": "「迫使～」",
+   "structure": "名詞＋を余儀なくさせる",
+   "example": "不況が事業の縮小を余儀なくさせた。",
+   "exampleKana": "ふきょうがじぎょうのしゅくしょうをよぎなくさせた。",
+   "exampleMeaning": "不景氣迫使事業縮編。"
+  },
+  {
+   "id": "n1-g-0031",
+   "pattern": "～に至る",
+   "reading": "～にいたる",
+   "meaning": "「到達～的地步」",
+   "structure": "動詞辭書形／名詞＋に至る",
+   "example": "長い議論の末、中止を決定するに至った。",
+   "exampleKana": "ながいぎろんのすえ、ちゅうしをけっていするにいたった。",
+   "exampleMeaning": "經過長時間討論，最終決定中止。"
+  },
+  {
+   "id": "n1-g-0032",
+   "pattern": "～に至るまで",
+   "reading": "～にいたるまで",
+   "meaning": "「甚至到～、直至～」",
+   "structure": "名詞＋に至るまで",
+   "example": "服装から言葉遣いに至るまで指導された。",
+   "exampleKana": "ふくそうからことばづかいにいたるまでしどうされた。",
+   "exampleMeaning": "從服裝到用詞都被指導。"
+  },
+  {
+   "id": "n1-g-0033",
+   "pattern": "～をおいて",
+   "reading": "",
+   "meaning": "「除了～（沒有別的）」",
+   "structure": "名詞＋をおいて",
+   "example": "この仕事を任せられるのは彼をおいて他にいない。",
+   "exampleKana": "このしごとをまかせられるのはかれをおいてほかにいない。",
+   "exampleMeaning": "能託付這工作的非他莫屬。"
+  },
+  {
+   "id": "n1-g-0034",
+   "pattern": "～ながらに／～ながらの",
+   "reading": "",
+   "meaning": "「保持～的狀態、～著」",
+   "structure": "名詞／動詞ます形＋ながらの",
+   "example": "彼女は涙ながらに事情を語った。",
+   "exampleKana": "かのじょはなみだながらにじじょうをかたった。",
+   "exampleMeaning": "她含淚訴說了原委。"
+  },
+  {
+   "id": "n1-g-0035",
+   "pattern": "～まみれ",
+   "reading": "",
+   "meaning": "「滿是～、沾滿～」",
+   "structure": "名詞＋まみれ",
+   "example": "泥まみれになって働いた。",
+   "exampleKana": "どろまみれになってはたらいた。",
+   "exampleMeaning": "渾身是泥地工作。"
+  },
+  {
+   "id": "n1-g-0036",
+   "pattern": "～ずくめ",
+   "reading": "",
+   "meaning": "「清一色～、淨是～」",
+   "structure": "名詞＋ずくめ",
+   "example": "今年はいいことずくめだった。",
+   "exampleKana": "ことしはいいことずくめだった。",
+   "exampleMeaning": "今年淨是好事。"
+  },
+  {
+   "id": "n1-g-0037",
+   "pattern": "～めく",
+   "reading": "",
+   "meaning": "「有～的樣子、帶有～氣息」",
+   "structure": "名詞＋めく",
+   "example": "ようやく春めいてきた。",
+   "exampleKana": "ようやくはるめいてきた。",
+   "exampleMeaning": "終於有春天的氣息了。"
+  },
+  {
+   "id": "n1-g-0038",
+   "pattern": "～ごとし／～ごとく／～ごとき",
+   "reading": "",
+   "meaning": "「如同～」（文語）",
+   "structure": "名詞＋の＋ごとし",
+   "example": "光陰矢のごとし。",
+   "exampleKana": "こういんやのごとし。",
+   "exampleMeaning": "光陰似箭。"
+  },
+  {
+   "id": "n1-g-0039",
+   "pattern": "～いかんだ",
+   "reading": "",
+   "meaning": "「取決於～如何」",
+   "structure": "名詞（＋の）＋いかんだ",
+   "example": "成功するかは君の努力いかんだ。",
+   "exampleKana": "せいこうするかはきみのどりょくいかんだ。",
+   "exampleMeaning": "能否成功取決於你的努力。"
+  },
+  {
+   "id": "n1-g-0040",
+   "pattern": "～たりとも",
+   "reading": "",
+   "meaning": "「哪怕～也（不）」",
+   "structure": "一＋量詞＋たりとも",
+   "example": "一日たりとも忘れたことはない。",
+   "exampleKana": "いちにちたりともわすれたことはない。",
+   "exampleMeaning": "沒有一天忘記過。"
+  },
+  {
+   "id": "n1-g-0041",
+   "pattern": "～であれ",
+   "reading": "",
+   "meaning": "「即使是～、無論～」",
+   "structure": "名詞＋であれ",
+   "example": "どんな理由であれ、暴力は許されない。",
+   "exampleKana": "どんなりゆうであれ、ぼうりょくはゆるされない。",
+   "exampleMeaning": "無論什麼理由，暴力都不被容許。"
+  },
+  {
+   "id": "n1-g-0042",
+   "pattern": "～とあって",
+   "reading": "",
+   "meaning": "「由於～（特殊情況）」",
+   "structure": "普通形／名詞＋とあって",
+   "example": "大型連休とあって、空港は混雑している。",
+   "exampleKana": "おおがたれんきゅうとあって、くうこうはこんざつしている。",
+   "exampleMeaning": "由於是大型連假，機場很擁擠。"
+  },
+  {
+   "id": "n1-g-0043",
+   "pattern": "～とあれば",
+   "reading": "",
+   "meaning": "「如果是～的話（就）」",
+   "structure": "普通形／名詞＋とあれば",
+   "example": "子供のためとあれば、何でもする。",
+   "exampleKana": "こどものためとあれば、なんでもする。",
+   "exampleMeaning": "如果是為了孩子，什麼都願意做。"
+  },
+  {
+   "id": "n1-g-0044",
+   "pattern": "～ものを",
+   "reading": "",
+   "meaning": "「本來～卻…（帶埋怨）」",
+   "structure": "普通形（な形＋な）＋ものを",
+   "example": "言ってくれれば手伝ったものを。",
+   "exampleKana": "いってくれればてつだったものを。",
+   "exampleMeaning": "你說一聲我就幫忙了嘛。"
+  },
+  {
+   "id": "n1-g-0045",
+   "pattern": "～とは",
+   "reading": "",
+   "meaning": "「竟然～、居然～」（驚訝）",
+   "structure": "普通形／名詞＋とは",
+   "example": "彼が犯人だったとは、信じられない。",
+   "exampleKana": "かれがはんにんだったとは、しんじられない。",
+   "exampleMeaning": "他竟然是犯人，難以置信。"
+  },
+  {
+   "id": "n1-g-0046",
+   "pattern": "～始末だ",
+   "reading": "～しまつだ",
+   "meaning": "「落得～的下場」",
+   "structure": "動詞辭書形＋始末だ",
+   "example": "準備を怠り、当日慌てる始末だ。",
+   "exampleKana": "じゅんびをおこたり、とうじつあわてるしまつだ。",
+   "exampleMeaning": "疏於準備，落得當天手忙腳亂。"
+  },
+  {
+   "id": "n1-g-0047",
+   "pattern": "～たところで",
+   "reading": "",
+   "meaning": "「即使～也（無濟於事）」",
+   "structure": "動詞た形＋ところで",
+   "example": "今から急いだところで間に合わない。",
+   "exampleKana": "いまからいそいだところでまにあわない。",
+   "exampleMeaning": "現在趕也來不及了。"
+  }
+ ]
+}

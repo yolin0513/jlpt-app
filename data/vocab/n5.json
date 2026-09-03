@@ -1,0 +1,2697 @@
+{
+ "level": "N5",
+ "type": "vocab",
+ "count": 269,
+ "items": [
+  {
+   "id": "n5-v-0001",
+   "kanji": "私",
+   "kana": "わたし",
+   "meaning": "我",
+   "pos": "代名詞",
+   "example": "私は台湾人です。",
+   "exampleKana": "わたしはたいわんじんです。",
+   "exampleMeaning": "我是台灣人。"
+  },
+  {
+   "id": "n5-v-0002",
+   "kanji": "私達",
+   "kana": "わたしたち",
+   "meaning": "我們",
+   "pos": "代名詞",
+   "example": "私達は友達です。",
+   "exampleKana": "わたしたちはともだちです。",
+   "exampleMeaning": "我們是朋友。"
+  },
+  {
+   "id": "n5-v-0003",
+   "kanji": "貴方",
+   "kana": "あなた",
+   "meaning": "你",
+   "pos": "代名詞",
+   "example": "貴方の名前は何ですか。",
+   "exampleKana": "あなたのなまえはなんですか。",
+   "exampleMeaning": "你的名字是什麼？"
+  },
+  {
+   "id": "n5-v-0004",
+   "kanji": "彼",
+   "kana": "かれ",
+   "meaning": "他；男朋友",
+   "pos": "代名詞",
+   "example": "彼は先生です。",
+   "exampleKana": "かれはせんせいです。",
+   "exampleMeaning": "他是老師。"
+  },
+  {
+   "id": "n5-v-0005",
+   "kanji": "彼女",
+   "kana": "かのじょ",
+   "meaning": "她；女朋友",
+   "pos": "代名詞",
+   "example": "彼女はとても親切です。",
+   "exampleKana": "かのじょはとてもしんせつです。",
+   "exampleMeaning": "她非常親切。"
+  },
+  {
+   "id": "n5-v-0006",
+   "kanji": "これ",
+   "kana": "これ",
+   "meaning": "這個",
+   "pos": "代名詞",
+   "example": "これは私のかばんです。",
+   "exampleKana": "これはわたしのかばんです。",
+   "exampleMeaning": "這是我的包包。"
+  },
+  {
+   "id": "n5-v-0007",
+   "kanji": "それ",
+   "kana": "それ",
+   "meaning": "那個（近對方）",
+   "pos": "代名詞",
+   "example": "それは何ですか。",
+   "exampleKana": "それはなんですか。",
+   "exampleMeaning": "那是什麼？"
+  },
+  {
+   "id": "n5-v-0008",
+   "kanji": "あれ",
+   "kana": "あれ",
+   "meaning": "那個（遠處）",
+   "pos": "代名詞",
+   "example": "あれは学校です。",
+   "exampleKana": "あれはがっこうです。",
+   "exampleMeaning": "那是學校。"
+  },
+  {
+   "id": "n5-v-0009",
+   "kanji": "どれ",
+   "kana": "どれ",
+   "meaning": "哪個",
+   "pos": "代名詞",
+   "example": "どれがあなたの傘ですか。",
+   "exampleKana": "どれがあなたのかさですか。",
+   "exampleMeaning": "哪一把是你的傘？"
+  },
+  {
+   "id": "n5-v-0010",
+   "kanji": "ここ",
+   "kana": "ここ",
+   "meaning": "這裡",
+   "pos": "代名詞",
+   "example": "ここは駅です。",
+   "exampleKana": "ここはえきです。",
+   "exampleMeaning": "這裡是車站。"
+  },
+  {
+   "id": "n5-v-0011",
+   "kanji": "そこ",
+   "kana": "そこ",
+   "meaning": "那裡",
+   "pos": "代名詞",
+   "example": "そこに座ってください。",
+   "exampleKana": "そこにすわってください。",
+   "exampleMeaning": "請坐在那裡。"
+  },
+  {
+   "id": "n5-v-0012",
+   "kanji": "あそこ",
+   "kana": "あそこ",
+   "meaning": "那裡（遠）",
+   "pos": "代名詞",
+   "example": "あそこに銀行があります。",
+   "exampleKana": "あそこにぎんこうがあります。",
+   "exampleMeaning": "那邊有銀行。"
+  },
+  {
+   "id": "n5-v-0013",
+   "kanji": "誰",
+   "kana": "だれ",
+   "meaning": "誰",
+   "pos": "疑問詞",
+   "example": "あの人は誰ですか。",
+   "exampleKana": "あのひとはだれですか。",
+   "exampleMeaning": "那個人是誰？"
+  },
+  {
+   "id": "n5-v-0014",
+   "kanji": "何",
+   "kana": "なに",
+   "meaning": "什麼",
+   "pos": "疑問詞",
+   "example": "何を食べますか。",
+   "exampleKana": "なにをたべますか。",
+   "exampleMeaning": "要吃什麼？"
+  },
+  {
+   "id": "n5-v-0015",
+   "kanji": "何時",
+   "kana": "いつ",
+   "meaning": "什麼時候",
+   "pos": "疑問詞",
+   "example": "試験はいつですか。",
+   "exampleKana": "しけんはいつですか。",
+   "exampleMeaning": "考試是什麼時候？"
+  },
+  {
+   "id": "n5-v-0016",
+   "kanji": "何処",
+   "kana": "どこ",
+   "meaning": "哪裡",
+   "pos": "疑問詞",
+   "example": "トイレはどこですか。",
+   "exampleKana": "トイレはどこですか。",
+   "exampleMeaning": "廁所在哪裡？"
+  },
+  {
+   "id": "n5-v-0017",
+   "kanji": "どう",
+   "kana": "どう",
+   "meaning": "如何、怎麼樣",
+   "pos": "副詞",
+   "example": "味はどうですか。",
+   "exampleKana": "あじはどうですか。",
+   "exampleMeaning": "味道如何？"
+  },
+  {
+   "id": "n5-v-0018",
+   "kanji": "幾ら",
+   "kana": "いくら",
+   "meaning": "多少錢",
+   "pos": "疑問詞",
+   "example": "これはいくらですか。",
+   "exampleKana": "これはいくらですか。",
+   "exampleMeaning": "這個多少錢？"
+  },
+  {
+   "id": "n5-v-0019",
+   "kanji": "幾つ",
+   "kana": "いくつ",
+   "meaning": "幾個；幾歲",
+   "pos": "疑問詞",
+   "example": "りんごはいくつありますか。",
+   "exampleKana": "りんごはいくつありますか。",
+   "exampleMeaning": "有幾顆蘋果？"
+  },
+  {
+   "id": "n5-v-0020",
+   "kanji": "家族",
+   "kana": "かぞく",
+   "meaning": "家人、家庭",
+   "pos": "名詞",
+   "example": "家族は四人です。",
+   "exampleKana": "かぞくはよにんです。",
+   "exampleMeaning": "家裡有四個人。"
+  },
+  {
+   "id": "n5-v-0021",
+   "kanji": "父",
+   "kana": "ちち",
+   "meaning": "（我的）父親",
+   "pos": "名詞",
+   "example": "父は会社員です。",
+   "exampleKana": "ちちはかいしゃいんです。",
+   "exampleMeaning": "我父親是上班族。"
+  },
+  {
+   "id": "n5-v-0022",
+   "kanji": "母",
+   "kana": "はは",
+   "meaning": "（我的）母親",
+   "pos": "名詞",
+   "example": "母は料理が上手です。",
+   "exampleKana": "はははりょうりがじょうずです。",
+   "exampleMeaning": "我母親很會做菜。"
+  },
+  {
+   "id": "n5-v-0023",
+   "kanji": "お父さん",
+   "kana": "おとうさん",
+   "meaning": "父親（尊稱）",
+   "pos": "名詞",
+   "example": "お父さんはお元気ですか。",
+   "exampleKana": "おとうさんはおげんきですか。",
+   "exampleMeaning": "令尊還好嗎？"
+  },
+  {
+   "id": "n5-v-0024",
+   "kanji": "お母さん",
+   "kana": "おかあさん",
+   "meaning": "母親（尊稱）",
+   "pos": "名詞",
+   "example": "お母さんは家にいます。",
+   "exampleKana": "おかあさんはいえにいます。",
+   "exampleMeaning": "媽媽在家。"
+  },
+  {
+   "id": "n5-v-0025",
+   "kanji": "兄",
+   "kana": "あに",
+   "meaning": "（我的）哥哥",
+   "pos": "名詞",
+   "example": "兄は大学生です。",
+   "exampleKana": "あにはだいがくせいです。",
+   "exampleMeaning": "我哥哥是大學生。"
+  },
+  {
+   "id": "n5-v-0026",
+   "kanji": "姉",
+   "kana": "あね",
+   "meaning": "（我的）姐姐",
+   "pos": "名詞",
+   "example": "姉は東京に住んでいます。",
+   "exampleKana": "あねはとうきょうにすんでいます。",
+   "exampleMeaning": "我姐姐住在東京。"
+  },
+  {
+   "id": "n5-v-0027",
+   "kanji": "弟",
+   "kana": "おとうと",
+   "meaning": "（我的）弟弟",
+   "pos": "名詞",
+   "example": "弟は高校生です。",
+   "exampleKana": "おとうとはこうこうせいです。",
+   "exampleMeaning": "我弟弟是高中生。"
+  },
+  {
+   "id": "n5-v-0028",
+   "kanji": "妹",
+   "kana": "いもうと",
+   "meaning": "（我的）妹妹",
+   "pos": "名詞",
+   "example": "妹はまだ子供です。",
+   "exampleKana": "いもうとはまだこどもです。",
+   "exampleMeaning": "我妹妹還是小孩。"
+  },
+  {
+   "id": "n5-v-0029",
+   "kanji": "子供",
+   "kana": "こども",
+   "meaning": "小孩",
+   "pos": "名詞",
+   "example": "子供が三人います。",
+   "exampleKana": "こどもがさんにんいます。",
+   "exampleMeaning": "有三個小孩。"
+  },
+  {
+   "id": "n5-v-0030",
+   "kanji": "友達",
+   "kana": "ともだち",
+   "meaning": "朋友",
+   "pos": "名詞",
+   "example": "友達と映画を見ます。",
+   "exampleKana": "ともだちとえいがをみます。",
+   "exampleMeaning": "和朋友看電影。"
+  },
+  {
+   "id": "n5-v-0031",
+   "kanji": "先生",
+   "kana": "せんせい",
+   "meaning": "老師",
+   "pos": "名詞",
+   "example": "田中先生は日本語の先生です。",
+   "exampleKana": "たなかせんせいはにほんごのせんせいです。",
+   "exampleMeaning": "田中老師是日語老師。"
+  },
+  {
+   "id": "n5-v-0032",
+   "kanji": "学生",
+   "kana": "がくせい",
+   "meaning": "學生",
+   "pos": "名詞",
+   "example": "私は学生です。",
+   "exampleKana": "わたしはがくせいです。",
+   "exampleMeaning": "我是學生。"
+  },
+  {
+   "id": "n5-v-0033",
+   "kanji": "医者",
+   "kana": "いしゃ",
+   "meaning": "醫生",
+   "pos": "名詞",
+   "example": "兄は医者になりたいです。",
+   "exampleKana": "あにはいしゃになりたいです。",
+   "exampleMeaning": "我哥哥想當醫生。"
+  },
+  {
+   "id": "n5-v-0034",
+   "kanji": "会社員",
+   "kana": "かいしゃいん",
+   "meaning": "公司職員",
+   "pos": "名詞",
+   "example": "父は会社員です。",
+   "exampleKana": "ちちはかいしゃいんです。",
+   "exampleMeaning": "我父親是公司職員。"
+  },
+  {
+   "id": "n5-v-0035",
+   "kanji": "警察",
+   "kana": "けいさつ",
+   "meaning": "警察",
+   "pos": "名詞",
+   "example": "警察を呼んでください。",
+   "exampleKana": "けいさつをよんでください。",
+   "exampleMeaning": "請叫警察。"
+  },
+  {
+   "id": "n5-v-0036",
+   "kanji": "今",
+   "kana": "いま",
+   "meaning": "現在",
+   "pos": "名詞",
+   "example": "今何時ですか。",
+   "exampleKana": "いまなんじですか。",
+   "exampleMeaning": "現在幾點？"
+  },
+  {
+   "id": "n5-v-0037",
+   "kanji": "今日",
+   "kana": "きょう",
+   "meaning": "今天",
+   "pos": "名詞",
+   "example": "今日は暑いです。",
+   "exampleKana": "きょうはあついです。",
+   "exampleMeaning": "今天很熱。"
+  },
+  {
+   "id": "n5-v-0038",
+   "kanji": "昨日",
+   "kana": "きのう",
+   "meaning": "昨天",
+   "pos": "名詞",
+   "example": "昨日雨が降りました。",
+   "exampleKana": "きのうあめがふりました。",
+   "exampleMeaning": "昨天下雨了。"
+  },
+  {
+   "id": "n5-v-0039",
+   "kanji": "明日",
+   "kana": "あした",
+   "meaning": "明天",
+   "pos": "名詞",
+   "example": "明日は休みです。",
+   "exampleKana": "あしたはやすみです。",
+   "exampleMeaning": "明天放假。"
+  },
+  {
+   "id": "n5-v-0040",
+   "kanji": "朝",
+   "kana": "あさ",
+   "meaning": "早上",
+   "pos": "名詞",
+   "example": "毎朝六時に起きます。",
+   "exampleKana": "まいあさろくじにおきます。",
+   "exampleMeaning": "每天早上六點起床。"
+  },
+  {
+   "id": "n5-v-0041",
+   "kanji": "昼",
+   "kana": "ひる",
+   "meaning": "中午、白天",
+   "pos": "名詞",
+   "example": "昼ご飯を食べましょう。",
+   "exampleKana": "ひるごはんをたべましょう。",
+   "exampleMeaning": "一起吃午餐吧。"
+  },
+  {
+   "id": "n5-v-0042",
+   "kanji": "夜",
+   "kana": "よる",
+   "meaning": "晚上",
+   "pos": "名詞",
+   "example": "夜は星がきれいです。",
+   "exampleKana": "よるはほしがきれいです。",
+   "exampleMeaning": "晚上星星很漂亮。"
+  },
+  {
+   "id": "n5-v-0043",
+   "kanji": "晩",
+   "kana": "ばん",
+   "meaning": "晚上",
+   "pos": "名詞",
+   "example": "今晩暇ですか。",
+   "exampleKana": "こんばんひまですか。",
+   "exampleMeaning": "今晚有空嗎？"
+  },
+  {
+   "id": "n5-v-0044",
+   "kanji": "午前",
+   "kana": "ごぜん",
+   "meaning": "上午",
+   "pos": "名詞",
+   "example": "午前九時に会いましょう。",
+   "exampleKana": "ごぜんくじにあいましょう。",
+   "exampleMeaning": "上午九點見面吧。"
+  },
+  {
+   "id": "n5-v-0045",
+   "kanji": "午後",
+   "kana": "ごご",
+   "meaning": "下午",
+   "pos": "名詞",
+   "example": "午後から授業があります。",
+   "exampleKana": "ごごからじゅぎょうがあります。",
+   "exampleMeaning": "下午開始有課。"
+  },
+  {
+   "id": "n5-v-0046",
+   "kanji": "毎日",
+   "kana": "まいにち",
+   "meaning": "每天",
+   "pos": "名詞",
+   "example": "毎日日本語を勉強します。",
+   "exampleKana": "まいにちにほんごをべんきょうします。",
+   "exampleMeaning": "每天學日語。"
+  },
+  {
+   "id": "n5-v-0047",
+   "kanji": "毎朝",
+   "kana": "まいあさ",
+   "meaning": "每天早上",
+   "pos": "名詞",
+   "example": "毎朝コーヒーを飲みます。",
+   "exampleKana": "まいあさコーヒーをのみます。",
+   "exampleMeaning": "每天早上喝咖啡。"
+  },
+  {
+   "id": "n5-v-0048",
+   "kanji": "毎晩",
+   "kana": "まいばん",
+   "meaning": "每天晚上",
+   "pos": "名詞",
+   "example": "毎晩本を読みます。",
+   "exampleKana": "まいばんほんをよみます。",
+   "exampleMeaning": "每晚讀書。"
+  },
+  {
+   "id": "n5-v-0049",
+   "kanji": "今年",
+   "kana": "ことし",
+   "meaning": "今年",
+   "pos": "名詞",
+   "example": "今年二十歳になります。",
+   "exampleKana": "ことしはたちになります。",
+   "exampleMeaning": "今年滿二十歲。"
+  },
+  {
+   "id": "n5-v-0050",
+   "kanji": "去年",
+   "kana": "きょねん",
+   "meaning": "去年",
+   "pos": "名詞",
+   "example": "去年日本へ行きました。",
+   "exampleKana": "きょねんにほんへいきました。",
+   "exampleMeaning": "去年去了日本。"
+  },
+  {
+   "id": "n5-v-0051",
+   "kanji": "来年",
+   "kana": "らいねん",
+   "meaning": "明年",
+   "pos": "名詞",
+   "example": "来年結婚します。",
+   "exampleKana": "らいねんけっこんします。",
+   "exampleMeaning": "明年結婚。"
+  },
+  {
+   "id": "n5-v-0052",
+   "kanji": "今週",
+   "kana": "こんしゅう",
+   "meaning": "這週",
+   "pos": "名詞",
+   "example": "今週は忙しいです。",
+   "exampleKana": "こんしゅうはいそがしいです。",
+   "exampleMeaning": "這週很忙。"
+  },
+  {
+   "id": "n5-v-0053",
+   "kanji": "来週",
+   "kana": "らいしゅう",
+   "meaning": "下週",
+   "pos": "名詞",
+   "example": "来週試験があります。",
+   "exampleKana": "らいしゅうしけんがあります。",
+   "exampleMeaning": "下週有考試。"
+  },
+  {
+   "id": "n5-v-0054",
+   "kanji": "時間",
+   "kana": "じかん",
+   "meaning": "時間；小時",
+   "pos": "名詞",
+   "example": "時間がありません。",
+   "exampleKana": "じかんがありません。",
+   "exampleMeaning": "沒有時間。"
+  },
+  {
+   "id": "n5-v-0055",
+   "kanji": "週間",
+   "kana": "しゅうかん",
+   "meaning": "（數）週",
+   "pos": "名詞",
+   "example": "一週間休みました。",
+   "exampleKana": "いっしゅうかんやすみました。",
+   "exampleMeaning": "休息了一週。"
+  },
+  {
+   "id": "n5-v-0056",
+   "kanji": "分",
+   "kana": "ふん",
+   "meaning": "分（鐘）",
+   "pos": "名詞",
+   "example": "十分待ってください。",
+   "exampleKana": "じゅっぷんまってください。",
+   "exampleMeaning": "請等十分鐘。"
+  },
+  {
+   "id": "n5-v-0057",
+   "kanji": "半",
+   "kana": "はん",
+   "meaning": "半",
+   "pos": "名詞",
+   "example": "今は三時半です。",
+   "exampleKana": "いまはさんじはんです。",
+   "exampleMeaning": "現在三點半。"
+  },
+  {
+   "id": "n5-v-0058",
+   "kanji": "月曜日",
+   "kana": "げつようび",
+   "meaning": "星期一",
+   "pos": "名詞",
+   "example": "月曜日から仕事です。",
+   "exampleKana": "げつようびからしごとです。",
+   "exampleMeaning": "星期一開始上班。"
+  },
+  {
+   "id": "n5-v-0059",
+   "kanji": "火曜日",
+   "kana": "かようび",
+   "meaning": "星期二",
+   "pos": "名詞",
+   "example": "火曜日は暇です。",
+   "exampleKana": "かようびはひまです。",
+   "exampleMeaning": "星期二有空。"
+  },
+  {
+   "id": "n5-v-0060",
+   "kanji": "水曜日",
+   "kana": "すいようび",
+   "meaning": "星期三",
+   "pos": "名詞",
+   "example": "水曜日にテストがあります。",
+   "exampleKana": "すいようびにテストがあります。",
+   "exampleMeaning": "星期三有考試。"
+  },
+  {
+   "id": "n5-v-0061",
+   "kanji": "木曜日",
+   "kana": "もくようび",
+   "meaning": "星期四",
+   "pos": "名詞",
+   "example": "木曜日まで待ちます。",
+   "exampleKana": "もくようびまでまちます。",
+   "exampleMeaning": "等到星期四。"
+  },
+  {
+   "id": "n5-v-0062",
+   "kanji": "金曜日",
+   "kana": "きんようび",
+   "meaning": "星期五",
+   "pos": "名詞",
+   "example": "金曜日の夜、飲みに行きます。",
+   "exampleKana": "きんようびのよる、のみにいきます。",
+   "exampleMeaning": "星期五晚上去喝一杯。"
+  },
+  {
+   "id": "n5-v-0063",
+   "kanji": "土曜日",
+   "kana": "どようび",
+   "meaning": "星期六",
+   "pos": "名詞",
+   "example": "土曜日に買い物をします。",
+   "exampleKana": "どようびにかいものをします。",
+   "exampleMeaning": "星期六去購物。"
+  },
+  {
+   "id": "n5-v-0064",
+   "kanji": "日曜日",
+   "kana": "にちようび",
+   "meaning": "星期日",
+   "pos": "名詞",
+   "example": "日曜日は教会へ行きます。",
+   "exampleKana": "にちようびはきょうかいへいきます。",
+   "exampleMeaning": "星期日去教會。"
+  },
+  {
+   "id": "n5-v-0065",
+   "kanji": "家",
+   "kana": "いえ",
+   "meaning": "家、房子",
+   "pos": "名詞",
+   "example": "家に帰ります。",
+   "exampleKana": "いえにかえります。",
+   "exampleMeaning": "回家。"
+  },
+  {
+   "id": "n5-v-0066",
+   "kanji": "学校",
+   "kana": "がっこう",
+   "meaning": "學校",
+   "pos": "名詞",
+   "example": "学校まで歩いて行きます。",
+   "exampleKana": "がっこうまであるいていきます。",
+   "exampleMeaning": "走路去學校。"
+  },
+  {
+   "id": "n5-v-0067",
+   "kanji": "会社",
+   "kana": "かいしゃ",
+   "meaning": "公司",
+   "pos": "名詞",
+   "example": "会社は駅の近くです。",
+   "exampleKana": "かいしゃはえきのちかくです。",
+   "exampleMeaning": "公司在車站附近。"
+  },
+  {
+   "id": "n5-v-0068",
+   "kanji": "病院",
+   "kana": "びょういん",
+   "meaning": "醫院",
+   "pos": "名詞",
+   "example": "病院で薬をもらいました。",
+   "exampleKana": "びょういんでくすりをもらいました。",
+   "exampleMeaning": "在醫院拿了藥。"
+  },
+  {
+   "id": "n5-v-0069",
+   "kanji": "銀行",
+   "kana": "ぎんこう",
+   "meaning": "銀行",
+   "pos": "名詞",
+   "example": "銀行でお金を下ろします。",
+   "exampleKana": "ぎんこうでおかねをおろします。",
+   "exampleMeaning": "在銀行領錢。"
+  },
+  {
+   "id": "n5-v-0070",
+   "kanji": "郵便局",
+   "kana": "ゆうびんきょく",
+   "meaning": "郵局",
+   "pos": "名詞",
+   "example": "郵便局で切手を買います。",
+   "exampleKana": "ゆうびんきょくできってをかいます。",
+   "exampleMeaning": "在郵局買郵票。"
+  },
+  {
+   "id": "n5-v-0071",
+   "kanji": "図書館",
+   "kana": "としょかん",
+   "meaning": "圖書館",
+   "pos": "名詞",
+   "example": "図書館で勉強します。",
+   "exampleKana": "としょかんでべんきょうします。",
+   "exampleMeaning": "在圖書館唸書。"
+  },
+  {
+   "id": "n5-v-0072",
+   "kanji": "駅",
+   "kana": "えき",
+   "meaning": "車站",
+   "pos": "名詞",
+   "example": "駅で友達を待ちます。",
+   "exampleKana": "えきでともだちをまちます。",
+   "exampleMeaning": "在車站等朋友。"
+  },
+  {
+   "id": "n5-v-0073",
+   "kanji": "店",
+   "kana": "みせ",
+   "meaning": "店",
+   "pos": "名詞",
+   "example": "あの店は安いです。",
+   "exampleKana": "あのみせはやすいです。",
+   "exampleMeaning": "那家店很便宜。"
+  },
+  {
+   "id": "n5-v-0074",
+   "kanji": "喫茶店",
+   "kana": "きっさてん",
+   "meaning": "咖啡廳",
+   "pos": "名詞",
+   "example": "喫茶店で話しましょう。",
+   "exampleKana": "きっさてんではなしましょう。",
+   "exampleMeaning": "在咖啡廳聊吧。"
+  },
+  {
+   "id": "n5-v-0075",
+   "kanji": "食堂",
+   "kana": "しょくどう",
+   "meaning": "餐廳、食堂",
+   "pos": "名詞",
+   "example": "食堂で昼ご飯を食べます。",
+   "exampleKana": "しょくどうでひるごはんをたべます。",
+   "exampleMeaning": "在食堂吃午餐。"
+  },
+  {
+   "id": "n5-v-0076",
+   "kanji": "公園",
+   "kana": "こうえん",
+   "meaning": "公園",
+   "pos": "名詞",
+   "example": "公園を散歩します。",
+   "exampleKana": "こうえんをさんぽします。",
+   "exampleMeaning": "在公園散步。"
+  },
+  {
+   "id": "n5-v-0077",
+   "kanji": "教室",
+   "kana": "きょうしつ",
+   "meaning": "教室",
+   "pos": "名詞",
+   "example": "教室は三階です。",
+   "exampleKana": "きょうしつはさんがいです。",
+   "exampleMeaning": "教室在三樓。"
+  },
+  {
+   "id": "n5-v-0078",
+   "kanji": "部屋",
+   "kana": "へや",
+   "meaning": "房間",
+   "pos": "名詞",
+   "example": "部屋を掃除します。",
+   "exampleKana": "へやをそうじします。",
+   "exampleMeaning": "打掃房間。"
+  },
+  {
+   "id": "n5-v-0079",
+   "kanji": "台所",
+   "kana": "だいどころ",
+   "meaning": "廚房",
+   "pos": "名詞",
+   "example": "母は台所にいます。",
+   "exampleKana": "はははだいどころにいます。",
+   "exampleMeaning": "媽媽在廚房。"
+  },
+  {
+   "id": "n5-v-0080",
+   "kanji": "トイレ",
+   "kana": "トイレ",
+   "meaning": "廁所",
+   "pos": "名詞",
+   "example": "トイレはあそこです。",
+   "exampleKana": "トイレはあそこです。",
+   "exampleMeaning": "廁所在那邊。"
+  },
+  {
+   "id": "n5-v-0081",
+   "kanji": "玄関",
+   "kana": "げんかん",
+   "meaning": "玄關",
+   "pos": "名詞",
+   "example": "玄関で靴を脱ぎます。",
+   "exampleKana": "げんかんでくつをぬぎます。",
+   "exampleMeaning": "在玄關脫鞋。"
+  },
+  {
+   "id": "n5-v-0082",
+   "kanji": "庭",
+   "kana": "にわ",
+   "meaning": "庭院",
+   "pos": "名詞",
+   "example": "庭に花が咲いています。",
+   "exampleKana": "にわにはながさいています。",
+   "exampleMeaning": "庭院裡花開了。"
+  },
+  {
+   "id": "n5-v-0083",
+   "kanji": "道",
+   "kana": "みち",
+   "meaning": "路、道路",
+   "pos": "名詞",
+   "example": "この道をまっすぐ行ってください。",
+   "exampleKana": "このみちをまっすぐいってください。",
+   "exampleMeaning": "請沿這條路直走。"
+  },
+  {
+   "id": "n5-v-0084",
+   "kanji": "町",
+   "kana": "まち",
+   "meaning": "城鎮、街",
+   "pos": "名詞",
+   "example": "この町は静かです。",
+   "exampleKana": "このまちはしずかです。",
+   "exampleMeaning": "這個城鎮很安靜。"
+  },
+  {
+   "id": "n5-v-0085",
+   "kanji": "国",
+   "kana": "くに",
+   "meaning": "國家",
+   "pos": "名詞",
+   "example": "お国はどちらですか。",
+   "exampleKana": "おくにはどちらですか。",
+   "exampleMeaning": "您是哪國人？"
+  },
+  {
+   "id": "n5-v-0086",
+   "kanji": "電車",
+   "kana": "でんしゃ",
+   "meaning": "電車",
+   "pos": "名詞",
+   "example": "電車で会社へ行きます。",
+   "exampleKana": "でんしゃでかいしゃへいきます。",
+   "exampleMeaning": "搭電車去公司。"
+  },
+  {
+   "id": "n5-v-0087",
+   "kanji": "地下鉄",
+   "kana": "ちかてつ",
+   "meaning": "地鐵",
+   "pos": "名詞",
+   "example": "地下鉄は速いです。",
+   "exampleKana": "ちかてつははやいです。",
+   "exampleMeaning": "地鐵很快。"
+  },
+  {
+   "id": "n5-v-0088",
+   "kanji": "バス",
+   "kana": "バス",
+   "meaning": "公車",
+   "pos": "名詞",
+   "example": "バスに乗ります。",
+   "exampleKana": "バスにのります。",
+   "exampleMeaning": "搭公車。"
+  },
+  {
+   "id": "n5-v-0089",
+   "kanji": "車",
+   "kana": "くるま",
+   "meaning": "車",
+   "pos": "名詞",
+   "example": "車で旅行します。",
+   "exampleKana": "くるまでりょこうします。",
+   "exampleMeaning": "開車旅行。"
+  },
+  {
+   "id": "n5-v-0090",
+   "kanji": "自転車",
+   "kana": "じてんしゃ",
+   "meaning": "腳踏車",
+   "pos": "名詞",
+   "example": "自転車で学校へ行きます。",
+   "exampleKana": "じてんしゃでがっこうへいきます。",
+   "exampleMeaning": "騎腳踏車上學。"
+  },
+  {
+   "id": "n5-v-0091",
+   "kanji": "飛行機",
+   "kana": "ひこうき",
+   "meaning": "飛機",
+   "pos": "名詞",
+   "example": "飛行機で日本へ行きます。",
+   "exampleKana": "ひこうきでにほんへいきます。",
+   "exampleMeaning": "搭飛機去日本。"
+  },
+  {
+   "id": "n5-v-0092",
+   "kanji": "タクシー",
+   "kana": "タクシー",
+   "meaning": "計程車",
+   "pos": "名詞",
+   "example": "タクシーを呼びましょう。",
+   "exampleKana": "タクシーをよびましょう。",
+   "exampleMeaning": "叫計程車吧。"
+  },
+  {
+   "id": "n5-v-0093",
+   "kanji": "切符",
+   "kana": "きっぷ",
+   "meaning": "車票",
+   "pos": "名詞",
+   "example": "切符を買いました。",
+   "exampleKana": "きっぷをかいました。",
+   "exampleMeaning": "買了車票。"
+  },
+  {
+   "id": "n5-v-0094",
+   "kanji": "ご飯",
+   "kana": "ごはん",
+   "meaning": "飯、餐",
+   "pos": "名詞",
+   "example": "ご飯を食べましたか。",
+   "exampleKana": "ごはんをたべましたか。",
+   "exampleMeaning": "吃飯了嗎？"
+  },
+  {
+   "id": "n5-v-0095",
+   "kanji": "朝ご飯",
+   "kana": "あさごはん",
+   "meaning": "早餐",
+   "pos": "名詞",
+   "example": "朝ご飯はパンです。",
+   "exampleKana": "あさごはんはパンです。",
+   "exampleMeaning": "早餐是麵包。"
+  },
+  {
+   "id": "n5-v-0096",
+   "kanji": "昼ご飯",
+   "kana": "ひるごはん",
+   "meaning": "午餐",
+   "pos": "名詞",
+   "example": "昼ご飯を一緒に食べましょう。",
+   "exampleKana": "ひるごはんをいっしょにたべましょう。",
+   "exampleMeaning": "一起吃午餐吧。"
+  },
+  {
+   "id": "n5-v-0097",
+   "kanji": "晩ご飯",
+   "kana": "ばんごはん",
+   "meaning": "晚餐",
+   "pos": "名詞",
+   "example": "晩ご飯は七時です。",
+   "exampleKana": "ばんごはんはしちじです。",
+   "exampleMeaning": "晚餐是七點。"
+  },
+  {
+   "id": "n5-v-0098",
+   "kanji": "水",
+   "kana": "みず",
+   "meaning": "水",
+   "pos": "名詞",
+   "example": "水を一杯ください。",
+   "exampleKana": "みずをいっぱいください。",
+   "exampleMeaning": "請給我一杯水。"
+  },
+  {
+   "id": "n5-v-0099",
+   "kanji": "お茶",
+   "kana": "おちゃ",
+   "meaning": "茶",
+   "pos": "名詞",
+   "example": "お茶を入れます。",
+   "exampleKana": "おちゃをいれます。",
+   "exampleMeaning": "泡茶。"
+  },
+  {
+   "id": "n5-v-0100",
+   "kanji": "牛乳",
+   "kana": "ぎゅうにゅう",
+   "meaning": "牛奶",
+   "pos": "名詞",
+   "example": "毎朝牛乳を飲みます。",
+   "exampleKana": "まいあさぎゅうにゅうをのみます。",
+   "exampleMeaning": "每天早上喝牛奶。"
+  },
+  {
+   "id": "n5-v-0101",
+   "kanji": "コーヒー",
+   "kana": "コーヒー",
+   "meaning": "咖啡",
+   "pos": "名詞",
+   "example": "コーヒーはいかがですか。",
+   "exampleKana": "コーヒーはいかがですか。",
+   "exampleMeaning": "要來杯咖啡嗎？"
+  },
+  {
+   "id": "n5-v-0102",
+   "kanji": "パン",
+   "kana": "パン",
+   "meaning": "麵包",
+   "pos": "名詞",
+   "example": "パンを二つ買いました。",
+   "exampleKana": "パンをふたつかいました。",
+   "exampleMeaning": "買了兩個麵包。"
+  },
+  {
+   "id": "n5-v-0103",
+   "kanji": "肉",
+   "kana": "にく",
+   "meaning": "肉",
+   "pos": "名詞",
+   "example": "肉より魚が好きです。",
+   "exampleKana": "にくよりさかながすきです。",
+   "exampleMeaning": "比起肉更喜歡魚。"
+  },
+  {
+   "id": "n5-v-0104",
+   "kanji": "魚",
+   "kana": "さかな",
+   "meaning": "魚",
+   "pos": "名詞",
+   "example": "魚を焼きます。",
+   "exampleKana": "さかなをやきます。",
+   "exampleMeaning": "烤魚。"
+  },
+  {
+   "id": "n5-v-0105",
+   "kanji": "野菜",
+   "kana": "やさい",
+   "meaning": "蔬菜",
+   "pos": "名詞",
+   "example": "野菜をたくさん食べます。",
+   "exampleKana": "やさいをたくさんたべます。",
+   "exampleMeaning": "吃很多蔬菜。"
+  },
+  {
+   "id": "n5-v-0106",
+   "kanji": "果物",
+   "kana": "くだもの",
+   "meaning": "水果",
+   "pos": "名詞",
+   "example": "果物が大好きです。",
+   "exampleKana": "くだものがだいすきです。",
+   "exampleMeaning": "最喜歡水果。"
+  },
+  {
+   "id": "n5-v-0107",
+   "kanji": "卵",
+   "kana": "たまご",
+   "meaning": "蛋",
+   "pos": "名詞",
+   "example": "卵を三つ使います。",
+   "exampleKana": "たまごをみっつつかいます。",
+   "exampleMeaning": "用三顆蛋。"
+  },
+  {
+   "id": "n5-v-0108",
+   "kanji": "塩",
+   "kana": "しお",
+   "meaning": "鹽",
+   "pos": "名詞",
+   "example": "塩を少し入れます。",
+   "exampleKana": "しおをすこしいれます。",
+   "exampleMeaning": "加一點鹽。"
+  },
+  {
+   "id": "n5-v-0109",
+   "kanji": "砂糖",
+   "kana": "さとう",
+   "meaning": "糖",
+   "pos": "名詞",
+   "example": "コーヒーに砂糖を入れますか。",
+   "exampleKana": "コーヒーにさとうをいれますか。",
+   "exampleMeaning": "咖啡要加糖嗎？"
+  },
+  {
+   "id": "n5-v-0110",
+   "kanji": "本",
+   "kana": "ほん",
+   "meaning": "書",
+   "pos": "名詞",
+   "example": "図書館で本を借ります。",
+   "exampleKana": "としょかんでほんをかります。",
+   "exampleMeaning": "在圖書館借書。"
+  },
+  {
+   "id": "n5-v-0111",
+   "kanji": "辞書",
+   "kana": "じしょ",
+   "meaning": "字典",
+   "pos": "名詞",
+   "example": "辞書で言葉を調べます。",
+   "exampleKana": "じしょでことばをしらべます。",
+   "exampleMeaning": "用字典查單字。"
+  },
+  {
+   "id": "n5-v-0112",
+   "kanji": "新聞",
+   "kana": "しんぶん",
+   "meaning": "報紙",
+   "pos": "名詞",
+   "example": "毎朝新聞を読みます。",
+   "exampleKana": "まいあさしんぶんをよみます。",
+   "exampleMeaning": "每天早上讀報。"
+  },
+  {
+   "id": "n5-v-0113",
+   "kanji": "雑誌",
+   "kana": "ざっし",
+   "meaning": "雜誌",
+   "pos": "名詞",
+   "example": "雑誌を買いました。",
+   "exampleKana": "ざっしをかいました。",
+   "exampleMeaning": "買了雜誌。"
+  },
+  {
+   "id": "n5-v-0114",
+   "kanji": "紙",
+   "kana": "かみ",
+   "meaning": "紙",
+   "pos": "名詞",
+   "example": "紙に名前を書いてください。",
+   "exampleKana": "かみになまえをかいてください。",
+   "exampleMeaning": "請在紙上寫名字。"
+  },
+  {
+   "id": "n5-v-0115",
+   "kanji": "鉛筆",
+   "kana": "えんぴつ",
+   "meaning": "鉛筆",
+   "pos": "名詞",
+   "example": "鉛筆で書きます。",
+   "exampleKana": "えんぴつでかきます。",
+   "exampleMeaning": "用鉛筆寫。"
+  },
+  {
+   "id": "n5-v-0116",
+   "kanji": "ペン",
+   "kana": "ペン",
+   "meaning": "筆、原子筆",
+   "pos": "名詞",
+   "example": "赤いペンはありますか。",
+   "exampleKana": "あかいペンはありますか。",
+   "exampleMeaning": "有紅筆嗎？"
+  },
+  {
+   "id": "n5-v-0117",
+   "kanji": "時計",
+   "kana": "とけい",
+   "meaning": "時鐘、手錶",
+   "pos": "名詞",
+   "example": "この時計は高いです。",
+   "exampleKana": "このとけいはたかいです。",
+   "exampleMeaning": "這隻錶很貴。"
+  },
+  {
+   "id": "n5-v-0118",
+   "kanji": "傘",
+   "kana": "かさ",
+   "meaning": "傘",
+   "pos": "名詞",
+   "example": "傘を忘れました。",
+   "exampleKana": "かさをわすれました。",
+   "exampleMeaning": "忘了帶傘。"
+  },
+  {
+   "id": "n5-v-0119",
+   "kanji": "鞄",
+   "kana": "かばん",
+   "meaning": "包包",
+   "pos": "名詞",
+   "example": "鞄の中に財布があります。",
+   "exampleKana": "かばんのなかにさいふがあります。",
+   "exampleMeaning": "包包裡有錢包。"
+  },
+  {
+   "id": "n5-v-0120",
+   "kanji": "財布",
+   "kana": "さいふ",
+   "meaning": "錢包",
+   "pos": "名詞",
+   "example": "財布をなくしました。",
+   "exampleKana": "さいふをなくしました。",
+   "exampleMeaning": "錢包不見了。"
+  },
+  {
+   "id": "n5-v-0121",
+   "kanji": "鍵",
+   "kana": "かぎ",
+   "meaning": "鑰匙",
+   "pos": "名詞",
+   "example": "ドアの鍵をかけました。",
+   "exampleKana": "ドアのかぎをかけました。",
+   "exampleMeaning": "鎖了門。"
+  },
+  {
+   "id": "n5-v-0122",
+   "kanji": "電話",
+   "kana": "でんわ",
+   "meaning": "電話",
+   "pos": "名詞",
+   "example": "後で電話します。",
+   "exampleKana": "あとででんわします。",
+   "exampleMeaning": "等一下打電話。"
+  },
+  {
+   "id": "n5-v-0123",
+   "kanji": "写真",
+   "kana": "しゃしん",
+   "meaning": "照片",
+   "pos": "名詞",
+   "example": "写真を撮ってもいいですか。",
+   "exampleKana": "しゃしんをとってもいいですか。",
+   "exampleMeaning": "可以拍照嗎？"
+  },
+  {
+   "id": "n5-v-0124",
+   "kanji": "テレビ",
+   "kana": "テレビ",
+   "meaning": "電視",
+   "pos": "名詞",
+   "example": "夜はテレビを見ます。",
+   "exampleKana": "よるはテレビをみます。",
+   "exampleMeaning": "晚上看電視。"
+  },
+  {
+   "id": "n5-v-0125",
+   "kanji": "ラジオ",
+   "kana": "ラジオ",
+   "meaning": "收音機",
+   "pos": "名詞",
+   "example": "ラジオでニュースを聞きます。",
+   "exampleKana": "ラジオでニュースをききます。",
+   "exampleMeaning": "用收音機聽新聞。"
+  },
+  {
+   "id": "n5-v-0126",
+   "kanji": "カメラ",
+   "kana": "カメラ",
+   "meaning": "相機",
+   "pos": "名詞",
+   "example": "新しいカメラを買いました。",
+   "exampleKana": "あたらしいカメラをかいました。",
+   "exampleMeaning": "買了新相機。"
+  },
+  {
+   "id": "n5-v-0127",
+   "kanji": "机",
+   "kana": "つくえ",
+   "meaning": "桌子",
+   "pos": "名詞",
+   "example": "机の上に本があります。",
+   "exampleKana": "つくえのうえにほんがあります。",
+   "exampleMeaning": "桌上有書。"
+  },
+  {
+   "id": "n5-v-0128",
+   "kanji": "椅子",
+   "kana": "いす",
+   "meaning": "椅子",
+   "pos": "名詞",
+   "example": "椅子に座ってください。",
+   "exampleKana": "いすにすわってください。",
+   "exampleMeaning": "請坐在椅子上。"
+  },
+  {
+   "id": "n5-v-0129",
+   "kanji": "窓",
+   "kana": "まど",
+   "meaning": "窗戶",
+   "pos": "名詞",
+   "example": "窓を開けてください。",
+   "exampleKana": "まどをあけてください。",
+   "exampleMeaning": "請開窗。"
+  },
+  {
+   "id": "n5-v-0130",
+   "kanji": "ドア",
+   "kana": "ドア",
+   "meaning": "門",
+   "pos": "名詞",
+   "example": "ドアを閉めます。",
+   "exampleKana": "ドアをしめます。",
+   "exampleMeaning": "關門。"
+  },
+  {
+   "id": "n5-v-0131",
+   "kanji": "服",
+   "kana": "ふく",
+   "meaning": "衣服",
+   "pos": "名詞",
+   "example": "新しい服がほしいです。",
+   "exampleKana": "あたらしいふくがほしいです。",
+   "exampleMeaning": "想要新衣服。"
+  },
+  {
+   "id": "n5-v-0132",
+   "kanji": "靴",
+   "kana": "くつ",
+   "meaning": "鞋子",
+   "pos": "名詞",
+   "example": "靴を履きます。",
+   "exampleKana": "くつをはきます。",
+   "exampleMeaning": "穿鞋。"
+  },
+  {
+   "id": "n5-v-0133",
+   "kanji": "帽子",
+   "kana": "ぼうし",
+   "meaning": "帽子",
+   "pos": "名詞",
+   "example": "帽子をかぶります。",
+   "exampleKana": "ぼうしをかぶります。",
+   "exampleMeaning": "戴帽子。"
+  },
+  {
+   "id": "n5-v-0134",
+   "kanji": "体",
+   "kana": "からだ",
+   "meaning": "身體",
+   "pos": "名詞",
+   "example": "体に気をつけてください。",
+   "exampleKana": "からだにきをつけてください。",
+   "exampleMeaning": "請注意身體。"
+  },
+  {
+   "id": "n5-v-0135",
+   "kanji": "頭",
+   "kana": "あたま",
+   "meaning": "頭",
+   "pos": "名詞",
+   "example": "頭が痛いです。",
+   "exampleKana": "あたまがいたいです。",
+   "exampleMeaning": "頭痛。"
+  },
+  {
+   "id": "n5-v-0136",
+   "kanji": "目",
+   "kana": "め",
+   "meaning": "眼睛",
+   "pos": "名詞",
+   "example": "目が悪いです。",
+   "exampleKana": "めがわるいです。",
+   "exampleMeaning": "視力不好。"
+  },
+  {
+   "id": "n5-v-0137",
+   "kanji": "耳",
+   "kana": "みみ",
+   "meaning": "耳朵",
+   "pos": "名詞",
+   "example": "耳が聞こえません。",
+   "exampleKana": "みみがきこえません。",
+   "exampleMeaning": "聽不見。"
+  },
+  {
+   "id": "n5-v-0138",
+   "kanji": "口",
+   "kana": "くち",
+   "meaning": "嘴巴",
+   "pos": "名詞",
+   "example": "口を大きく開けてください。",
+   "exampleKana": "くちをおおきくあけてください。",
+   "exampleMeaning": "請把嘴張大。"
+  },
+  {
+   "id": "n5-v-0139",
+   "kanji": "手",
+   "kana": "て",
+   "meaning": "手",
+   "pos": "名詞",
+   "example": "手を洗いましょう。",
+   "exampleKana": "てをあらいましょう。",
+   "exampleMeaning": "洗手吧。"
+  },
+  {
+   "id": "n5-v-0140",
+   "kanji": "足",
+   "kana": "あし",
+   "meaning": "腳、腿",
+   "pos": "名詞",
+   "example": "足が疲れました。",
+   "exampleKana": "あしがつかれました。",
+   "exampleMeaning": "腳累了。"
+  },
+  {
+   "id": "n5-v-0141",
+   "kanji": "天気",
+   "kana": "てんき",
+   "meaning": "天氣",
+   "pos": "名詞",
+   "example": "今日はいい天気ですね。",
+   "exampleKana": "きょうはいいてんきですね。",
+   "exampleMeaning": "今天天氣真好。"
+  },
+  {
+   "id": "n5-v-0142",
+   "kanji": "雨",
+   "kana": "あめ",
+   "meaning": "雨",
+   "pos": "名詞",
+   "example": "雨が降っています。",
+   "exampleKana": "あめがふっています。",
+   "exampleMeaning": "正在下雨。"
+  },
+  {
+   "id": "n5-v-0143",
+   "kanji": "雪",
+   "kana": "ゆき",
+   "meaning": "雪",
+   "pos": "名詞",
+   "example": "北海道では雪が多いです。",
+   "exampleKana": "ほっかいどうではゆきがおおいです。",
+   "exampleMeaning": "北海道雪很多。"
+  },
+  {
+   "id": "n5-v-0144",
+   "kanji": "風",
+   "kana": "かぜ",
+   "meaning": "風",
+   "pos": "名詞",
+   "example": "風が強いです。",
+   "exampleKana": "かぜがつよいです。",
+   "exampleMeaning": "風很大。"
+  },
+  {
+   "id": "n5-v-0145",
+   "kanji": "空",
+   "kana": "そら",
+   "meaning": "天空",
+   "pos": "名詞",
+   "example": "空が青いです。",
+   "exampleKana": "そらがあおいです。",
+   "exampleMeaning": "天空很藍。"
+  },
+  {
+   "id": "n5-v-0146",
+   "kanji": "海",
+   "kana": "うみ",
+   "meaning": "海",
+   "pos": "名詞",
+   "example": "夏に海へ行きます。",
+   "exampleKana": "なつにうみへいきます。",
+   "exampleMeaning": "夏天去海邊。"
+  },
+  {
+   "id": "n5-v-0147",
+   "kanji": "山",
+   "kana": "やま",
+   "meaning": "山",
+   "pos": "名詞",
+   "example": "山に登ります。",
+   "exampleKana": "やまにのぼります。",
+   "exampleMeaning": "爬山。"
+  },
+  {
+   "id": "n5-v-0148",
+   "kanji": "川",
+   "kana": "かわ",
+   "meaning": "河、川",
+   "pos": "名詞",
+   "example": "川で泳ぎました。",
+   "exampleKana": "かわでおよぎました。",
+   "exampleMeaning": "在河裡游了泳。"
+  },
+  {
+   "id": "n5-v-0149",
+   "kanji": "木",
+   "kana": "き",
+   "meaning": "樹、木頭",
+   "pos": "名詞",
+   "example": "大きな木があります。",
+   "exampleKana": "おおきなきがあります。",
+   "exampleMeaning": "有一棵大樹。"
+  },
+  {
+   "id": "n5-v-0150",
+   "kanji": "花",
+   "kana": "はな",
+   "meaning": "花",
+   "pos": "名詞",
+   "example": "花を買って帰ります。",
+   "exampleKana": "はなをかってかえります。",
+   "exampleMeaning": "買花回家。"
+  },
+  {
+   "id": "n5-v-0151",
+   "kanji": "犬",
+   "kana": "いぬ",
+   "meaning": "狗",
+   "pos": "名詞",
+   "example": "犬を飼っています。",
+   "exampleKana": "いぬをかっています。",
+   "exampleMeaning": "有養狗。"
+  },
+  {
+   "id": "n5-v-0152",
+   "kanji": "猫",
+   "kana": "ねこ",
+   "meaning": "貓",
+   "pos": "名詞",
+   "example": "猫が好きです。",
+   "exampleKana": "ねこがすきです。",
+   "exampleMeaning": "喜歡貓。"
+  },
+  {
+   "id": "n5-v-0153",
+   "kanji": "大きい",
+   "kana": "おおきい",
+   "meaning": "大的",
+   "pos": "形容詞（い形）",
+   "example": "大きい荷物ですね。",
+   "exampleKana": "おおきいにもつですね。",
+   "exampleMeaning": "好大的行李。"
+  },
+  {
+   "id": "n5-v-0154",
+   "kanji": "小さい",
+   "kana": "ちいさい",
+   "meaning": "小的",
+   "pos": "形容詞（い形）",
+   "example": "小さい部屋です。",
+   "exampleKana": "ちいさいへやです。",
+   "exampleMeaning": "是個小房間。"
+  },
+  {
+   "id": "n5-v-0155",
+   "kanji": "新しい",
+   "kana": "あたらしい",
+   "meaning": "新的",
+   "pos": "形容詞（い形）",
+   "example": "新しいパソコンがほしいです。",
+   "exampleKana": "あたらしいパソコンがほしいです。",
+   "exampleMeaning": "想要新電腦。"
+  },
+  {
+   "id": "n5-v-0156",
+   "kanji": "古い",
+   "kana": "ふるい",
+   "meaning": "舊的",
+   "pos": "形容詞（い形）",
+   "example": "この建物は古いです。",
+   "exampleKana": "このたてものはふるいです。",
+   "exampleMeaning": "這棟建築很舊。"
+  },
+  {
+   "id": "n5-v-0157",
+   "kanji": "良い",
+   "kana": "いい",
+   "meaning": "好的",
+   "pos": "形容詞（い形）",
+   "example": "今日は気分がいいです。",
+   "exampleKana": "きょうはきぶんがいいです。",
+   "exampleMeaning": "今天心情很好。"
+  },
+  {
+   "id": "n5-v-0158",
+   "kanji": "悪い",
+   "kana": "わるい",
+   "meaning": "壞的、不好的",
+   "pos": "形容詞（い形）",
+   "example": "頭が悪いわけではありません。",
+   "exampleKana": "あたまがわるいわけではありません。",
+   "exampleMeaning": "並不是頭腦不好。"
+  },
+  {
+   "id": "n5-v-0159",
+   "kanji": "暑い",
+   "kana": "あつい",
+   "meaning": "（天氣）熱",
+   "pos": "形容詞（い形）",
+   "example": "夏はとても暑いです。",
+   "exampleKana": "なつはとてもあついです。",
+   "exampleMeaning": "夏天非常熱。"
+  },
+  {
+   "id": "n5-v-0160",
+   "kanji": "寒い",
+   "kana": "さむい",
+   "meaning": "冷",
+   "pos": "形容詞（い形）",
+   "example": "冬は寒いです。",
+   "exampleKana": "ふゆはさむいです。",
+   "exampleMeaning": "冬天很冷。"
+  },
+  {
+   "id": "n5-v-0161",
+   "kanji": "熱い",
+   "kana": "あつい",
+   "meaning": "（物體）燙",
+   "pos": "形容詞（い形）",
+   "example": "このお茶は熱いです。",
+   "exampleKana": "このおちゃはあついです。",
+   "exampleMeaning": "這杯茶很燙。"
+  },
+  {
+   "id": "n5-v-0162",
+   "kanji": "冷たい",
+   "kana": "つめたい",
+   "meaning": "冰的、冷淡的",
+   "pos": "形容詞（い形）",
+   "example": "冷たい水が飲みたいです。",
+   "exampleKana": "つめたいみずがのみたいです。",
+   "exampleMeaning": "想喝冰水。"
+  },
+  {
+   "id": "n5-v-0163",
+   "kanji": "高い",
+   "kana": "たかい",
+   "meaning": "高的、貴的",
+   "pos": "形容詞（い形）",
+   "example": "この店は高いです。",
+   "exampleKana": "このみせはたかいです。",
+   "exampleMeaning": "這家店很貴。"
+  },
+  {
+   "id": "n5-v-0164",
+   "kanji": "安い",
+   "kana": "やすい",
+   "meaning": "便宜的",
+   "pos": "形容詞（い形）",
+   "example": "ここは安くておいしいです。",
+   "exampleKana": "ここはやすくておいしいです。",
+   "exampleMeaning": "這裡又便宜又好吃。"
+  },
+  {
+   "id": "n5-v-0165",
+   "kanji": "低い",
+   "kana": "ひくい",
+   "meaning": "低的、矮的",
+   "pos": "形容詞（い形）",
+   "example": "声が低いです。",
+   "exampleKana": "こえがひくいです。",
+   "exampleMeaning": "聲音很低。"
+  },
+  {
+   "id": "n5-v-0166",
+   "kanji": "長い",
+   "kana": "ながい",
+   "meaning": "長的",
+   "pos": "形容詞（い形）",
+   "example": "長い映画でした。",
+   "exampleKana": "ながいえいがでした。",
+   "exampleMeaning": "是部很長的電影。"
+  },
+  {
+   "id": "n5-v-0167",
+   "kanji": "短い",
+   "kana": "みじかい",
+   "meaning": "短的",
+   "pos": "形容詞（い形）",
+   "example": "時間が短いです。",
+   "exampleKana": "じかんがみじかいです。",
+   "exampleMeaning": "時間很短。"
+  },
+  {
+   "id": "n5-v-0168",
+   "kanji": "広い",
+   "kana": "ひろい",
+   "meaning": "寬廣的",
+   "pos": "形容詞（い形）",
+   "example": "広い部屋に住みたいです。",
+   "exampleKana": "ひろいへやにすみたいです。",
+   "exampleMeaning": "想住寬敞的房間。"
+  },
+  {
+   "id": "n5-v-0169",
+   "kanji": "狭い",
+   "kana": "せまい",
+   "meaning": "狹窄的",
+   "pos": "形容詞（い形）",
+   "example": "この道は狭いです。",
+   "exampleKana": "このみちはせまいです。",
+   "exampleMeaning": "這條路很窄。"
+  },
+  {
+   "id": "n5-v-0170",
+   "kanji": "多い",
+   "kana": "おおい",
+   "meaning": "多的",
+   "pos": "形容詞（い形）",
+   "example": "人が多いです。",
+   "exampleKana": "ひとがおおいです。",
+   "exampleMeaning": "人很多。"
+  },
+  {
+   "id": "n5-v-0171",
+   "kanji": "少ない",
+   "kana": "すくない",
+   "meaning": "少的",
+   "pos": "形容詞（い形）",
+   "example": "お金が少ないです。",
+   "exampleKana": "おかねがすくないです。",
+   "exampleMeaning": "錢很少。"
+  },
+  {
+   "id": "n5-v-0172",
+   "kanji": "面白い",
+   "kana": "おもしろい",
+   "meaning": "有趣的",
+   "pos": "形容詞（い形）",
+   "example": "この本は面白いです。",
+   "exampleKana": "このほんはおもしろいです。",
+   "exampleMeaning": "這本書很有趣。"
+  },
+  {
+   "id": "n5-v-0173",
+   "kanji": "楽しい",
+   "kana": "たのしい",
+   "meaning": "快樂的",
+   "pos": "形容詞（い形）",
+   "example": "旅行は楽しかったです。",
+   "exampleKana": "りょこうはたのしかったです。",
+   "exampleMeaning": "旅行很開心。"
+  },
+  {
+   "id": "n5-v-0174",
+   "kanji": "難しい",
+   "kana": "むずかしい",
+   "meaning": "困難的",
+   "pos": "形容詞（い形）",
+   "example": "日本語は難しいですか。",
+   "exampleKana": "にほんごはむずかしいですか。",
+   "exampleMeaning": "日語難嗎？"
+  },
+  {
+   "id": "n5-v-0175",
+   "kanji": "易しい",
+   "kana": "やさしい",
+   "meaning": "簡單的",
+   "pos": "形容詞（い形）",
+   "example": "この問題は易しいです。",
+   "exampleKana": "このもんだいはやさしいです。",
+   "exampleMeaning": "這題很簡單。"
+  },
+  {
+   "id": "n5-v-0176",
+   "kanji": "忙しい",
+   "kana": "いそがしい",
+   "meaning": "忙碌的",
+   "pos": "形容詞（い形）",
+   "example": "今週はとても忙しいです。",
+   "exampleKana": "こんしゅうはとてもいそがしいです。",
+   "exampleMeaning": "這週非常忙。"
+  },
+  {
+   "id": "n5-v-0177",
+   "kanji": "早い",
+   "kana": "はやい",
+   "meaning": "早的、快的",
+   "pos": "形容詞（い形）",
+   "example": "朝が早いです。",
+   "exampleKana": "あさがはやいです。",
+   "exampleMeaning": "早上起得很早。"
+  },
+  {
+   "id": "n5-v-0178",
+   "kanji": "遅い",
+   "kana": "おそい",
+   "meaning": "慢的、晚的",
+   "pos": "形容詞（い形）",
+   "example": "バスが遅いです。",
+   "exampleKana": "バスがおそいです。",
+   "exampleMeaning": "公車很慢。"
+  },
+  {
+   "id": "n5-v-0179",
+   "kanji": "美味しい",
+   "kana": "おいしい",
+   "meaning": "好吃的",
+   "pos": "形容詞（い形）",
+   "example": "このケーキは美味しいです。",
+   "exampleKana": "このケーキはおいしいです。",
+   "exampleMeaning": "這個蛋糕很好吃。"
+  },
+  {
+   "id": "n5-v-0180",
+   "kanji": "不味い",
+   "kana": "まずい",
+   "meaning": "難吃的",
+   "pos": "形容詞（い形）",
+   "example": "この料理はまずいです。",
+   "exampleKana": "このりょうりはまずいです。",
+   "exampleMeaning": "這道菜很難吃。"
+  },
+  {
+   "id": "n5-v-0181",
+   "kanji": "可愛い",
+   "kana": "かわいい",
+   "meaning": "可愛的",
+   "pos": "形容詞（い形）",
+   "example": "可愛い犬ですね。",
+   "exampleKana": "かわいいいぬですね。",
+   "exampleMeaning": "好可愛的狗。"
+  },
+  {
+   "id": "n5-v-0182",
+   "kanji": "白い",
+   "kana": "しろい",
+   "meaning": "白色的",
+   "pos": "形容詞（い形）",
+   "example": "白いシャツを着ます。",
+   "exampleKana": "しろいシャツをきます。",
+   "exampleMeaning": "穿白襯衫。"
+  },
+  {
+   "id": "n5-v-0183",
+   "kanji": "黒い",
+   "kana": "くろい",
+   "meaning": "黑色的",
+   "pos": "形容詞（い形）",
+   "example": "黒い猫がいます。",
+   "exampleKana": "くろいねこがいます。",
+   "exampleMeaning": "有一隻黑貓。"
+  },
+  {
+   "id": "n5-v-0184",
+   "kanji": "赤い",
+   "kana": "あかい",
+   "meaning": "紅色的",
+   "pos": "形容詞（い形）",
+   "example": "赤いりんごを買いました。",
+   "exampleKana": "あかいりんごをかいました。",
+   "exampleMeaning": "買了紅蘋果。"
+  },
+  {
+   "id": "n5-v-0185",
+   "kanji": "青い",
+   "kana": "あおい",
+   "meaning": "藍色的",
+   "pos": "形容詞（い形）",
+   "example": "青い空が好きです。",
+   "exampleKana": "あおいそらがすきです。",
+   "exampleMeaning": "喜歡藍天。"
+  },
+  {
+   "id": "n5-v-0186",
+   "kanji": "好き",
+   "kana": "すき",
+   "meaning": "喜歡",
+   "pos": "形容動詞（な形）",
+   "example": "音楽が好きです。",
+   "exampleKana": "おんがくがすきです。",
+   "exampleMeaning": "喜歡音樂。"
+  },
+  {
+   "id": "n5-v-0187",
+   "kanji": "嫌い",
+   "kana": "きらい",
+   "meaning": "討厭",
+   "pos": "形容動詞（な形）",
+   "example": "納豆が嫌いです。",
+   "exampleKana": "なっとうがきらいです。",
+   "exampleMeaning": "討厭納豆。"
+  },
+  {
+   "id": "n5-v-0188",
+   "kanji": "上手",
+   "kana": "じょうず",
+   "meaning": "擅長",
+   "pos": "形容動詞（な形）",
+   "example": "彼は歌が上手です。",
+   "exampleKana": "かれはうたがじょうずです。",
+   "exampleMeaning": "他很會唱歌。"
+  },
+  {
+   "id": "n5-v-0189",
+   "kanji": "下手",
+   "kana": "へた",
+   "meaning": "不擅長",
+   "pos": "形容動詞（な形）",
+   "example": "料理が下手です。",
+   "exampleKana": "りょうりがへたです。",
+   "exampleMeaning": "不太會做菜。"
+  },
+  {
+   "id": "n5-v-0190",
+   "kanji": "元気",
+   "kana": "げんき",
+   "meaning": "有精神、健康",
+   "pos": "形容動詞（な形）",
+   "example": "祖母はとても元気です。",
+   "exampleKana": "そぼはとてもげんきです。",
+   "exampleMeaning": "奶奶很有精神。"
+  },
+  {
+   "id": "n5-v-0191",
+   "kanji": "有名",
+   "kana": "ゆうめい",
+   "meaning": "有名",
+   "pos": "形容動詞（な形）",
+   "example": "この店は有名です。",
+   "exampleKana": "このみせはゆうめいです。",
+   "exampleMeaning": "這家店很有名。"
+  },
+  {
+   "id": "n5-v-0192",
+   "kanji": "親切",
+   "kana": "しんせつ",
+   "meaning": "親切",
+   "pos": "形容動詞（な形）",
+   "example": "店員がとても親切でした。",
+   "exampleKana": "てんいんがとてもしんせつでした。",
+   "exampleMeaning": "店員非常親切。"
+  },
+  {
+   "id": "n5-v-0193",
+   "kanji": "静か",
+   "kana": "しずか",
+   "meaning": "安靜",
+   "pos": "形容動詞（な形）",
+   "example": "図書館は静かです。",
+   "exampleKana": "としょかんはしずかです。",
+   "exampleMeaning": "圖書館很安靜。"
+  },
+  {
+   "id": "n5-v-0194",
+   "kanji": "賑やか",
+   "kana": "にぎやか",
+   "meaning": "熱鬧",
+   "pos": "形容動詞（な形）",
+   "example": "この町は賑やかです。",
+   "exampleKana": "このまちはにぎやかです。",
+   "exampleMeaning": "這個城鎮很熱鬧。"
+  },
+  {
+   "id": "n5-v-0195",
+   "kanji": "綺麗",
+   "kana": "きれい",
+   "meaning": "漂亮、乾淨",
+   "pos": "形容動詞（な形）",
+   "example": "部屋が綺麗になりました。",
+   "exampleKana": "へやがきれいになりました。",
+   "exampleMeaning": "房間變乾淨了。"
+  },
+  {
+   "id": "n5-v-0196",
+   "kanji": "暇",
+   "kana": "ひま",
+   "meaning": "空閒",
+   "pos": "形容動詞（な形）",
+   "example": "日曜日は暇です。",
+   "exampleKana": "にちようびはひまです。",
+   "exampleMeaning": "星期日有空。"
+  },
+  {
+   "id": "n5-v-0197",
+   "kanji": "便利",
+   "kana": "べんり",
+   "meaning": "方便",
+   "pos": "形容動詞（な形）",
+   "example": "この駅は便利です。",
+   "exampleKana": "このえきはべんりです。",
+   "exampleMeaning": "這個車站很方便。"
+  },
+  {
+   "id": "n5-v-0198",
+   "kanji": "簡単",
+   "kana": "かんたん",
+   "meaning": "簡單",
+   "pos": "形容動詞（な形）",
+   "example": "使い方は簡単です。",
+   "exampleKana": "つかいかたはかんたんです。",
+   "exampleMeaning": "使用方法很簡單。"
+  },
+  {
+   "id": "n5-v-0199",
+   "kanji": "大丈夫",
+   "kana": "だいじょうぶ",
+   "meaning": "沒問題、不要緊",
+   "pos": "形容動詞（な形）",
+   "example": "一人で大丈夫ですか。",
+   "exampleKana": "ひとりでだいじょうぶですか。",
+   "exampleMeaning": "一個人沒問題嗎？"
+  },
+  {
+   "id": "n5-v-0200",
+   "kanji": "大切",
+   "kana": "たいせつ",
+   "meaning": "重要、珍惜",
+   "pos": "形容動詞（な形）",
+   "example": "家族は大切です。",
+   "exampleKana": "かぞくはたいせつです。",
+   "exampleMeaning": "家人很重要。"
+  },
+  {
+   "id": "n5-v-0201",
+   "kanji": "大変",
+   "kana": "たいへん",
+   "meaning": "辛苦、不得了",
+   "pos": "形容動詞（な形）",
+   "example": "仕事が大変です。",
+   "exampleKana": "しごとがたいへんです。",
+   "exampleMeaning": "工作很辛苦。"
+  },
+  {
+   "id": "n5-v-0202",
+   "kanji": "色々",
+   "kana": "いろいろ",
+   "meaning": "各式各樣",
+   "pos": "形容動詞（な形）",
+   "example": "色々な国へ行きました。",
+   "exampleKana": "いろいろなくにへいきました。",
+   "exampleMeaning": "去過各種國家。"
+  },
+  {
+   "id": "n5-v-0203",
+   "kanji": "行く",
+   "kana": "いく",
+   "meaning": "去",
+   "pos": "動詞",
+   "example": "明日学校へ行きます。",
+   "exampleKana": "あしたがっこうへいきます。",
+   "exampleMeaning": "明天去學校。"
+  },
+  {
+   "id": "n5-v-0204",
+   "kanji": "来る",
+   "kana": "くる",
+   "meaning": "來",
+   "pos": "動詞",
+   "example": "友達が家に来ます。",
+   "exampleKana": "ともだちがいえにきます。",
+   "exampleMeaning": "朋友要來家裡。"
+  },
+  {
+   "id": "n5-v-0205",
+   "kanji": "帰る",
+   "kana": "かえる",
+   "meaning": "回去、回家",
+   "pos": "動詞",
+   "example": "六時に帰ります。",
+   "exampleKana": "ろくじにかえります。",
+   "exampleMeaning": "六點回家。"
+  },
+  {
+   "id": "n5-v-0206",
+   "kanji": "食べる",
+   "kana": "たべる",
+   "meaning": "吃",
+   "pos": "動詞",
+   "example": "朝ご飯を食べます。",
+   "exampleKana": "あさごはんをたべます。",
+   "exampleMeaning": "吃早餐。"
+  },
+  {
+   "id": "n5-v-0207",
+   "kanji": "飲む",
+   "kana": "のむ",
+   "meaning": "喝",
+   "pos": "動詞",
+   "example": "水を飲みます。",
+   "exampleKana": "みずをのみます。",
+   "exampleMeaning": "喝水。"
+  },
+  {
+   "id": "n5-v-0208",
+   "kanji": "見る",
+   "kana": "みる",
+   "meaning": "看",
+   "pos": "動詞",
+   "example": "映画を見ます。",
+   "exampleKana": "えいがをみます。",
+   "exampleMeaning": "看電影。"
+  },
+  {
+   "id": "n5-v-0209",
+   "kanji": "聞く",
+   "kana": "きく",
+   "meaning": "聽、問",
+   "pos": "動詞",
+   "example": "音楽を聞きます。",
+   "exampleKana": "おんがくをききます。",
+   "exampleMeaning": "聽音樂。"
+  },
+  {
+   "id": "n5-v-0210",
+   "kanji": "話す",
+   "kana": "はなす",
+   "meaning": "說、談",
+   "pos": "動詞",
+   "example": "日本語で話します。",
+   "exampleKana": "にほんごではなします。",
+   "exampleMeaning": "用日語說。"
+  },
+  {
+   "id": "n5-v-0211",
+   "kanji": "読む",
+   "kana": "よむ",
+   "meaning": "讀",
+   "pos": "動詞",
+   "example": "新聞を読みます。",
+   "exampleKana": "しんぶんをよみます。",
+   "exampleMeaning": "讀報。"
+  },
+  {
+   "id": "n5-v-0212",
+   "kanji": "書く",
+   "kana": "かく",
+   "meaning": "寫、畫",
+   "pos": "動詞",
+   "example": "手紙を書きます。",
+   "exampleKana": "てがみをかきます。",
+   "exampleMeaning": "寫信。"
+  },
+  {
+   "id": "n5-v-0213",
+   "kanji": "買う",
+   "kana": "かう",
+   "meaning": "買",
+   "pos": "動詞",
+   "example": "パンを買います。",
+   "exampleKana": "パンをかいます。",
+   "exampleMeaning": "買麵包。"
+  },
+  {
+   "id": "n5-v-0214",
+   "kanji": "売る",
+   "kana": "うる",
+   "meaning": "賣",
+   "pos": "動詞",
+   "example": "この店は野菜を売っています。",
+   "exampleKana": "このみせはやさいをうっています。",
+   "exampleMeaning": "這家店賣蔬菜。"
+  },
+  {
+   "id": "n5-v-0215",
+   "kanji": "起きる",
+   "kana": "おきる",
+   "meaning": "起床、起來",
+   "pos": "動詞",
+   "example": "毎日七時に起きます。",
+   "exampleKana": "まいにちしちじにおきます。",
+   "exampleMeaning": "每天七點起床。"
+  },
+  {
+   "id": "n5-v-0216",
+   "kanji": "寝る",
+   "kana": "ねる",
+   "meaning": "睡覺",
+   "pos": "動詞",
+   "example": "十一時に寝ます。",
+   "exampleKana": "じゅういちじにねます。",
+   "exampleMeaning": "十一點睡。"
+  },
+  {
+   "id": "n5-v-0217",
+   "kanji": "働く",
+   "kana": "はたらく",
+   "meaning": "工作",
+   "pos": "動詞",
+   "example": "銀行で働いています。",
+   "exampleKana": "ぎんこうではたらいています。",
+   "exampleMeaning": "在銀行工作。"
+  },
+  {
+   "id": "n5-v-0218",
+   "kanji": "休む",
+   "kana": "やすむ",
+   "meaning": "休息、請假",
+   "pos": "動詞",
+   "example": "今日は会社を休みます。",
+   "exampleKana": "きょうはかいしゃをやすみます。",
+   "exampleMeaning": "今天向公司請假。"
+  },
+  {
+   "id": "n5-v-0219",
+   "kanji": "勉強する",
+   "kana": "べんきょうする",
+   "meaning": "學習、唸書",
+   "pos": "動詞",
+   "example": "図書館で勉強します。",
+   "exampleKana": "としょかんでべんきょうします。",
+   "exampleMeaning": "在圖書館唸書。"
+  },
+  {
+   "id": "n5-v-0220",
+   "kanji": "教える",
+   "kana": "おしえる",
+   "meaning": "教、告訴",
+   "pos": "動詞",
+   "example": "日本語を教えています。",
+   "exampleKana": "にほんごをおしえています。",
+   "exampleMeaning": "在教日語。"
+  },
+  {
+   "id": "n5-v-0221",
+   "kanji": "習う",
+   "kana": "ならう",
+   "meaning": "學（技藝）",
+   "pos": "動詞",
+   "example": "ピアノを習っています。",
+   "exampleKana": "ピアノをならっています。",
+   "exampleMeaning": "在學鋼琴。"
+  },
+  {
+   "id": "n5-v-0222",
+   "kanji": "分かる",
+   "kana": "わかる",
+   "meaning": "懂、明白",
+   "pos": "動詞",
+   "example": "意味が分かりました。",
+   "exampleKana": "いみがわかりました。",
+   "exampleMeaning": "明白意思了。"
+  },
+  {
+   "id": "n5-v-0223",
+   "kanji": "知る",
+   "kana": "しる",
+   "meaning": "知道、認識",
+   "pos": "動詞",
+   "example": "彼の名前を知っていますか。",
+   "exampleKana": "かれのなまえをしっていますか。",
+   "exampleMeaning": "你知道他的名字嗎？"
+  },
+  {
+   "id": "n5-v-0224",
+   "kanji": "会う",
+   "kana": "あう",
+   "meaning": "見面",
+   "pos": "動詞",
+   "example": "駅で友達に会いました。",
+   "exampleKana": "えきでともだちにあいました。",
+   "exampleMeaning": "在車站遇到朋友。"
+  },
+  {
+   "id": "n5-v-0225",
+   "kanji": "待つ",
+   "kana": "まつ",
+   "meaning": "等",
+   "pos": "動詞",
+   "example": "ここで待ってください。",
+   "exampleKana": "ここでまってください。",
+   "exampleMeaning": "請在這裡等。"
+  },
+  {
+   "id": "n5-v-0226",
+   "kanji": "使う",
+   "kana": "つかう",
+   "meaning": "使用",
+   "pos": "動詞",
+   "example": "箸を使います。",
+   "exampleKana": "はしをつかいます。",
+   "exampleMeaning": "用筷子。"
+  },
+  {
+   "id": "n5-v-0227",
+   "kanji": "作る",
+   "kana": "つくる",
+   "meaning": "製作、做",
+   "pos": "動詞",
+   "example": "母は昼ご飯を作ります。",
+   "exampleKana": "はははひるごはんをつくります。",
+   "exampleMeaning": "媽媽做午餐。"
+  },
+  {
+   "id": "n5-v-0228",
+   "kanji": "持つ",
+   "kana": "もつ",
+   "meaning": "拿、持有",
+   "pos": "動詞",
+   "example": "荷物を持ちましょうか。",
+   "exampleKana": "にもつをもちましょうか。",
+   "exampleMeaning": "我幫你拿行李吧？"
+  },
+  {
+   "id": "n5-v-0229",
+   "kanji": "立つ",
+   "kana": "たつ",
+   "meaning": "站立",
+   "pos": "動詞",
+   "example": "席を立ちます。",
+   "exampleKana": "せきをたちます。",
+   "exampleMeaning": "站起來離座。"
+  },
+  {
+   "id": "n5-v-0230",
+   "kanji": "座る",
+   "kana": "すわる",
+   "meaning": "坐",
+   "pos": "動詞",
+   "example": "どうぞ座ってください。",
+   "exampleKana": "どうぞすわってください。",
+   "exampleMeaning": "請坐。"
+  },
+  {
+   "id": "n5-v-0231",
+   "kanji": "歩く",
+   "kana": "あるく",
+   "meaning": "走路",
+   "pos": "動詞",
+   "example": "駅まで歩きます。",
+   "exampleKana": "えきまであるきます。",
+   "exampleMeaning": "走到車站。"
+  },
+  {
+   "id": "n5-v-0232",
+   "kanji": "走る",
+   "kana": "はしる",
+   "meaning": "跑",
+   "pos": "動詞",
+   "example": "毎朝公園を走ります。",
+   "exampleKana": "まいあさこうえんをはしります。",
+   "exampleMeaning": "每天早上在公園跑步。"
+  },
+  {
+   "id": "n5-v-0233",
+   "kanji": "泳ぐ",
+   "kana": "およぐ",
+   "meaning": "游泳",
+   "pos": "動詞",
+   "example": "海で泳ぎます。",
+   "exampleKana": "うみでおよぎます。",
+   "exampleMeaning": "在海裡游泳。"
+  },
+  {
+   "id": "n5-v-0234",
+   "kanji": "飛ぶ",
+   "kana": "とぶ",
+   "meaning": "飛",
+   "pos": "動詞",
+   "example": "鳥が空を飛んでいます。",
+   "exampleKana": "とりがそらをとんでいます。",
+   "exampleMeaning": "鳥在天上飛。"
+  },
+  {
+   "id": "n5-v-0235",
+   "kanji": "入る",
+   "kana": "はいる",
+   "meaning": "進入",
+   "pos": "動詞",
+   "example": "部屋に入ります。",
+   "exampleKana": "へやにはいります。",
+   "exampleMeaning": "進房間。"
+  },
+  {
+   "id": "n5-v-0236",
+   "kanji": "出る",
+   "kana": "でる",
+   "meaning": "出去、出現",
+   "pos": "動詞",
+   "example": "家を出ます。",
+   "exampleKana": "いえをでます。",
+   "exampleMeaning": "出門。"
+  },
+  {
+   "id": "n5-v-0237",
+   "kanji": "乗る",
+   "kana": "のる",
+   "meaning": "搭乘",
+   "pos": "動詞",
+   "example": "バスに乗ります。",
+   "exampleKana": "バスにのります。",
+   "exampleMeaning": "搭公車。"
+  },
+  {
+   "id": "n5-v-0238",
+   "kanji": "降りる",
+   "kana": "おりる",
+   "meaning": "下車、下來",
+   "pos": "動詞",
+   "example": "次の駅で降ります。",
+   "exampleKana": "つぎのえきでおります。",
+   "exampleMeaning": "在下一站下車。"
+  },
+  {
+   "id": "n5-v-0239",
+   "kanji": "開ける",
+   "kana": "あける",
+   "meaning": "打開",
+   "pos": "動詞",
+   "example": "窓を開けます。",
+   "exampleKana": "まどをあけます。",
+   "exampleMeaning": "開窗。"
+  },
+  {
+   "id": "n5-v-0240",
+   "kanji": "閉める",
+   "kana": "しめる",
+   "meaning": "關閉",
+   "pos": "動詞",
+   "example": "ドアを閉めてください。",
+   "exampleKana": "ドアをしめてください。",
+   "exampleMeaning": "請關門。"
+  },
+  {
+   "id": "n5-v-0241",
+   "kanji": "着る",
+   "kana": "きる",
+   "meaning": "穿（上衣）",
+   "pos": "動詞",
+   "example": "コートを着ます。",
+   "exampleKana": "コートをきます。",
+   "exampleMeaning": "穿大衣。"
+  },
+  {
+   "id": "n5-v-0242",
+   "kanji": "脱ぐ",
+   "kana": "ぬぐ",
+   "meaning": "脫",
+   "pos": "動詞",
+   "example": "靴を脱いでください。",
+   "exampleKana": "くつをぬいでください。",
+   "exampleMeaning": "請脫鞋。"
+  },
+  {
+   "id": "n5-v-0243",
+   "kanji": "洗う",
+   "kana": "あらう",
+   "meaning": "洗",
+   "pos": "動詞",
+   "example": "手を洗います。",
+   "exampleKana": "てをあらいます。",
+   "exampleMeaning": "洗手。"
+  },
+  {
+   "id": "n5-v-0244",
+   "kanji": "掃除する",
+   "kana": "そうじする",
+   "meaning": "打掃",
+   "pos": "動詞",
+   "example": "部屋を掃除します。",
+   "exampleKana": "へやをそうじします。",
+   "exampleMeaning": "打掃房間。"
+  },
+  {
+   "id": "n5-v-0245",
+   "kanji": "洗濯する",
+   "kana": "せんたくする",
+   "meaning": "洗衣服",
+   "pos": "動詞",
+   "example": "週末に洗濯します。",
+   "exampleKana": "しゅうまつにせんたくします。",
+   "exampleMeaning": "週末洗衣服。"
+  },
+  {
+   "id": "n5-v-0246",
+   "kanji": "料理する",
+   "kana": "りょうりする",
+   "meaning": "做菜",
+   "pos": "動詞",
+   "example": "今晩は私が料理します。",
+   "exampleKana": "こんばんはわたしがりょうりします。",
+   "exampleMeaning": "今晚我來做菜。"
+  },
+  {
+   "id": "n5-v-0247",
+   "kanji": "撮る",
+   "kana": "とる",
+   "meaning": "拍照",
+   "pos": "動詞",
+   "example": "写真を撮ります。",
+   "exampleKana": "しゃしんをとります。",
+   "exampleMeaning": "拍照。"
+  },
+  {
+   "id": "n5-v-0248",
+   "kanji": "遊ぶ",
+   "kana": "あそぶ",
+   "meaning": "玩",
+   "pos": "動詞",
+   "example": "子供が公園で遊んでいます。",
+   "exampleKana": "こどもがこうえんであそんでいます。",
+   "exampleMeaning": "小孩在公園玩。"
+  },
+  {
+   "id": "n5-v-0249",
+   "kanji": "歌う",
+   "kana": "うたう",
+   "meaning": "唱歌",
+   "pos": "動詞",
+   "example": "カラオケで歌います。",
+   "exampleKana": "カラオケでうたいます。",
+   "exampleMeaning": "在卡拉OK唱歌。"
+  },
+  {
+   "id": "n5-v-0250",
+   "kanji": "死ぬ",
+   "kana": "しぬ",
+   "meaning": "死、死亡",
+   "pos": "動詞",
+   "example": "祖父は去年死にました。",
+   "exampleKana": "そふはきょねんしにました。",
+   "exampleMeaning": "我祖父去年過世了。"
+  },
+  {
+   "id": "n5-v-0251",
+   "kanji": "とても",
+   "kana": "とても",
+   "meaning": "非常",
+   "pos": "副詞",
+   "example": "とても面白かったです。",
+   "exampleKana": "とてもおもしろかったです。",
+   "exampleMeaning": "非常有趣。"
+  },
+  {
+   "id": "n5-v-0252",
+   "kanji": "少し",
+   "kana": "すこし",
+   "meaning": "一點點",
+   "pos": "副詞",
+   "example": "少し疲れました。",
+   "exampleKana": "すこしつかれました。",
+   "exampleMeaning": "有點累。"
+  },
+  {
+   "id": "n5-v-0253",
+   "kanji": "たくさん",
+   "kana": "たくさん",
+   "meaning": "很多",
+   "pos": "副詞",
+   "example": "本をたくさん読みます。",
+   "exampleKana": "ほんをたくさんよみます。",
+   "exampleMeaning": "讀很多書。"
+  },
+  {
+   "id": "n5-v-0254",
+   "kanji": "よく",
+   "kana": "よく",
+   "meaning": "經常、好好地",
+   "pos": "副詞",
+   "example": "よく映画を見ます。",
+   "exampleKana": "よくえいがをみます。",
+   "exampleMeaning": "常看電影。"
+  },
+  {
+   "id": "n5-v-0255",
+   "kanji": "時々",
+   "kana": "ときどき",
+   "meaning": "有時候",
+   "pos": "副詞",
+   "example": "時々日本語で話します。",
+   "exampleKana": "ときどきにほんごではなします。",
+   "exampleMeaning": "有時用日語聊天。"
+  },
+  {
+   "id": "n5-v-0256",
+   "kanji": "いつも",
+   "kana": "いつも",
+   "meaning": "總是",
+   "pos": "副詞",
+   "example": "いつも七時に起きます。",
+   "exampleKana": "いつもしちじにおきます。",
+   "exampleMeaning": "總是七點起床。"
+  },
+  {
+   "id": "n5-v-0257",
+   "kanji": "もう",
+   "kana": "もう",
+   "meaning": "已經",
+   "pos": "副詞",
+   "example": "もう食べました。",
+   "exampleKana": "もうたべました。",
+   "exampleMeaning": "已經吃過了。"
+  },
+  {
+   "id": "n5-v-0258",
+   "kanji": "まだ",
+   "kana": "まだ",
+   "meaning": "還（沒）",
+   "pos": "副詞",
+   "example": "まだ終わっていません。",
+   "exampleKana": "まだおわっていません。",
+   "exampleMeaning": "還沒結束。"
+  },
+  {
+   "id": "n5-v-0259",
+   "kanji": "すぐに",
+   "kana": "すぐに",
+   "meaning": "馬上",
+   "pos": "副詞",
+   "example": "すぐに行きます。",
+   "exampleKana": "すぐにいきます。",
+   "exampleMeaning": "馬上去。"
+  },
+  {
+   "id": "n5-v-0260",
+   "kanji": "ゆっくり",
+   "kana": "ゆっくり",
+   "meaning": "慢慢地",
+   "pos": "副詞",
+   "example": "ゆっくり話してください。",
+   "exampleKana": "ゆっくりはなしてください。",
+   "exampleMeaning": "請慢慢說。"
+  },
+  {
+   "id": "n5-v-0261",
+   "kanji": "一緒に",
+   "kana": "いっしょに",
+   "meaning": "一起",
+   "pos": "副詞",
+   "example": "一緒に帰りましょう。",
+   "exampleKana": "いっしょにかえりましょう。",
+   "exampleMeaning": "一起回家吧。"
+  },
+  {
+   "id": "n5-v-0262",
+   "kanji": "まっすぐ",
+   "kana": "まっすぐ",
+   "meaning": "直直地",
+   "pos": "副詞",
+   "example": "まっすぐ行ってください。",
+   "exampleKana": "まっすぐいってください。",
+   "exampleMeaning": "請直走。"
+  },
+  {
+   "id": "n5-v-0263",
+   "kanji": "本当に",
+   "kana": "ほんとうに",
+   "meaning": "真的",
+   "pos": "副詞",
+   "example": "本当にありがとうございます。",
+   "exampleKana": "ほんとうにありがとうございます。",
+   "exampleMeaning": "真的很謝謝你。"
+  },
+  {
+   "id": "n5-v-0264",
+   "kanji": "一番",
+   "kana": "いちばん",
+   "meaning": "最",
+   "pos": "副詞",
+   "example": "夏が一番好きです。",
+   "exampleKana": "なつがいちばんすきです。",
+   "exampleMeaning": "最喜歡夏天。"
+  },
+  {
+   "id": "n5-v-0265",
+   "kanji": "だんだん",
+   "kana": "だんだん",
+   "meaning": "漸漸地",
+   "pos": "副詞",
+   "example": "だんだん寒くなりました。",
+   "exampleKana": "だんだんさむくなりました。",
+   "exampleMeaning": "漸漸變冷了。"
+  },
+  {
+   "id": "n5-v-0266",
+   "kanji": "また",
+   "kana": "また",
+   "meaning": "又、再",
+   "pos": "副詞",
+   "example": "また明日会いましょう。",
+   "exampleKana": "またあしたあいましょう。",
+   "exampleMeaning": "明天再見。"
+  },
+  {
+   "id": "n5-v-0267",
+   "kanji": "それから",
+   "kana": "それから",
+   "meaning": "然後",
+   "pos": "接續詞",
+   "example": "買い物をして、それから帰りました。",
+   "exampleKana": "かいものをして、それからかえりました。",
+   "exampleMeaning": "買了東西然後回家。"
+  },
+  {
+   "id": "n5-v-0268",
+   "kanji": "でも",
+   "kana": "でも",
+   "meaning": "但是",
+   "pos": "接續詞",
+   "example": "高いです。でも、おいしいです。",
+   "exampleKana": "たかいです。でも、おいしいです。",
+   "exampleMeaning": "很貴，但是很好吃。"
+  },
+  {
+   "id": "n5-v-0269",
+   "kanji": "だから",
+   "kana": "だから",
+   "meaning": "所以",
+   "pos": "接續詞",
+   "example": "雨です。だから、行きません。",
+   "exampleKana": "あめです。だから、いきません。",
+   "exampleMeaning": "下雨，所以不去。"
+  }
+ ]
+}

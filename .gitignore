@@ -1,0 +1,13 @@
+# 依賴（只有截圖腳本 scripts/screenshots.mjs 需要；執行 App 本身不需要任何依賴）
+node_modules/
+package-lock.json
+
+# 暫存 / 系統
+*.tmp
+*.log
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# 本機開發設定（不影響部署）
+.claude/settings.local.json
