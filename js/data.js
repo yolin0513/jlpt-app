@@ -59,13 +59,24 @@ export async function loadSet(type, level) {
   return items;
 }
 
-/** 一次載入多個級別（複習 / 混合模式用）。序列載入以降低並發、避免暫時性 fetch 失敗 */
-export async function loadMany(type, levels) {
-  const out = [];
-  for (const lv of levels) {
-    out.push(...await loadSet(type, lv));
+/** 併發上限的 map（同時最多 limit 個，避免壓垮本機 dev server） */
+async function mapLimit(items, limit, fn) {
+  const out = new Array(items.length);
+  let i = 0;
+  async function worker() {
+    while (i < items.length) {
+      const idx = i++;
+      out[idx] = await fn(items[idx]);
+    }
   }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
   return out;
+}
+
+/** 一次載入多個級別（複習 / 混合模式用）。已快取者立即回傳，其餘限並發載入 */
+export async function loadMany(type, levels) {
+  const groups = await mapLimit(levels, 3, (lv) => loadSet(type, lv));
+  return groups.flat();
 }
 
 /* ---------- 生活旅行 ---------- */
@@ -92,9 +103,8 @@ export async function loadTravel(cat) {
 export async function loadTravelAll(cats) {
   const tm = await getTravelManifest();
   const keys = cats && cats.length ? cats : tm.sets.map((s) => s.cat);
-  const out = [];
-  for (const c of keys) out.push(...await loadTravel(c));
-  return out;
+  const groups = await mapLimit(keys, 3, (c) => loadTravel(c));
+  return groups.flat();
 }
 
 /** 依 id 反查（跨全部已載入 + 需要時載入對應檔） */

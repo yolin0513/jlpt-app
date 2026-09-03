@@ -47,6 +47,7 @@ for (const [hash, marker] of [
   ['#/favorites', '#view'], ['#/search?q=床', '.detail-card'],
 ]) {
   await go(p, hash);
+  await p.waitForSelector(marker, { timeout: 8000 }).catch(() => {});
   const has = await p.evaluate((m) => !!document.querySelector(m), marker);
   ok(has, `${hash} 內容渲染`);
 }

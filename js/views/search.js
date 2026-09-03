@@ -7,10 +7,11 @@ let _pool = null; // 快取全題庫（含 vocab + grammar + travel）
 
 async function getPool() {
   if (_pool) return _pool;
-  const v = await loadMany('vocab', LEVELS);
-  const g = await loadMany('grammar', LEVELS);
-  let tv = [];
-  try { tv = await loadTravelAll(); } catch { tv = []; }
+  const [v, g, tv] = await Promise.all([
+    loadMany('vocab', LEVELS),
+    loadMany('grammar', LEVELS),
+    loadTravelAll().catch(() => [])
+  ]);
   _pool = [...v, ...g, ...tv];
   return _pool;
 }
