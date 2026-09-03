@@ -18,7 +18,7 @@
    "label": "文法"
   }
  ],
- "totalItems": 1628,
+ "totalItems": 1841,
  "sets": [
   {
    "type": "grammar",
@@ -54,7 +54,7 @@
    "type": "vocab",
    "level": "N5",
    "file": "vocab/n5.json",
-   "count": 269
+   "count": 482
   },
   {
    "type": "vocab",

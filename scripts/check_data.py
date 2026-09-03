@@ -37,10 +37,15 @@ ID_RE = re.compile(r"^n[1-5]-[vg]-\d{4}$")
 TV_ID_RE = re.compile(r"^tv-[puk]-\d{4}$")
 
 problems = []
+warnings = []
 
 
 def err(msg):
     problems.append(msg)
+
+
+def warn(msg):
+    warnings.append(msg)
 
 
 def check_vocab(level, items):
@@ -174,6 +179,20 @@ def main():
         dups = {i for i in ids if ids.count(i) > 1}
         err(f"全域重複 id: {sorted(dups)}")
 
+    # 同一單字／文法跨級別重複收錄（依 漢字+假名 / 句型）— 列為警告，不影響結果碼
+    seen_vocab, seen_grammar = {}, {}
+    for typ, level, it in all_items:
+        if typ == "vocab":
+            k = (it.get("kanji", ""), it.get("kana", ""))
+            if k in seen_vocab and seen_vocab[k][0] != level:
+                warn(f"跨級別重複單字 {k[0]}（{k[1]}）: {seen_vocab[k][1]} 與 {level}/{it['id']}")
+            seen_vocab.setdefault(k, (level, it["id"]))
+        elif typ == "grammar":
+            k = it.get("pattern", "")
+            if k in seen_grammar and seen_grammar[k][0] != level:
+                warn(f"跨級別重複文法「{k}」: {seen_grammar[k][1]} 與 {level}/{it['id']}")
+            seen_grammar.setdefault(k, (level, it["id"]))
+
     print(f"總條目：{grand} + 生活旅行 {travel_grand} = {grand + travel_grand}"
           f"（manifest JLPT totalItems={manifest.get('totalItems')}，"
           f"travel total={manifest.get('travel', {}).get('total')}）")
@@ -184,12 +203,17 @@ def main():
     for cat in TRAVEL_CATS:
         print(f"  travel {cat:8s}: {tv_counts.get(cat, 0):4d}")
 
+    if warnings:
+        print(f"\n⚠ {len(warnings)} 個警告（不影響結果碼）：")
+        for w in warnings:
+            print("  - " + w)
+
     if problems:
         print(f"\n發現 {len(problems)} 個問題：", file=sys.stderr)
         for p in problems:
             print("  - " + p, file=sys.stderr)
     else:
-        print("\n✓ 全部檢查通過")
+        print("\n✓ 全部檢查通過" + (f"（另有 {len(warnings)} 個警告）" if warnings else ""))
 
     if args.sample:
         print(f"\n--- 隨機抽樣 {args.sample} 條（請人工核對假名與釋義）---")

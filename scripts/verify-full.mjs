@@ -34,11 +34,16 @@ const sw = await p.evaluate(async () => {
   for (let i = 0; i < 40 && !reg.active; i++) await new Promise(r => setTimeout(r, 100));
   const keys = await caches.keys();
   const man = await fetch(new URL('data/manifest.json', location.href)).then(r => r.json());
-  return { scope: reg.scope, state: reg.active?.state, cacheKeys: keys, jlpt: man.totalItems, travel: man.travel?.total };
+  const setSum = (man.sets || []).reduce((s, x) => s + x.count, 0);
+  const tvSum = (man.travel?.sets || []).reduce((s, x) => s + x.count, 0);
+  return { scope: reg.scope, state: reg.active?.state, cacheKeys: keys,
+    jlpt: man.totalItems, travel: man.travel?.total, setSum, tvSum };
 });
 ok(sw.state === 'activated' && (sw.scope.endsWith('/jlpt-app/') || sw.scope.endsWith(':5173/')), `SW ${sw.state} @ ${sw.scope}`);
 ok(sw.cacheKeys.some(k => /v1\.\d+\.\d+-shell/.test(k)), `SW shell 快取存在 (${sw.cacheKeys.join(', ')})`);
-ok(sw.jlpt === 1628 && sw.travel === 266, `題庫載入 JLPT ${sw.jlpt} + 旅行 ${sw.travel}`);
+// 題庫數量不寫死：只驗證 manifest 內部一致且達合理下限
+ok(sw.jlpt === sw.setSum && sw.jlpt >= 1600 && sw.travel === sw.tvSum && sw.travel >= 260,
+  `題庫載入 JLPT ${sw.jlpt} + 旅行 ${sw.travel}（manifest 內部一致）`);
 
 // 逐頁載入
 for (const [hash, marker] of [
