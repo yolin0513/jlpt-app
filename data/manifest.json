@@ -19,66 +19,77 @@
   }
  ],
  "totalItems": 2432,
+ "activeItems": 2405,
  "sets": [
   {
    "type": "grammar",
    "level": "N5",
    "file": "grammar/n5.json",
-   "count": 46
+   "count": 46,
+   "activeCount": 46
   },
   {
    "type": "grammar",
    "level": "N4",
    "file": "grammar/n4.json",
-   "count": 55
+   "count": 55,
+   "activeCount": 54
   },
   {
    "type": "grammar",
    "level": "N3",
    "file": "grammar/n3.json",
-   "count": 54
+   "count": 54,
+   "activeCount": 54
   },
   {
    "type": "grammar",
    "level": "N2",
    "file": "grammar/n2.json",
-   "count": 52
+   "count": 52,
+   "activeCount": 51
   },
   {
    "type": "grammar",
    "level": "N1",
    "file": "grammar/n1.json",
-   "count": 47
+   "count": 47,
+   "activeCount": 47
   },
   {
    "type": "vocab",
    "level": "N5",
    "file": "vocab/n5.json",
-   "count": 646
+   "count": 646,
+   "activeCount": 646
   },
   {
    "type": "vocab",
    "level": "N4",
    "file": "vocab/n4.json",
-   "count": 501
+   "count": 501,
+   "activeCount": 501
   },
   {
    "type": "vocab",
    "level": "N3",
    "file": "vocab/n3.json",
-   "count": 508
+   "count": 508,
+   "activeCount": 499
   },
   {
    "type": "vocab",
    "level": "N2",
    "file": "vocab/n2.json",
-   "count": 260
+   "count": 260,
+   "activeCount": 250
   },
   {
    "type": "vocab",
    "level": "N1",
    "file": "vocab/n1.json",
-   "count": 263
+   "count": 263,
+   "activeCount": 257
   }
  ],
  "travel": {

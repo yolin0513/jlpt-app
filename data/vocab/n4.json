@@ -2,6 +2,7 @@
  "level": "N4",
  "type": "vocab",
  "count": 501,
+ "activeCount": 501,
  "items": [
   {
    "id": "n4-v-0001",
@@ -737,7 +738,7 @@
    "id": "n4-v-0074",
    "kanji": "断る",
    "kana": "ことわる",
-   "meaning": "拒絕",
+   "meaning": "拒絕；事先知會",
    "pos": "動詞",
    "example": "残念ですが、お誘いを断りました。",
    "exampleKana": "ざんねんですが、おさそいをことわりました。",

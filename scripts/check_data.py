@@ -151,6 +151,12 @@ def main():
                 err(f"{fp.name}: count={d.get('count')} 但 items={len(items)}")
             if man_counts.get((typ, level)) != len(items):
                 err(f"manifest {typ} {level}: {man_counts.get((typ, level))} != {len(items)}")
+            active = sum(1 for it in items if not it.get("dup"))
+            if d.get("activeCount") != active:
+                err(f"{fp.name}: activeCount={d.get('activeCount')} 但實際未隱藏 {active}")
+            for it in items:
+                if it.get("dup") and not it.get("dupOf"):
+                    err(f"{fp.name}: {it['id']} 標記 dup 但缺 dupOf")
             checker(level, items)
             grand += len(items)
             for it in items:
@@ -179,13 +185,16 @@ def main():
         dups = {i for i in ids if ids.count(i) > 1}
         err(f"全域重複 id: {sorted(dups)}")
 
-    # 同一單字／文法跨級別重複收錄（依 漢字+假名 / 句型）— 列為警告，不影響結果碼
+    # 同一單字／文法跨級別重複收錄（依 漢字+假名 / 句型）
+    # 已在 data/src/dedup.txt 標記 dup 的（較高級別那筆）視為已處理，不再警告
     seen_vocab, seen_grammar = {}, {}
     for typ, level, it in all_items:
+        if it.get("dup"):
+            continue
         if typ == "vocab":
             k = (it.get("kanji", ""), it.get("kana", ""))
             if k in seen_vocab and seen_vocab[k][0] != level:
-                warn(f"跨級別重複單字 {k[0]}（{k[1]}）: {seen_vocab[k][1]} 與 {level}/{it['id']}")
+                warn(f"跨級別重複單字 {k[0]}（{k[1]}）: {seen_vocab[k][1]} 與 {level}/{it['id']}（可加進 dedup.txt）")
             seen_vocab.setdefault(k, (level, it["id"]))
         elif typ == "grammar":
             k = it.get("pattern", "")

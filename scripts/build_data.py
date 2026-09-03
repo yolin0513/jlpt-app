@@ -165,38 +165,97 @@ def build_travel(cat_key: str, id_abbr: str):
     return items
 
 
+def _content_key(it, typ):
+    """跨級別去重用的內容鍵（不含級別）。"""
+    if typ == "vocab":
+        return ("v", it.get("kanji", ""), it.get("kana", ""))
+    return ("g", it.get("pattern", ""), "")
+
+
+def apply_dedup(by_set):
+    """讀 data/src/dedup.txt，把「較高級別」的重複條目標成 dup=true / dupOf=<保留 id>。
+
+    by_set: {(typ, level): [items]}  會就地修改
+    每條規則都必須：(1) 在指定級別恰好命中一筆；(2) 在某個較低級別找得到同內容的「保留」筆。
+    否則丟出例外，避免規則失效卻靜默隱藏。
+    """
+    rules = parse_lines(SRC / "dedup.txt")
+    hidden = 0
+    for cols in rules:
+        lv = field(cols, 0).upper()
+        kind = field(cols, 1)          # v / g
+        key1 = field(cols, 2)          # 漢字 / 句型
+        key2 = field(cols, 3)          # 假名（文法留空）
+        typ = "vocab" if kind == "v" else "grammar"
+        if lv not in LEVELS:
+            raise SystemExit(f"dedup.txt: 未知級別 {lv} — {cols}")
+        want = ("v" if typ == "vocab" else "g", key1, key2)
+
+        matches = [it for it in by_set.get((typ, lv), [])
+                   if _content_key(it, typ) == want]
+        if len(matches) != 1:
+            raise SystemExit(
+                f"dedup.txt 規則命中 {len(matches)} 筆（應為 1）：{lv} {kind} {key1} {key2}")
+
+        # 找較低級別的「保留」筆
+        kept = None
+        for lower in LEVELS[:LEVELS.index(lv)]:
+            for it in by_set.get((typ, lower), []):
+                if _content_key(it, typ) == want:
+                    kept = it
+                    break
+            if kept:
+                break
+        if not kept:
+            raise SystemExit(
+                f"dedup.txt: {lv} {key1} 找不到較低級別的保留筆，規則無效")
+
+        matches[0]["dup"] = True
+        matches[0]["dupOf"] = kept["id"]
+        hidden += 1
+    return hidden
+
+
 def main():
     VOCAB_OUT.mkdir(parents=True, exist_ok=True)
     GRAMMAR_OUT.mkdir(parents=True, exist_ok=True)
     TRAVEL_OUT.mkdir(parents=True, exist_ok=True)
     sets = []
     total = 0
+    active_total = 0
+
+    # 先全部建好，再套跨級別去重標記
+    by_set = {}
+    for level in LEVELS:
+        v, g = build_vocab(level), build_grammar(level)
+        if v:
+            by_set[("vocab", level)] = v
+        if g:
+            by_set[("grammar", level)] = g
+
+    hidden = apply_dedup(by_set)
 
     for level in LEVELS:
-        vocab = build_vocab(level)
-        grammar = build_grammar(level)
-
-        if vocab:
-            out = VOCAB_OUT / f"{level.lower()}.json"
+        for typ, folder in (("vocab", VOCAB_OUT), ("grammar", GRAMMAR_OUT)):
+            items = by_set.get((typ, level))
+            if not items:
+                continue
+            active = sum(1 for it in items if not it.get("dup"))
+            out = folder / f"{level.lower()}.json"
             out.write_text(json.dumps(
-                {"level": level, "type": "vocab", "count": len(vocab), "items": vocab},
+                {"level": level, "type": typ, "count": len(items),
+                 "activeCount": active, "items": items},
                 ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
-            sets.append({"type": "vocab", "level": level,
-                         "file": f"vocab/{level.lower()}.json", "count": len(vocab)})
-            total += len(vocab)
-            print(f"  vocab   {level}: {len(vocab):4d} 條 -> {out.relative_to(ROOT)}")
-
-        if grammar:
-            out = GRAMMAR_OUT / f"{level.lower()}.json"
-            out.write_text(json.dumps(
-                {"level": level, "type": "grammar", "count": len(grammar), "items": grammar},
-                ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
-            sets.append({"type": "grammar", "level": level,
-                         "file": f"grammar/{level.lower()}.json", "count": len(grammar)})
-            total += len(grammar)
-            print(f"  grammar {level}: {len(grammar):4d} 條 -> {out.relative_to(ROOT)}")
+            sets.append({"type": typ, "level": level,
+                         "file": f"{typ}/{level.lower()}.json",
+                         "count": len(items), "activeCount": active})
+            total += len(items)
+            active_total += active
+            tag = f"（其中 {len(items) - active} 筆跨級別重複已隱藏）" if active != len(items) else ""
+            print(f"  {typ:7s} {level}: {len(items):4d} 條 -> {out.relative_to(ROOT)} {tag}")
 
     sets.sort(key=lambda s: (s["type"], LEVELS.index(s["level"])))
+    print(f"  跨級別重複隱藏共 {hidden} 筆")
 
     # ---- 生活旅行 ----
     travel_sets = []
@@ -222,11 +281,12 @@ def main():
         "levels": LEVELS,
         "types": [{"key": "vocab", "label": "單字"}, {"key": "grammar", "label": "文法"}],
         "totalItems": total,
+        "activeItems": active_total,
         "sets": sets,
         "travel": {"total": travel_total, "sets": travel_sets},
     }
     MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
-    print(f"\n完成：JLPT {total} 條 + 生活旅行 {travel_total} 條 = {total + travel_total} 條，"
+    print(f"\n完成：JLPT {total} 條（可練 {active_total}）+ 生活旅行 {travel_total} 條 = {total + travel_total} 條，"
           f"寫入 {MANIFEST.relative_to(ROOT)}")
 
 

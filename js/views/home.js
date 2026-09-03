@@ -106,7 +106,7 @@ export default async function homeView() {
   const totals = {};
   for (const s of man.sets) {
     totals[s.level] = totals[s.level] || { total: 0, learned: 0 };
-    totals[s.level].total += s.count;
+    totals[s.level].total += (s.activeCount ?? s.count); // 扣掉跨級別重複隱藏的條目
   }
   for (const r of pmap.values()) {
     if (r.box >= LEARNED_BOX && totals[r.level]) totals[r.level].learned += 1;

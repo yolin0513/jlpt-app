@@ -2,6 +2,7 @@
  "level": "N2",
  "type": "grammar",
  "count": 52,
+ "activeCount": 51,
  "items": [
   {
    "id": "n2-g-0001",
@@ -131,7 +132,9 @@
    "structure": "普通形＋に違いない",
    "example": "電気がついている。誰かいるに違いない。",
    "exampleKana": "でんきがついている。だれかいるにちがいない。",
-   "exampleMeaning": "燈亮著，一定有人在。"
+   "exampleMeaning": "燈亮著，一定有人在。",
+   "dup": true,
+   "dupOf": "n3-g-0027"
   },
   {
    "id": "n2-g-0014",

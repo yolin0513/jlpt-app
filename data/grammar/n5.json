@@ -2,6 +2,7 @@
  "level": "N5",
  "type": "grammar",
  "count": 46,
+ "activeCount": 46,
  "items": [
   {
    "id": "n5-g-0001",
@@ -307,7 +308,7 @@
    "id": "n5-g-0031",
    "pattern": "～ながら",
    "reading": "",
-   "meaning": "「一邊～一邊～」",
+   "meaning": "「一邊～一邊～」（同一人同時做兩個動作）",
    "structure": "動詞ます形＋ながら",
    "example": "音楽を聞きながら勉強します。",
    "exampleKana": "おんがくをききながらべんきょうします。",

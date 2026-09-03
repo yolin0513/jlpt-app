@@ -2,6 +2,7 @@
  "level": "N4",
  "type": "grammar",
  "count": 55,
+ "activeCount": 54,
  "items": [
   {
    "id": "n4-g-0001",
@@ -201,7 +202,9 @@
    "structure": "動詞ます形＋ながら",
    "example": "テレビを見ながら食事します。",
    "exampleKana": "テレビをみながらしょくじします。",
-   "exampleMeaning": "一邊看電視一邊吃飯。"
+   "exampleMeaning": "一邊看電視一邊吃飯。",
+   "dup": true,
+   "dupOf": "n5-g-0031"
   },
   {
    "id": "n4-g-0021",

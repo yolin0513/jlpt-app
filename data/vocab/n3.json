@@ -2,6 +2,7 @@
  "level": "N3",
  "type": "vocab",
  "count": 508,
+ "activeCount": 499,
  "items": [
   {
    "id": "n3-v-0001",
@@ -961,7 +962,9 @@
    "pos": "形容動詞（な形）",
    "example": "この地域は農業が盛んです。",
    "exampleKana": "このちいきはのうぎょうがさかんです。",
-   "exampleMeaning": "這地區農業興盛。"
+   "exampleMeaning": "這地區農業興盛。",
+   "dup": true,
+   "dupOf": "n4-v-0292"
   },
   {
    "id": "n3-v-0097",
@@ -1041,7 +1044,9 @@
    "pos": "形容詞（い形）",
    "example": "様子が少しおかしいです。",
    "exampleKana": "ようすがすこしおかしいです。",
-   "exampleMeaning": "情況有點奇怪。"
+   "exampleMeaning": "情況有點奇怪。",
+   "dup": true,
+   "dupOf": "n4-v-0286"
   },
   {
    "id": "n3-v-0105",
@@ -1108,7 +1113,7 @@
    "kanji": "偶然",
    "kana": "ぐうぜん",
    "meaning": "偶然",
-   "pos": "副詞",
+   "pos": "名詞・副詞",
    "example": "駅で偶然先生に会いました。",
    "exampleKana": "えきでぐうぜんせんせいにあいました。",
    "exampleMeaning": "在車站偶然遇到老師。"
@@ -1831,7 +1836,9 @@
    "pos": "名詞",
    "example": "説明は以上です。",
    "exampleKana": "せつめいはいじょうです。",
-   "exampleMeaning": "說明到此為止。"
+   "exampleMeaning": "說明到此為止。",
+   "dup": true,
+   "dupOf": "n4-v-0163"
   },
   {
    "id": "n3-v-0184",
@@ -2141,7 +2148,9 @@
    "pos": "動詞",
    "example": "無理なお願いは断ってもいいです。",
    "exampleKana": "むりなおねがいはことわってもいいです。",
-   "exampleMeaning": "不合理的請求可以拒絕。"
+   "exampleMeaning": "不合理的請求可以拒絕。",
+   "dup": true,
+   "dupOf": "n4-v-0074"
   },
   {
    "id": "n3-v-0215",
@@ -2411,7 +2420,9 @@
    "pos": "動詞",
    "example": "設定を元に戻します。",
    "exampleKana": "せっていをもとにもどします。",
-   "exampleMeaning": "把設定恢復原狀。"
+   "exampleMeaning": "把設定恢復原狀。",
+   "dup": true,
+   "dupOf": "n4-v-0267"
   },
   {
    "id": "n3-v-0242",
@@ -2431,7 +2442,9 @@
    "pos": "動詞",
    "example": "夜勤の生活にもだいぶ慣れました。",
    "exampleKana": "やきんのせいかつにもだいぶなれました。",
-   "exampleMeaning": "也相當習慣夜班生活了。"
+   "exampleMeaning": "也相當習慣夜班生活了。",
+   "dup": true,
+   "dupOf": "n4-v-0079"
   },
   {
    "id": "n3-v-0244",
@@ -2601,7 +2614,9 @@
    "pos": "形容詞（い形）",
    "example": "生活が苦しくても諦めません。",
    "exampleKana": "せいかつがくるしくてもあきらめません。",
-   "exampleMeaning": "生活再艱難也不放棄。"
+   "exampleMeaning": "生活再艱難也不放棄。",
+   "dup": true,
+   "dupOf": "n4-v-0278"
   },
   {
    "id": "n3-v-0261",
@@ -2641,7 +2656,9 @@
    "pos": "接續詞",
    "example": "締め切りは今日、つまりあと数時間です。",
    "exampleKana": "しめきりはきょう、つまりあとすうじかんです。",
-   "exampleMeaning": "截止是今天，也就是只剩幾小時。"
+   "exampleMeaning": "截止是今天，也就是只剩幾小時。",
+   "dup": true,
+   "dupOf": "n4-v-0306"
   },
   {
    "id": "n3-v-0265",
@@ -2651,7 +2668,9 @@
    "pos": "副詞",
    "example": "実は前から気になっていました。",
    "exampleKana": "じつはまえからきになっていました。",
-   "exampleMeaning": "其實我從以前就很在意。"
+   "exampleMeaning": "其實我從以前就很在意。",
+   "dup": true,
+   "dupOf": "n4-v-0153"
   },
   {
    "id": "n3-v-0266",

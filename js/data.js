@@ -73,10 +73,13 @@ async function mapLimit(items, limit, fn) {
   return out;
 }
 
-/** 一次載入多個級別（複習 / 混合模式用）。已快取者立即回傳，其餘限並發載入 */
+/** 一次載入多個級別（複習 / 混合模式 / 搜尋用）。
+ *  會濾掉標記 dup 的跨級別重複條目（較低級別已收錄同一個詞），
+ *  避免同一詞在混合出題／誘答／搜尋結果裡重複出現。
+ *  單級別的 loadSet 不濾 → findItem() 仍解析得到，既有進度不受影響。 */
 export async function loadMany(type, levels) {
   const groups = await mapLimit(levels, 3, (lv) => loadSet(type, lv));
-  return groups.flat();
+  return groups.flat().filter((it) => !it.dup);
 }
 
 /* ---------- 生活旅行 ---------- */
@@ -150,7 +153,8 @@ function normalize(it, type, level) {
       meaning: it.meaning || '',
       example: it.example || '',
       exampleKana: it.exampleKana || it.example_kana || '',
-      exampleMeaning: it.exampleMeaning || it.example_meaning || ''
+      exampleMeaning: it.exampleMeaning || it.example_meaning || '',
+      dup: !!it.dup
     };
   }
   return {
@@ -164,7 +168,8 @@ function normalize(it, type, level) {
     structure: it.structure || '',
     example: it.example || '',
     exampleKana: it.exampleKana || it.example_kana || '',
-    exampleMeaning: it.exampleMeaning || it.example_meaning || ''
+    exampleMeaning: it.exampleMeaning || it.example_meaning || '',
+    dup: !!it.dup
   };
 }
 

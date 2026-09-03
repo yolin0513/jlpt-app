@@ -23,7 +23,8 @@ export default async function statsView() {
   const totalCorrect = prog.reduce((s, r) => s + (r.correct || 0), 0);
   const totalWrong = prog.reduce((s, r) => s + (r.wrong || 0), 0);
   const acc = pct(totalCorrect, totalCorrect + totalWrong);
-  const totalItems = man.sets.reduce((s, x) => s + x.count, 0) + (tm.total || 0);
+  const setCount = (s) => (s.activeCount ?? s.count); // 扣掉跨級別重複隱藏的條目
+  const totalItems = man.sets.reduce((s, x) => s + setCount(x), 0) + (tm.total || 0);
 
   wrap.append(h('div', { class: 'stat-grid' }, [
     statCard('已掌握', learned, `題庫共 ${totalItems}`),
@@ -57,8 +58,8 @@ export default async function statsView() {
   const totals = {};
   for (const s of man.sets) {
     totals[s.level] = totals[s.level] || { total: 0, learned: 0, seen: 0, vocab: 0, grammar: 0 };
-    totals[s.level].total += s.count;
-    totals[s.level][s.type] += s.count;
+    totals[s.level].total += setCount(s);
+    totals[s.level][s.type] += setCount(s);
   }
   for (const r of prog) {
     if (!totals[r.level]) continue;
@@ -177,7 +178,7 @@ export default async function statsView() {
   mgmt.append(h('button', { class: 'btn ghost', style: 'color:var(--bad);border-color:var(--bad)', onclick: doReset }, '🗑 重置所有進度'));
   wrap.append(mgmt);
 
-  wrap.append(h('p', { class: 'small muted', style: 'text-align:center;margin-top:16px' }, 'JLPT 練習 v1.4.0・資料僅儲存在此瀏覽器'));
+  wrap.append(h('p', { class: 'small muted', style: 'text-align:center;margin-top:16px' }, 'JLPT 練習 v1.6.0・資料僅儲存在此瀏覽器'));
 
   async function doExport() {
     const data = await exportAll();

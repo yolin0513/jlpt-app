@@ -2,6 +2,7 @@
  "level": "N2",
  "type": "vocab",
  "count": 260,
+ "activeCount": 250,
  "items": [
   {
    "id": "n2-v-0001",
@@ -351,7 +352,9 @@
    "pos": "動詞",
    "example": "ビタミンを多く含む野菜です。",
    "exampleKana": "ビタミンをおおくふくむやさいです。",
-   "exampleMeaning": "是富含維他命的蔬菜。"
+   "exampleMeaning": "是富含維他命的蔬菜。",
+   "dup": true,
+   "dupOf": "n3-v-0051"
   },
   {
    "id": "n2-v-0036",
@@ -371,7 +374,9 @@
    "pos": "動詞",
    "example": "意見を簡潔に述べてください。",
    "exampleKana": "いけんをかんけつにのべてください。",
-   "exampleMeaning": "請簡潔地陳述意見。"
+   "exampleMeaning": "請簡潔地陳述意見。",
+   "dup": true,
+   "dupOf": "n3-v-0058"
   },
   {
    "id": "n2-v-0038",
@@ -601,7 +606,9 @@
    "pos": "名詞",
    "example": "二人の出会いは偶然でした。",
    "exampleKana": "ふたりのであいはぐうぜんでした。",
-   "exampleMeaning": "兩人的相遇是偶然。"
+   "exampleMeaning": "兩人的相遇是偶然。",
+   "dup": true,
+   "dupOf": "n3-v-0111"
   },
   {
    "id": "n2-v-0061",
@@ -911,7 +918,9 @@
    "pos": "名詞",
    "example": "彼女は控えめな印象を与えます。",
    "exampleKana": "かのじょはひかえめないんしょうをあたえます。",
-   "exampleMeaning": "她給人謙遜的印象。"
+   "exampleMeaning": "她給人謙遜的印象。",
+   "dup": true,
+   "dupOf": "n3-v-0019"
   },
   {
    "id": "n2-v-0092",
@@ -931,7 +940,9 @@
    "pos": "名詞",
    "example": "あいまいな態度は誤解を招きます。",
    "exampleKana": "あいまいなたいどはごかいをまねきます。",
-   "exampleMeaning": "曖昧的態度會招致誤解。"
+   "exampleMeaning": "曖昧的態度會招致誤解。",
+   "dup": true,
+   "dupOf": "n3-v-0020"
   },
   {
    "id": "n2-v-0094",
@@ -1491,7 +1502,9 @@
    "pos": "形容動詞（な形）",
    "example": "交渉は順調に進んでいます。",
    "exampleKana": "こうしょうはじゅんちょうにすすんでいます。",
-   "exampleMeaning": "談判進展順利。"
+   "exampleMeaning": "談判進展順利。",
+   "dup": true,
+   "dupOf": "n3-v-0252"
   },
   {
    "id": "n2-v-0150",
@@ -1681,7 +1694,9 @@
    "pos": "副詞",
    "example": "少なくとも三人は必要です。",
    "exampleKana": "すくなくともさんにんはひつようです。",
-   "exampleMeaning": "至少需要三個人。"
+   "exampleMeaning": "至少需要三個人。",
+   "dup": true,
+   "dupOf": "n3-v-0267"
   },
   {
    "id": "n2-v-0169",
@@ -1691,7 +1706,9 @@
    "pos": "副詞",
    "example": "たとえ反対されても続けます。",
    "exampleKana": "たとえはんたいされてもつづけます。",
-   "exampleMeaning": "即使被反對也要繼續。"
+   "exampleMeaning": "即使被反對也要繼續。",
+   "dup": true,
+   "dupOf": "n3-v-0268"
   },
   {
    "id": "n2-v-0170",
@@ -2181,7 +2198,9 @@
    "pos": "動詞",
    "example": "引っ越しの片付けがやっと落ち着きました。",
    "exampleKana": "ひっこしのかたづけがやっとおちつきました。",
-   "exampleMeaning": "搬家的整理終於告一段落。"
+   "exampleMeaning": "搬家的整理終於告一段落。",
+   "dup": true,
+   "dupOf": "n3-v-0248"
   },
   {
    "id": "n2-v-0219",
@@ -2601,7 +2620,9 @@
    "pos": "副詞",
    "example": "この番組は主に子供向けです。",
    "exampleKana": "このばんぐみはおもにこどもむけです。",
-   "exampleMeaning": "這個節目主要是給小孩看的。"
+   "exampleMeaning": "這個節目主要是給小孩看的。",
+   "dup": true,
+   "dupOf": "n3-v-0109"
   }
  ]
 }

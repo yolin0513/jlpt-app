@@ -2,6 +2,7 @@
  "level": "N1",
  "type": "vocab",
  "count": 263,
+ "activeCount": 257,
  "items": [
   {
    "id": "n1-v-0001",
@@ -561,7 +562,9 @@
    "pos": "名詞",
    "example": "制度そのものに矛盾を抱えています。",
    "exampleKana": "せいどそのものにむじゅんをかかえています。",
-   "exampleMeaning": "制度本身就存在矛盾。"
+   "exampleMeaning": "制度本身就存在矛盾。",
+   "dup": true,
+   "dupOf": "n2-v-0015"
   },
   {
    "id": "n1-v-0057",
@@ -911,7 +914,9 @@
    "pos": "動詞",
    "example": "地域経済に深刻な影響を及ぼします。",
    "exampleKana": "ちいきけいざいにしんこくなえいきょうをおよぼします。",
-   "exampleMeaning": "對地方經濟造成嚴重影響。"
+   "exampleMeaning": "對地方經濟造成嚴重影響。",
+   "dup": true,
+   "dupOf": "n2-v-0023"
   },
   {
    "id": "n1-v-0092",
@@ -1111,7 +1116,9 @@
    "pos": "形容詞（い形）",
    "example": "資源に乏しい国です。",
    "exampleKana": "しげんにとぼしいくにです。",
-   "exampleMeaning": "是資源匱乏的國家。"
+   "exampleMeaning": "是資源匱乏的國家。",
+   "dup": true,
+   "dupOf": "n2-v-0045"
   },
   {
    "id": "n1-v-0112",
@@ -1151,7 +1158,9 @@
    "pos": "形容動詞（な形）",
    "example": "柔軟な対応が求められます。",
    "exampleKana": "じゅうなんなたいおうがもとめられます。",
-   "exampleMeaning": "需要靈活的應對。"
+   "exampleMeaning": "需要靈活的應對。",
+   "dup": true,
+   "dupOf": "n2-v-0041"
   },
   {
    "id": "n1-v-0116",
@@ -1181,7 +1190,9 @@
    "pos": "形容動詞（な形）",
    "example": "妥当な結論に落ち着きました。",
    "exampleKana": "だとうなけつろんにおちつきました。",
-   "exampleMeaning": "得出了妥當的結論。"
+   "exampleMeaning": "得出了妥當的結論。",
+   "dup": true,
+   "dupOf": "n2-v-0039"
   },
   {
    "id": "n1-v-0119",
@@ -1921,7 +1932,9 @@
    "pos": "形容詞（い形）",
    "example": "品質に著しい改善が見られます。",
    "exampleKana": "ひんしつにいちじるしいかいぜんがみられます。",
-   "exampleMeaning": "品質有顯著的改善。"
+   "exampleMeaning": "品質有顯著的改善。",
+   "dup": true,
+   "dupOf": "n2-v-0143"
   },
   {
    "id": "n1-v-0193",
