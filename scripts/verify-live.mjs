@@ -13,7 +13,7 @@ mkdirSync(OUT, { recursive: true });
 // 若設了環境變數 MIRROR_DIR，額外複製線上首頁圖過去；沒設就跳過。
 const MIRROR = process.env.MIRROR_DIR || '';
 
-const URL_BASE = (process.argv[2] || 'https://3a532043.github.io/jlpt-app/').replace(/\/?$/, '/');
+const URL_BASE = (process.argv[2] || 'https://yolin0513.github.io/jlpt-app/').replace(/\/?$/, '/');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 (async () => {

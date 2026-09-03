@@ -1,6 +1,6 @@
 # JLPT 練習 — 日文檢定 N1–N5＋生活旅行
 
-**線上版：https://3a532043.github.io/jlpt-app/**（手機開啟後可「加入主畫面」安裝，安裝後可離線使用）
+**線上版：https://yolin0513.github.io/jlpt-app/**（手機開啟後可「加入主畫面」安裝，安裝後可離線使用）
 
 手機優先的 **PWA**（漸進式網頁應用程式），用來練習 JLPT N1～N5 的**單字**與**文法**，
 另附一組與級別無關的**生活旅行用語**（情境會話、日本人實際用法、中日漢字差異）。
@@ -80,7 +80,7 @@
 
 ## 部署（GitHub Pages）
 
-已部署於 `https://3a532043.github.io/jlpt-app/`（`main` 分支根目錄，含 `.nojekyll`）。
+已部署於 `https://yolin0513.github.io/jlpt-app/`（`main` 分支根目錄，含 `.nojekyll`）。
 專案內所有路徑都是相對路徑（`./`、`../` 搭配 `import.meta.url`），子路徑部署不需任何調整。
 推新版到 `main` 後，GitHub Pages 會自動重建；使用者端 Service Worker 會在下次連線時抓到新版
 （`sw.js` 的 `VERSION` 有變更時會清掉舊快取）。
@@ -176,6 +176,7 @@ JLPT_App/
     ├── check_data.py       題庫品質檢查（--sample N 可隨機抽樣）
     ├── make_icons.py       產生 PWA 圖示（需 Pillow）
     ├── screenshots.mjs     用 puppeteer 產生各畫面截圖（需先 npm install）
+    ├── verify-live.mjs     線上部署驗證（SW / 題庫 / 離線 / 截圖）
     └── serve.py            開發用伺服器
 ```
 
