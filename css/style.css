@@ -180,18 +180,19 @@ button, input, select { font-family: inherit; font-size: inherit; color: inherit
   background: var(--surface-2);
   border: 1px solid var(--border);
 }
-.pill.n5 { background: #e7f5ff; color: #1971c2; border-color: #a5d8ff; }
-.pill.n4 { background: #e6fcf5; color: #0ca678; border-color: #96f2d7; }
-.pill.n3 { background: #fff9db; color: #f08c00; border-color: #ffe066; }
-.pill.n2 { background: #fff0f6; color: #e64980; border-color: #fcc2d7; }
-.pill.n1 { background: #f3f0ff; color: #7048e8; border-color: #d0bfff; }
-.pill.travel { background: #e6f7f4; color: #0b7285; border-color: #99e9f2; }
-:root[data-theme="dark"] .pill.travel { background: var(--surface-2); color: var(--accent); border-color: var(--border); }
-:root[data-theme="dark"] .pill.n5,
-:root[data-theme="dark"] .pill.n4,
-:root[data-theme="dark"] .pill.n3,
-:root[data-theme="dark"] .pill.n2,
-:root[data-theme="dark"] .pill.n1 { background: var(--surface-2); border-color: var(--border); }
+/* 級別色票（文字對比皆 ≥ 4.5:1） */
+.pill.n5 { background: #e7f5ff; color: #10548c; border-color: #a5d8ff; }
+.pill.n4 { background: #e6fcf5; color: #087f5b; border-color: #96f2d7; }
+.pill.n3 { background: #fff4e0; color: #9a5000; border-color: #ffd8a8; }
+.pill.n2 { background: #fff0f6; color: #a61e4d; border-color: #fcc2d7; }
+.pill.n1 { background: #f3f0ff; color: #5235ab; border-color: #d0bfff; }
+.pill.travel { background: #e6f7f4; color: #0b6b7d; border-color: #99e9f2; }
+:root[data-theme="dark"] .pill.n5 { background: var(--surface-2); color: #6cb6ff; border-color: var(--border); }
+:root[data-theme="dark"] .pill.n4 { background: var(--surface-2); color: #4bdcb0; border-color: var(--border); }
+:root[data-theme="dark"] .pill.n3 { background: var(--surface-2); color: #ffb066; border-color: var(--border); }
+:root[data-theme="dark"] .pill.n2 { background: var(--surface-2); color: #ff9bc0; border-color: var(--border); }
+:root[data-theme="dark"] .pill.n1 { background: var(--surface-2); color: #bda6ff; border-color: var(--border); }
+:root[data-theme="dark"] .pill.travel { background: var(--surface-2); color: #5cc7d6; border-color: var(--border); }
 
 /* progress bar */
 .bar { height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
@@ -398,7 +399,9 @@ select.sel {
   background: var(--surface-2); border: 1px solid var(--border);
   border-radius: 999px; padding: 5px 12px; font-size: 13px; cursor: pointer; color: var(--text);
 }
-.chip.on { background: var(--primary); color: var(--primary-ink); border-color: var(--primary); font-weight: 700; }
+.chip.on { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 700; }
+/* 深色主題的 --primary 較亮，白字對比不足 → 選中的 chip 用較深藍 */
+:root[data-theme="dark"] .chip.on { background: #1862ab; border-color: #1862ab; }
 .chip-sep { width: 1px; height: 18px; background: var(--border); margin: 0 2px; }
 
 /* ---- 搜尋 ---- */

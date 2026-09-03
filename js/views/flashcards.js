@@ -12,7 +12,7 @@ export default async function flashcardsView(ctx) {
   wrap.append(spinner());
 
   const src = ctx.query.src || 'set';
-  const backTo = src === 'travel' ? '/travel' : '/learn';
+  const backTo = { travel: '/travel', review: '/review', mistakes: '/mistakes', favorites: '/favorites' }[src] || '/learn';
   const [{ items }, favSet, autoSpeak] = await Promise.all([
     buildSession({
       type: ctx.query.type || 'vocab',
@@ -165,7 +165,7 @@ export default async function flashcardsView(ctx) {
   }
 
   function end() {
-    if (idx === 0 && !flipped) { history.length > 1 ? history.back() : navigate('/home'); return; }
+    if (idx === 0 && !flipped) { navigate(backTo); return; }
     finish();
   }
 

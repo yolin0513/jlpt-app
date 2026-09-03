@@ -27,11 +27,17 @@ export default async function reviewView() {
 
   // 統計分佈
   const byLevel = {};
-  const byType = { vocab: 0, grammar: 0 };
+  const byType = { vocab: 0, grammar: 0, travel: 0 };
   for (const r of due) {
     byLevel[r.level] = (byLevel[r.level] || 0) + 1;
     byType[r.type] = (byType[r.type] || 0) + 1;
   }
+  const ORDER = ['N5', 'N4', 'N3', 'N2', 'N1', 'TRAVEL'];
+  const typeParts = [
+    byType.vocab ? `單字 ${byType.vocab}` : null,
+    byType.grammar ? `文法 ${byType.grammar}` : null,
+    byType.travel ? `旅行 ${byType.travel}` : null
+  ].filter(Boolean).join('・');
 
   wrap.append(h('div', { class: 'card' }, [
     h('div', { class: 'row spread' }, [
@@ -39,14 +45,17 @@ export default async function reviewView() {
         h('div', { class: 'small muted', text: '待複習' }),
         h('div', { class: 'big-num', text: String(due.length) })
       ]),
-      h('div', { style: 'text-align:right' }, [
-        h('div', { class: 'small muted', text: '單字 / 文法' }),
-        h('div', { class: 'big-num', style: 'font-size:22px', text: `${byType.vocab} / ${byType.grammar}` })
+      h('div', { style: 'text-align:right;max-width:55%' }, [
+        h('div', { class: 'small muted', style: 'line-height:1.5', text: typeParts })
       ])
     ]),
     h('div', { class: 'row', style: 'gap:6px;flex-wrap:wrap;margin-top:10px' },
-      Object.entries(byLevel).sort().map(([lv, n]) =>
-        h('span', { class: `pill ${lv.toLowerCase()}`, text: `${lv} × ${n}` })))
+      Object.entries(byLevel)
+        .sort((a, b) => ORDER.indexOf(a[0]) - ORDER.indexOf(b[0]))
+        .map(([lv, n]) => h('span', {
+          class: `pill ${lv === 'TRAVEL' ? 'travel' : lv.toLowerCase()}`,
+          text: `${lv === 'TRAVEL' ? '旅行' : lv} × ${n}`
+        })))
   ]));
 
   wrap.append(h('div', { class: 'section-title', text: '複習方式' }));

@@ -38,9 +38,13 @@ export function currentRoute() { return current; }
 let onChange = () => {};
 export function onRouteChange(fn) { onChange = fn; }
 
+let dispatchGen = 0;
+
 async function dispatch() {
+  const gen = ++dispatchGen;
   const ctx = parseHash();
   current = ctx;
+  onChange(ctx); // 先更新標題/分頁，畫面內容稍後才 await 完成
   const match = routes.find((r) => r.pattern === ctx.path);
   const view = document.getElementById('view');
   view.scrollTop = 0;
@@ -49,18 +53,19 @@ async function dispatch() {
     let node;
     if (match) node = await match.handler(ctx);
     else if (notFound) node = await notFound(ctx);
+    if (gen !== dispatchGen) return; // 期間又切了頁，捨棄這次結果
     if (node) {
       view.replaceChildren(node);
       view.firstElementChild?.classList.add('fade-in');
     }
   } catch (err) {
+    if (gen !== dispatchGen) return;
     console.error(err);
     view.replaceChildren(Object.assign(document.createElement('div'), {
       className: 'empty',
       innerHTML: `<div class="big">⚠️</div><p>載入發生錯誤</p><p class="small muted">${err.message}</p>`
     }));
   }
-  onChange(ctx);
 }
 
 export function startRouter() {

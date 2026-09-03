@@ -31,23 +31,24 @@ export default async function statsView() {
     statCard('連續天數', '🔥 ' + st, '每天學習就會累積')
   ]));
 
-  // ---- 每日學習量（近 14 天）----
-  wrap.append(h('div', { class: 'section-title', text: '每日學習量（近 14 天）' }));
+  // ---- 每日學習量（近 14 天）— 以「作答題數」為準，閃卡翻卡另計不重複算 ----
+  wrap.append(h('div', { class: 'section-title', text: '每日作答量（近 14 天）' }));
   const days = last14();
   const map = new Map(daily.map((d) => [d.date, d]));
-  const maxV = Math.max(1, ...days.map((k) => (map.get(k)?.studied || 0) + (map.get(k)?.cards || 0)));
+  const valOf = (k) => (map.get(k)?.studied || 0);
+  const maxV = Math.max(1, ...days.map(valOf));
+  const td = map.get(todayKey()) || {};
   wrap.append(h('div', { class: 'card' }, [
     h('div', { class: 'chart-bars' }, days.map((k) => {
-      const d = map.get(k) || { studied: 0, cards: 0 };
-      const v = d.studied + d.cards;
+      const v = valOf(k);
       return h('div', {}, [
         h('div', { class: 'cbwrap' }, [
-          h('div', { class: 'cb', style: `height:${v ? Math.max(4, Math.round((v / maxV) * 100)) : 0}%`, title: `${k}：${v}` })
+          h('div', { class: 'cb', style: `height:${v ? Math.max(4, Math.round((v / maxV) * 100)) : 0}%`, title: `${k}：${v} 題` })
         ]),
         h('div', { class: 'cl', text: k.slice(8) })
       ]);
     })),
-    h('div', { class: 'small muted', style: 'margin-top:8px', text: `今日 ${(map.get(todayKey())?.studied || 0)} 題作答、${(map.get(todayKey())?.cards || 0)} 次翻卡` })
+    h('div', { class: 'small muted', style: 'margin-top:8px', text: `今日作答 ${td.studied || 0} 題・閃卡翻看 ${td.cards || 0} 次` })
   ]));
 
   // ---- 各級別完成度 ----

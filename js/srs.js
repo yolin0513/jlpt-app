@@ -37,20 +37,28 @@ export function schedule(rec, grade, meta = {}) {
     ? { ...rec }
     : newRecord(meta.itemId, meta.level, meta.type);
 
-  r.reps += 1;
+  // 防呆：舊／匯入紀錄若缺欄位，補成數字
+  const box0 = Number.isFinite(r.box) ? r.box : 0;
+  r.reps = (Number(r.reps) || 0) + 1;
+  r.lapses = Number(r.lapses) || 0;
+  r.correct = Number(r.correct) || 0;
+  r.wrong = Number(r.wrong) || 0;
+  r.level = r.level || meta.level;
+  r.type = r.type || meta.type;
+
+  const MAX_BOX = BOX_INTERVALS_MIN.length - 1;
   if (grade === 'again') {
     r.box = 0;
     r.lapses += 1;
     r.wrong += 1;
   } else if (grade === 'hard') {
-    r.box = Math.max(0, r.box - 1);
+    r.box = Math.max(0, box0 - 1);
     r.correct += 1;
   } else {
-    r.box = Math.min(BOX_INTERVALS_MIN.length - 1, r.box + 1);
+    r.box = Math.min(MAX_BOX, box0 + 1);
     r.correct += 1;
   }
-  const intervalMin = BOX_INTERVALS_MIN[r.box];
-  r.due = Date.now() + intervalMin * MIN;
+  r.due = Date.now() + BOX_INTERVALS_MIN[r.box] * MIN;
   r.updated = Date.now();
   return r;
 }

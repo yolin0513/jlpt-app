@@ -53,10 +53,15 @@ export default async function learnView(ctx) {
 
     wrap.append(h('div', { class: 'section-title', text: '出題範圍' }));
     wrap.append(seg([
-      { value: 'smart', label: '智慧（新題優先）' },
+      { value: 'smart', label: '新題優先' },
       { value: 'random', label: '隨機' },
       { value: 'order', label: '依序' }
     ], state.scope, (v) => { state.scope = v; render(); }));
+    wrap.append(h('p', { class: 'small muted', style: 'margin:6px 2px 0', text: {
+      smart: '先出還沒學過的，再出到期該複習的。',
+      random: '整個題庫隨機抽。',
+      order: '照題庫既定順序，適合從頭讀。'
+    }[state.scope] }));
 
     wrap.append(h('div', { style: 'height:8px' }));
     const disabled = total === 0;

@@ -9,5 +9,9 @@ Thumbs.db
 .DS_Store
 desktop.ini
 
+# 測試腳本產生的暫存截圖
+screenshots/responsive/
+scripts/_*.mjs
+
 # 本機開發設定（不影響部署）
 .claude/settings.local.json

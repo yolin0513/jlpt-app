@@ -44,6 +44,18 @@ const TAB_OF = {
   '/search': null, '/favorites': null, '/travel': 'learn'
 };
 
+/** 各畫面的「上一層」— 返回鍵用，永遠不會離開 App */
+function parentOf(ctx) {
+  if (ctx.path === '/study') {
+    return { travel: '/travel', review: '/review', mistakes: '/mistakes', favorites: '/favorites' }[ctx.query.src] || '/learn';
+  }
+  if (ctx.path === '/favorites') return '/home';
+  return '/home';
+}
+
+// App 啟動時的 history 長度；用來判斷 history.back() 會不會退出 App
+const startHistoryLen = history.length;
+
 onRouteChange((ctx) => {
   document.getElementById('topTitle').textContent = TITLES[ctx.path] || 'JLPT 練習';
   const showBack = ctx.path !== '/home';
@@ -55,13 +67,18 @@ onRouteChange((ctx) => {
 });
 
 document.getElementById('backBtn').addEventListener('click', () => {
-  if (history.length > 1) history.back();
-  else navigate('/home');
+  const ctx = parseHash();
+  if (ctx.path === '/home') return;
+  // 有 App 內的瀏覽歷史就用 back（保留使用者的實際路徑），否則跳到上一層
+  if (history.length > startHistoryLen) history.back();
+  else navigate(parentOf(ctx));
 });
 
 document.getElementById('searchBtn').addEventListener('click', () => {
-  if (parseHash().path === '/search') { if (history.length > 1) history.back(); else navigate('/home'); }
-  else navigate('/search');
+  if (parseHash().path === '/search') {
+    if (history.length > startHistoryLen) history.back();
+    else navigate('/home');
+  } else navigate('/search');
 });
 
 /* ---- 主題 ---- */

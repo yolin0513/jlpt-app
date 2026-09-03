@@ -12,8 +12,8 @@ export default async function quizView(ctx) {
 
   const src = ctx.query.src || 'set';
   const level = ctx.query.level || 'N5';
-  const backTo = src === 'travel' ? '/travel' : '/learn';
-  const back = () => (history.length > 1 ? history.back() : navigate(backTo));
+  const backTo = { travel: '/travel', review: '/review', mistakes: '/mistakes', favorites: '/favorites' }[src] || '/learn';
+  const back = () => navigate(backTo);
   const [{ items }, favSet] = await Promise.all([
     buildSession({
       type: ctx.query.type || 'vocab',
