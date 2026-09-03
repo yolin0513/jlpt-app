@@ -1,13 +1,15 @@
 /* JLPT 練習 — Service Worker
  * 快取策略：
- *  - App shell（HTML/CSS/JS/manifest/icons）：預先快取，採 stale-while-revalidate
- *  - 題庫 JSON（data/）：cache-first + 背景更新
+ *  - App shell（HTML/CSS/JS/manifest/icons）：install 時預先快取，之後 stale-while-revalidate
+ *  - 題庫 JSON（data/）：cache-first + 背景更新；首次載入不預抓，改由頁面在 load 後
+ *    傳訊要求 SW 於背景暖機（WARM_DATA），避免拖慢首屏
  *  - 其他請求：network-first，失敗時回退快取
  */
-const VERSION = 'jlpt-v1.2.1';
+const VERSION = 'jlpt-v1.3.0';
 const SHELL_CACHE = `${VERSION}-shell`;
 const DATA_CACHE = `${VERSION}-data`;
 
+// App 外殼：小、必要，install 時就抓
 const SHELL_ASSETS = [
   './',
   './index.html',
@@ -35,21 +37,17 @@ const SHELL_ASSETS = [
   './js/views/favorites.js',
   './js/views/travel.js',
   './data/manifest.json',
-  './data/vocab/n5.json',
-  './data/vocab/n4.json',
-  './data/vocab/n3.json',
-  './data/vocab/n2.json',
-  './data/vocab/n1.json',
-  './data/grammar/n5.json',
-  './data/grammar/n4.json',
-  './data/grammar/n3.json',
-  './data/grammar/n2.json',
-  './data/grammar/n1.json',
-  './data/travel/phrases.json',
-  './data/travel/usage.json',
-  './data/travel/kanji.json',
   './icons/icon-192.png',
   './icons/icon-512.png'
+];
+
+// 題庫檔：較大，離線需要但非首屏必要 → 頁面 load 後才背景暖機
+const DATA_ASSETS = [
+  './data/vocab/n5.json', './data/vocab/n4.json', './data/vocab/n3.json',
+  './data/vocab/n2.json', './data/vocab/n1.json',
+  './data/grammar/n5.json', './data/grammar/n4.json', './data/grammar/n3.json',
+  './data/grammar/n2.json', './data/grammar/n1.json',
+  './data/travel/phrases.json', './data/travel/usage.json', './data/travel/kanji.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -71,6 +69,18 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('message', (event) => {
   if (event.data === 'SKIP_WAITING') self.skipWaiting();
+  if (event.data === 'WARM_DATA') {
+    event.waitUntil((async () => {
+      const cache = await caches.open(DATA_CACHE);
+      await Promise.all(DATA_ASSETS.map(async (u) => {
+        try {
+          if (await cache.match(u)) return;
+          const res = await fetch(u, { cache: 'no-cache' });
+          if (res && res.ok) await cache.put(u, res.clone());
+        } catch (e) { /* 下次再試 */ }
+      }));
+    })());
+  }
 });
 
 self.addEventListener('fetch', (event) => {

@@ -3,27 +3,19 @@ import { route, setNotFound, startRouter, onRouteChange, navigate, parseHash } f
 import { getSetting, setSetting } from './store.js';
 import { h } from './ui.js';
 
-import homeView from './views/home.js';
-import learnView from './views/learn.js';
-import flashcardsView from './views/flashcards.js';
-import quizView from './views/quiz.js';
-import reviewView from './views/review.js';
-import mistakesView from './views/mistakes.js';
-import statsView from './views/stats.js';
-import searchView from './views/search.js';
-import favoritesView from './views/favorites.js';
-import travelView from './views/travel.js';
+/* 各畫面以動態 import 延遲載入 → 首次載入只抓進入頁的模組，其餘按需載入 */
+const lazy = (loader) => (ctx) => loader(ctx).then((m) => m.default(ctx));
 
 /* ---- 路由表 ---- */
-route('/home', homeView);
-route('/learn', learnView);
-route('/study', (ctx) => (ctx.query.mode === 'quiz' ? quizView(ctx) : flashcardsView(ctx)));
-route('/review', reviewView);
-route('/mistakes', mistakesView);
-route('/stats', statsView);
-route('/search', searchView);
-route('/favorites', favoritesView);
-route('/travel', travelView);
+route('/home', lazy(() => import('./views/home.js')));
+route('/learn', lazy(() => import('./views/learn.js')));
+route('/study', lazy((ctx) => (ctx.query.mode === 'quiz' ? import('./views/quiz.js') : import('./views/flashcards.js'))));
+route('/review', lazy(() => import('./views/review.js')));
+route('/mistakes', lazy(() => import('./views/mistakes.js')));
+route('/stats', lazy(() => import('./views/stats.js')));
+route('/search', lazy(() => import('./views/search.js')));
+route('/favorites', lazy(() => import('./views/favorites.js')));
+route('/travel', lazy(() => import('./views/travel.js')));
 setNotFound(() => h('div', { class: 'empty', html: '<div class="big">🔍</div><p>找不到頁面</p>' }));
 
 /* ---- 標題 / 返回鍵 / 分頁高亮 ---- */
@@ -103,6 +95,12 @@ document.getElementById('themeBtn').addEventListener('click', async () => {
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register(new URL('../sw.js', import.meta.url))
+      .then(async (reg) => {
+        // 首屏之後，請 SW 在背景把題庫檔快取起來（供離線用），不擋首次載入
+        await navigator.serviceWorker.ready;
+        const target = reg.active || navigator.serviceWorker.controller;
+        setTimeout(() => target && target.postMessage('WARM_DATA'), 1500);
+      })
       .catch((e) => console.warn('SW 註冊失敗', e));
   });
 }

@@ -9,8 +9,11 @@ Thumbs.db
 .DS_Store
 desktop.ini
 
-# 測試腳本產生的暫存截圖
+# 測試腳本產生的暫存截圖（QA 用，可由 screenshots.mjs 重新產生）
 screenshots/responsive/
+screenshots/360-*.png
+screenshots/dark-*.png
+screenshots/live-home.png
 scripts/_*.mjs
 
 # 本機開發設定（不影響部署）
