@@ -180,7 +180,7 @@ def main():
             out = VOCAB_OUT / f"{level.lower()}.json"
             out.write_text(json.dumps(
                 {"level": level, "type": "vocab", "count": len(vocab), "items": vocab},
-                ensure_ascii=False, indent=1), encoding="utf-8")
+                ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
             sets.append({"type": "vocab", "level": level,
                          "file": f"vocab/{level.lower()}.json", "count": len(vocab)})
             total += len(vocab)
@@ -190,7 +190,7 @@ def main():
             out = GRAMMAR_OUT / f"{level.lower()}.json"
             out.write_text(json.dumps(
                 {"level": level, "type": "grammar", "count": len(grammar), "items": grammar},
-                ensure_ascii=False, indent=1), encoding="utf-8")
+                ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
             sets.append({"type": "grammar", "level": level,
                          "file": f"grammar/{level.lower()}.json", "count": len(grammar)})
             total += len(grammar)
@@ -225,7 +225,7 @@ def main():
         "sets": sets,
         "travel": {"total": travel_total, "sets": travel_sets},
     }
-    MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8")
+    MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
     print(f"\n完成：JLPT {total} 條 + 生活旅行 {travel_total} 條 = {total + travel_total} 條，"
           f"寫入 {MANIFEST.relative_to(ROOT)}")
 
