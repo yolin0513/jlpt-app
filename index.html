@@ -13,6 +13,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="JLPT 練習" />
   <link rel="stylesheet" href="./css/style.css" />
+  <!-- 首屏會用到的模組先平行下載，避免逐層 import 的瀑布延遲 -->
+  <link rel="modulepreload" href="./js/app.js" />
+  <link rel="modulepreload" href="./js/router.js" />
+  <link rel="modulepreload" href="./js/store.js" />
+  <link rel="modulepreload" href="./js/db.js" />
+  <link rel="modulepreload" href="./js/srs.js" />
+  <link rel="modulepreload" href="./js/ui.js" />
+  <link rel="modulepreload" href="./js/data.js" />
+  <link rel="modulepreload" href="./js/views/home.js" />
 </head>
 <body>
   <div id="app">

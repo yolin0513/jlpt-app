@@ -270,6 +270,11 @@ python scripts/check_data.py --sample 30   # 另外隨機抽 30 條供人工核�
 
 ## 版本紀錄
 
+- **v1.3.0** — 效能與品質回歸：各畫面改動態 `import()` 延遲載入（首次載入 JS 96KB→32KB、
+  首屏內容 3.6s→1.2s）；Service Worker 不再於安裝時搶抓題庫，改為載入後背景暖機（離線可用性不變）；
+  級別色票深淺色文字對比全數達 WCAG AA；返回鍵永不退出 App；每日圖表改以「作答題數」計（原本閃卡會重複計）；
+  `srs.js` 對舊/匯入紀錄防呆；新增 `scripts/regress.mjs`（23 項）與 `scripts/verify-full.mjs`（線上完整驗證）。
+- **v1.2.1** — 修正「依情境挑選」展開後無法收合（`.chips` 的 `display:flex` 蓋掉 `[hidden]`）。
 - **v1.2.0** — 新增與 JLPT 平行的**生活旅行**分類（情境會話 142／日本人這樣說 54／中日漢字大不同 70，共 266 條），
   獨立入口、獨立統計，沿用閃卡／測驗／SRS／錯題本；搜尋與最愛涵蓋旅行內容；`check_data.py` 加入旅行檢查。
 - **v1.1.0** — 題庫擴充至 1628 條（五級單字皆 ≥260、文法皆 ≥46）；新增重點複習（★）、跨級搜尋、日文朗讀（Web Speech）、每日目標設定、鍵盤快捷鍵、首次引導；`check_data.py` 品質檢查腳本；IndexedDB 升級至 v2（累加式，不影響舊資料）。
@@ -292,9 +297,9 @@ python scripts/check_data.py --sample 30   # 另外隨機抽 30 條供人工核�
 - ✅ **資料相容性**：既有 IndexedDB 於 v1→v2 升級後資料保留；匯出為 v2、可匯入 v1 或 v2 格式備份；`resetAll` 保留設定
 - ✅ 全部 12 條路由（含所有旅行模式）0 console error；全部 JS 通過 `node --check`
 
-> **關於 PWA 離線**：Service Worker 已實作（App 外殼 + 全部程式與題庫預先快取，題庫採 cache-first 背景更新）。
-> 請在**真實的手機或桌面瀏覽器**（Chrome／Safari／Edge，透過 `localhost` 或 HTTPS）驗證安裝與離線；
-> 部分內嵌式預覽環境會停用 Service Worker，屬環境限制，程式本身已妥善處理註冊失敗。
+> **關於 PWA 離線**：Service Worker 安裝時預先快取 App 外殼（HTML/CSS/JS/manifest/icons，約 56KB），
+> 頁面載入後 1.5 秒再於背景把 13 個題庫檔快取起來（`WARM_DATA` 訊息）→ 首次載入快、之後完整離線可用。
+> 已用無痕 headless Chrome 實測：斷網後首頁、各級測驗、生活旅行閃卡、統計皆可運作。
 >
 > **關於朗讀**：Web Speech API 是否有日文語音因裝置而異。iOS／macOS Safari、Windows Chrome 通常內建；
 > 未偵測到日文語音時朗讀鈕會隱藏，設定頁也會提示。
