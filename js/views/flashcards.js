@@ -4,7 +4,7 @@ import { buildSession } from '../session.js';
 import { recordAnswer, bumpCardViewed, favoriteIdSet } from '../store.js';
 import { navigate } from '../router.js';
 import { actionRow, speakText } from '../itemview.js';
-import { speak, getAutoSpeak } from '../speech.js';
+import { speak, getAutoSpeak, stop as stopSpeech } from '../speech.js';
 import { bindKeys } from '../keys.js';
 
 export default async function flashcardsView(ctx) {
@@ -39,6 +39,7 @@ export default async function flashcardsView(ctx) {
   let idx = 0;
   let flipped = false;
   let done = false;
+  let moveFocus = false; // 僅在使用者動作後移動焦點，首次進場不搶焦點
   const tally = { good: 0, hard: 0, again: 0 };
   const againItems = [];
 
@@ -58,6 +59,7 @@ export default async function flashcardsView(ctx) {
   function doFlip() {
     if (flipped) return;
     flipped = true;
+    moveFocus = true;
     bumpCardViewed();
     if (autoSpeak) speak(speakText(items[idx]));
     render();
@@ -69,11 +71,20 @@ export default async function flashcardsView(ctx) {
 
     wrap.append(h('div', { class: 'study-head' }, [
       h('span', { class: 'study-count', text: `${idx + 1} / ${items.length}` }),
-      progressBar(idx, items.length),
-      h('button', { class: 'icon-btn', title: '結束', onclick: end }, '✕')
+      progressBar(idx, items.length, false, `第 ${idx + 1} 張，共 ${items.length} 張`),
+      h('button', { class: 'icon-btn', title: '結束', 'aria-label': '結束練習', onclick: end }, '✕')
     ]));
 
-    const card = h('div', { class: 'flashcard' + (flipped ? ' flipped' : '') });
+    const card = h('div', {
+      class: 'flashcard' + (flipped ? ' flipped' : ''),
+      role: 'button',
+      tabindex: '0',
+      'aria-pressed': flipped ? 'true' : 'false',
+      'aria-label': flipped ? '已翻面，下方為解答與評分' : '題面，點一下或按空白鍵看解答',
+      onkeydown: (e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && !flipped) { e.preventDefault(); doFlip(); }
+      }
+    });
     let front, back;
 
     if (item.type === 'travel') {
@@ -114,32 +125,41 @@ export default async function flashcardsView(ctx) {
 
     if (!flipped) {
       wrap.append(h('button', { class: 'btn', onclick: doFlip }, '顯示解答'));
+      if (moveFocus) requestAnimationFrame(() => card.focus());
     } else {
+      const knowBtn = h('button', { class: 'btn know', style: 'grid-column:1/3', onclick: () => grade('good') }, '認得 ✓');
       wrap.append(h('div', { class: 'grade-grid' }, [
         h('button', { class: 'btn dont', onclick: () => grade('again') }, '不會'),
         h('button', { class: 'btn secondary', onclick: () => grade('hard') }, '模糊'),
-        h('button', { class: 'btn know', style: 'grid-column:1/3', onclick: () => grade('good') }, '認得 ✓')
+        knowBtn
       ]));
       wrap.append(h('p', { class: 'kbd-hint small muted', text: '鍵盤：1 不會・2 模糊・3 認得・S 朗讀' }));
+      if (moveFocus) requestAnimationFrame(() => knowBtn.focus());
     }
+    moveFocus = false;
   }
 
+  let grading = false;
   async function grade(g) {
-    if (!flipped || done) return;
+    if (!flipped || done || grading) return;
+    grading = true;
     const item = items[idx];
     tally[g] += 1;
     if (g === 'again') againItems.push(item);
     await recordAnswer({ item, level: item.level, type: item.type, grade: g });
     idx += 1;
     flipped = false;
+    moveFocus = true;
+    grading = false;
     if (idx >= items.length) return finish();
     render();
   }
 
   function finish() {
     done = true;
+    stopSpeech();
     wrap.replaceChildren();
-    wrap.append(h('div', { class: 'result-hero' }, [
+    wrap.append(h('div', { class: 'result-hero', role: 'status' }, [
       h('div', { style: 'font-size:44px', text: '🎉' }),
       h('div', { class: 'big-num', text: `完成 ${idx} 張` })
     ]));
@@ -154,8 +174,9 @@ export default async function flashcardsView(ctx) {
         class: 'btn', style: 'margin-bottom:10px',
         onclick: () => {
           items.length = 0; items.push(...againItems.splice(0));
-          idx = 0; flipped = false; done = false;
+          idx = 0; flipped = false; done = false; grading = false;
           tally.good = tally.hard = tally.again = 0;
+          moveFocus = false;
           render();
         }
       }, `再練「不會」的 ${againItems.length} 張`));

@@ -4,7 +4,8 @@ import { allProgress, allDaily, streak, todayKey, exportAll, importAll, resetAll
   getDailyGoal, setDailyGoal, allFavorites } from '../store.js';
 import { LEARNED_BOX } from '../srs.js';
 import { navigate } from '../router.js';
-import { isSupported as ttsSupported, getAutoSpeak, setAutoSpeak, hasJapaneseVoice } from '../speech.js';
+import { isSupported as ttsSupported, getAutoSpeak, setAutoSpeak, hasJapaneseVoice,
+  getRatePref, setSpeechRate, speak } from '../speech.js';
 
 export default async function statsView() {
   const wrap = h('div');
@@ -138,6 +139,23 @@ export default async function statsView() {
       ]),
       cb
     ]));
+
+    // 朗讀語速
+    const rateVal = h('span', { class: 'small', style: 'font-variant-numeric:tabular-nums', text: `${getRatePref().toFixed(2)}×` });
+    const rateRange = h('input', {
+      type: 'range', min: '0.6', max: '1.1', step: '0.05', value: String(getRatePref()),
+      class: 'range', 'aria-label': '朗讀語速'
+    });
+    rateRange.addEventListener('input', () => { rateVal.textContent = `${Number(rateRange.value).toFixed(2)}×`; });
+    rateRange.addEventListener('change', async () => {
+      await setSpeechRate(Number(rateRange.value));
+      speak('日本語の発音、これくらいの速さです');
+      toast('已更新朗讀語速');
+    });
+    settings.append(h('div', { class: 'toggle-line', style: 'margin-top:6px' }, [
+      h('span', {}, '朗讀語速'), rateVal
+    ]));
+    settings.append(rateRange);
   } else {
     settings.append(h('p', { class: 'small muted', style: 'margin:6px 0 0', text: '此瀏覽器不支援語音朗讀。' }));
   }
@@ -159,7 +177,7 @@ export default async function statsView() {
   mgmt.append(h('button', { class: 'btn ghost', style: 'color:var(--bad);border-color:var(--bad)', onclick: doReset }, '🗑 重置所有進度'));
   wrap.append(mgmt);
 
-  wrap.append(h('p', { class: 'small muted', style: 'text-align:center;margin-top:16px' }, 'JLPT 練習 v1.3.0・資料僅儲存在此瀏覽器'));
+  wrap.append(h('p', { class: 'small muted', style: 'text-align:center;margin-top:16px' }, 'JLPT 練習 v1.4.0・資料僅儲存在此瀏覽器'));
 
   async function doExport() {
     const data = await exportAll();

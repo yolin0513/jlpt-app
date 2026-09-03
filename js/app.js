@@ -2,6 +2,7 @@
 import { route, setNotFound, startRouter, onRouteChange, navigate, parseHash } from './router.js';
 import { getSetting, setSetting } from './store.js';
 import { h } from './ui.js';
+import { stop as stopSpeech, loadRatePref } from './speech.js';
 
 /* 各畫面以動態 import 延遲載入 → 首次載入只抓進入頁的模組，其餘按需載入 */
 const lazy = (loader) => (ctx) => loader(ctx).then((m) => m.default(ctx));
@@ -49,6 +50,7 @@ function parentOf(ctx) {
 const startHistoryLen = history.length;
 
 onRouteChange((ctx) => {
+  stopSpeech(); // 切換畫面時停止朗讀，避免語音延續到下一頁
   document.getElementById('topTitle').textContent = TITLES[ctx.path] || 'JLPT 練習';
   const showBack = ctx.path !== '/home';
   document.getElementById('backBtn').hidden = !showBack;
@@ -107,6 +109,7 @@ if ('serviceWorker' in navigator) {
 
 /* ---- 啟動 ---- */
 initTheme();
+loadRatePref();
 startRouter();
 
 // 匯出給 inline 需求（除錯）

@@ -66,9 +66,16 @@ export function sample(arr, n) {
   return shuffle(arr).slice(0, n);
 }
 
-export function progressBar(value, total, good = false) {
+export function progressBar(value, total, good = false, label) {
   const p = pct(value, total);
-  return h('div', { class: `bar${good ? ' good' : ''}` }, [
+  return h('div', {
+    class: `bar${good ? ' good' : ''}`,
+    role: 'progressbar',
+    'aria-valuenow': String(value),
+    'aria-valuemin': '0',
+    'aria-valuemax': String(total || 0),
+    'aria-label': label || `進度 ${value} / ${total}（${p}%）`
+  }, [
     h('i', { style: `width:${p}%` })
   ]);
 }

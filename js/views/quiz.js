@@ -46,6 +46,7 @@ export default async function quizView(ctx) {
   let answered = false;
   let finished = false;
   let correctCount = 0;
+  let moveFocus = false; // 僅在使用者動作後移動焦點，首次進場不搶焦點
   const wrongItems = [];
 
   bindKeys(wrap, (e) => {
@@ -58,7 +59,8 @@ export default async function quizView(ctx) {
       }
     } else if (e.key === 'Enter' || e.key === ' ') {
       const nextBtn = wrap.querySelector('.quiz-next');
-      if (nextBtn) { nextBtn.click(); e.preventDefault(); }
+      // 若焦點已在「下一題」上，交給瀏覽器原生處理，避免重複觸發跳過題目
+      if (nextBtn && document.activeElement !== nextBtn) { nextBtn.click(); e.preventDefault(); }
     } else if (e.key.toLowerCase() === 's') {
       speak(speakText(questions[idx].item));
     }
@@ -129,8 +131,8 @@ export default async function quizView(ctx) {
 
     wrap.append(h('div', { class: 'study-head' }, [
       h('span', { class: 'study-count', text: `${idx + 1} / ${questions.length}` }),
-      progressBar(idx, questions.length),
-      h('button', { class: 'icon-btn', title: '結束', onclick: () => (idx === 0 && !answered ? back() : finish()) }, '✕')
+      progressBar(idx, questions.length, false, `第 ${idx + 1} 題，共 ${questions.length} 題`),
+      h('button', { class: 'icon-btn', title: '結束', 'aria-label': '結束測驗', onclick: () => (idx === 0 && !answered ? back() : finish()) }, '✕')
     ]));
 
     const isTravel = q.item.type === 'travel';
@@ -147,7 +149,7 @@ export default async function quizView(ctx) {
       q.promptSub ? h('span', { class: 'sub', text: q.promptSub }) : null
     ]));
 
-    const optBox = h('div');
+    const optBox = h('div', { role: 'group', 'aria-label': '答案選項' });
     q.opts.forEach((o, i) => {
       const b = h('button', { class: 'opt' + (q.optionsAreJp ? ' jp' : ''), onclick: () => pick(o, b, optBox) }, [
         h('span', { class: 'opt-num', text: String(i + 1) }),
@@ -157,8 +159,17 @@ export default async function quizView(ctx) {
     });
     wrap.append(optBox);
 
-    const fb = h('div', { id: 'fb' });
+    const fb = h('div', { id: 'fb', role: 'status', 'aria-live': 'polite' });
     wrap.append(fb);
+
+    if (!answered) {
+      wrap.append(h('p', { class: 'kbd-hint small muted', text: '鍵盤：1–4 選答・Enter 下一題・S 朗讀' }));
+      requestAnimationFrame(() => {
+        const first = optBox.querySelector('.opt');
+        if (moveFocus && first) first.focus();
+        moveFocus = false;
+      });
+    }
   }
 
   async function pick(o, btn, optBox) {
@@ -167,9 +178,15 @@ export default async function quizView(ctx) {
     const q = questions[idx];
     optBox.querySelectorAll('.opt').forEach((el, i) => {
       el.disabled = true;
-      if (q.opts[i] && q.opts[i].correct) el.classList.add('correct');
+      if (q.opts[i] && q.opts[i].correct) {
+        el.classList.add('correct');
+        el.setAttribute('aria-label', `${q.opts[i].text}（正確答案）`);
+      }
     });
-    if (!o.correct) btn.classList.add('wrong');
+    if (!o.correct) {
+      btn.classList.add('wrong');
+      btn.setAttribute('aria-label', `${o.text}（你的選擇，答錯）`);
+    }
 
     const grade = o.correct ? 'good' : 'again';
     if (o.correct) correctCount += 1;
@@ -213,15 +230,18 @@ export default async function quizView(ctx) {
       ...detail.filter(Boolean)
     );
 
-    wrap.append(h('button', {
+    const nextBtn = h('button', {
       class: 'btn quiz-next', style: 'margin-top:12px',
       onclick: next
-    }, idx + 1 >= questions.length ? '看結果' : '下一題'));
+    }, idx + 1 >= questions.length ? '看結果' : '下一題');
+    wrap.append(nextBtn);
+    requestAnimationFrame(() => nextBtn.focus());
   }
 
   function next() {
     idx += 1;
     answered = false;
+    moveFocus = true;
     if (idx >= questions.length) return finish();
     render();
   }
@@ -231,7 +251,7 @@ export default async function quizView(ctx) {
     const done = Math.max(idx, answered ? idx + 1 : idx);
     const acc = pct(correctCount, done || 1);
     wrap.replaceChildren();
-    wrap.append(h('div', { class: 'result-hero' }, [
+    wrap.append(h('div', { class: 'result-hero', role: 'status' }, [
       h('div', { class: 'result-score', text: `${acc}%` }),
       h('div', { class: 'muted', text: `答對 ${correctCount} / ${done} 題` })
     ]));

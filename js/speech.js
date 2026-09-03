@@ -43,15 +43,26 @@ export function hasJapaneseVoice() {
 }
 
 let lastUtter = null;
+let ratePref = 0.95;
+
+/** 朗讀語速偏好（0.6–1.1）。從設定載入後由 App 呼叫一次。 */
+export function setRatePref(r) {
+  const n = Number(r);
+  if (Number.isFinite(n) && n >= 0.5 && n <= 1.2) ratePref = n;
+}
+export function getRatePref() {
+  return ratePref;
+}
 
 export function speak(text, { rate } = {}) {
   if (!isSupported() || !text) return;
   try {
     synth.cancel();
+    if (!jaVoice) pickVoice(); // 語音清單可能較晚才就緒，臨用前再試一次
     const u = new SpeechSynthesisUtterance(String(text));
     u.lang = 'ja-JP';
     if (jaVoice) u.voice = jaVoice;
-    u.rate = rate || 0.95;
+    u.rate = rate || ratePref;
     u.pitch = 1;
     lastUtter = u;
     synth.speak(u);
@@ -72,6 +83,17 @@ export async function getAutoSpeak() {
 }
 export async function setAutoSpeak(v) {
   return setSetting('autoSpeak', !!v);
+}
+
+/* 語速偏好（持久化） */
+export async function loadRatePref() {
+  const r = await getSetting('speechRate', 0.95);
+  setRatePref(r);
+  return getRatePref();
+}
+export async function setSpeechRate(v) {
+  setRatePref(v);
+  return setSetting('speechRate', getRatePref());
 }
 
 /**
