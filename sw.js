@@ -4,7 +4,7 @@
  *  - 題庫 JSON（data/）：cache-first + 背景更新
  *  - 其他請求：network-first，失敗時回退快取
  */
-const VERSION = 'jlpt-v1.2.0';
+const VERSION = 'jlpt-v1.2.1';
 const SHELL_CACHE = `${VERSION}-shell`;
 const DATA_CACHE = `${VERSION}-data`;
 

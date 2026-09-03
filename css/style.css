@@ -38,6 +38,8 @@
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+/* hidden 屬性優先於任何 display 設定（否則 .chips 等 display:flex 會蓋掉瀏覽器預設的 [hidden]{display:none}） */
+[hidden] { display: none !important; }
 html, body { margin: 0; padding: 0; height: 100%; }
 body {
   background: var(--bg);
