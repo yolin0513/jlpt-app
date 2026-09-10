@@ -79,6 +79,81 @@ def looks_bad(cols):
     return any(re.search(r"[Ѐ-ӿ]", c) for c in cols)
 
 
+# ---- 假名 → 羅馬字（Hepburn 式，供搜尋比對用）----
+_ROMAJI_2 = {
+    "きゃ": "kya", "きゅ": "kyu", "きょ": "kyo", "しゃ": "sha", "しゅ": "shu", "しょ": "sho",
+    "ちゃ": "cha", "ちゅ": "chu", "ちょ": "cho", "にゃ": "nya", "にゅ": "nyu", "にょ": "nyo",
+    "ひゃ": "hya", "ひゅ": "hyu", "ひょ": "hyo", "みゃ": "mya", "みゅ": "myu", "みょ": "myo",
+    "りゃ": "rya", "りゅ": "ryu", "りょ": "ryo", "ぎゃ": "gya", "ぎゅ": "gyu", "ぎょ": "gyo",
+    "じゃ": "ja", "じゅ": "ju", "じょ": "jo", "ぢゃ": "ja", "ぢゅ": "ju", "ぢょ": "jo",
+    "びゃ": "bya", "びゅ": "byu", "びょ": "byo", "ぴゃ": "pya", "ぴゅ": "pyu", "ぴょ": "pyo",
+    "ふぁ": "fa", "ふぃ": "fi", "ふぇ": "fe", "ふぉ": "fo", "ゔぁ": "va", "ゔぃ": "vi",
+    "ゔぇ": "ve", "ゔぉ": "vo", "てぃ": "ti", "でぃ": "di", "とぅ": "tu", "どぅ": "du",
+    "しぇ": "she", "ちぇ": "che", "じぇ": "je", "うぃ": "wi", "うぇ": "we", "うぉ": "wo",
+}
+_ROMAJI_1 = {
+    "あ": "a", "い": "i", "う": "u", "え": "e", "お": "o",
+    "か": "ka", "き": "ki", "く": "ku", "け": "ke", "こ": "ko",
+    "さ": "sa", "し": "shi", "す": "su", "せ": "se", "そ": "so",
+    "た": "ta", "ち": "chi", "つ": "tsu", "て": "te", "と": "to",
+    "な": "na", "に": "ni", "ぬ": "nu", "ね": "ne", "の": "no",
+    "は": "ha", "ひ": "hi", "ふ": "fu", "へ": "he", "ほ": "ho",
+    "ま": "ma", "み": "mi", "む": "mu", "め": "me", "も": "mo",
+    "や": "ya", "ゆ": "yu", "よ": "yo",
+    "ら": "ra", "り": "ri", "る": "ru", "れ": "re", "ろ": "ro",
+    "わ": "wa", "ゐ": "i", "ゑ": "e", "を": "o", "ん": "n",
+    "が": "ga", "ぎ": "gi", "ぐ": "gu", "げ": "ge", "ご": "go",
+    "ざ": "za", "じ": "ji", "ず": "zu", "ぜ": "ze", "ぞ": "zo",
+    "だ": "da", "ぢ": "ji", "づ": "zu", "で": "de", "ど": "do",
+    "ば": "ba", "び": "bi", "ぶ": "bu", "べ": "be", "ぼ": "bo",
+    "ぱ": "pa", "ぴ": "pi", "ぷ": "pu", "ぺ": "pe", "ぽ": "po",
+    "ゔ": "vu",
+    "ぁ": "a", "ぃ": "i", "ぅ": "u", "ぇ": "e", "ぉ": "o",
+    "ゃ": "ya", "ゅ": "yu", "ょ": "yo", "ゎ": "wa",
+}
+
+
+def _kata_to_hira(s: str) -> str:
+    return "".join(
+        chr(ord(c) - 0x60) if "ァ" <= c <= "ヶ" else c
+        for c in s
+    )
+
+
+def to_romaji(kana: str) -> str:
+    """把假名讀音轉成羅馬字（僅供搜尋比對，長音以重複母音表示）。"""
+    if not kana:
+        return ""
+    s = _kata_to_hira(kana)
+    out = []
+    i = 0
+    while i < len(s):
+        ch = s[i]
+        if ch == "っ":  # 促音：重複下一個子音
+            nxt = s[i + 1:i + 3]
+            r = _ROMAJI_2.get(nxt) or _ROMAJI_1.get(s[i + 1] if i + 1 < len(s) else "", "")
+            if r and r[0].isalpha():
+                out.append("tch" if r.startswith("ch") else r[0])
+            i += 1
+            continue
+        if ch in ("ー", "ー"):  # 長音：重複前一個母音
+            if out and out[-1] and out[-1][-1] in "aiueo":
+                out.append(out[-1][-1])
+            i += 1
+            continue
+        two = s[i:i + 2]
+        if two in _ROMAJI_2:
+            out.append(_ROMAJI_2[two])
+            i += 2
+            continue
+        if ch in _ROMAJI_1:
+            out.append(_ROMAJI_1[ch])
+            i += 1
+            continue
+        i += 1  # 標點等直接略過
+    return "".join(out)
+
+
 def build_vocab(level: str):
     rows = parse_lines(SRC / f"vocab.{level.lower()}.txt")
     items = []
@@ -92,6 +167,7 @@ def build_vocab(level: str):
             "id": f"{level.lower()}-v-{n:04d}",
             "kanji": field(cols, 0),
             "kana": field(cols, 1),
+            "romaji": to_romaji(field(cols, 1)),  # 自動產生，供搜尋比對
             "meaning": field(cols, 2),
             "pos": field(cols, 3),
             "example": field(cols, 4),

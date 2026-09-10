@@ -331,6 +331,23 @@ ok(/輸入關鍵字/.test(s2.blank), '空白查詢顯示提示而非全部結果
 ok(/沒有符合/.test(s2.none), '無結果顯示提示');
 ok(s2.kana > 0, `假名搜尋有結果 (${s2.kana})`);
 
+// 羅馬字搜尋（README 有承諾此功能）
+const roma = [];
+for (const [q, want] of [['taberu', '食べる'], ['gakkou', '学校'], ['koohii', 'コーヒー']]) {
+  await go(`#/search?q=${q}`);
+  await p.waitForSelector('.detail-card, .empty', { timeout: 15000 }).catch(() => {});
+  const hit = await p.evaluate(() => document.querySelector('.detail-card .detail-main')?.textContent);
+  roma.push(`${q}→${hit || '無'}`);
+}
+ok(roma.every((r, i) => r.includes(['食べる', '学校', 'コーヒー'][i])),
+  `羅馬字搜尋可用 (${roma.join(', ')})`);
+const romaField = await p.evaluate(async () => {
+  const d = await import('./js/data.js');
+  const all = await d.loadMany('vocab', d.LEVELS);
+  return { tot: all.length, filled: all.filter((x) => x.romaji && x.romaji.trim()).length };
+});
+ok(romaField.filled === romaField.tot, `所有單字都有 romaji (${romaField.filled}/${romaField.tot})`);
+
 /* ================= 11. 收藏即時性 ================= */
 console.log('\n[11] 收藏');
 await go('#/search?q=勉強');
