@@ -50,8 +50,9 @@ export function actionRow(item, favSet, onChange) {
   return row;
 }
 
-/** 搜尋結果 / 詳細用的卡片 */
-export function detailCard(item, favSet) {
+/** 搜尋結果 / 詳細用的卡片
+ * @param {function} [onFav]  ★ 切換後回呼 (nowFav)，供清單即時增刪 */
+export function detailCard(item, favSet, onFav) {
   const lv = String(item.level).toLowerCase();
 
   if (item.type === 'travel') {
@@ -63,7 +64,7 @@ export function detailCard(item, favSet) {
             h('span', { class: 'detail-main jp', text: item.kanji }),
             item.reading ? h('span', { class: 'muted', text: item.reading }) : null
           ]),
-          actionRow(item, favSet)
+          actionRow(item, favSet, onFav)
         ]),
         h('div', { class: 'detail-meaning', text: `日文意思：${item.jpMeaning}` }),
         item.zhMisread ? h('div', { class: 'small', style: 'color:var(--bad);margin-top:4px', text: `台灣人常誤解：${item.zhMisread}` }) : null,
@@ -80,7 +81,7 @@ export function detailCard(item, favSet) {
           h('span', { class: 'pill travel', text: item.cat === 'usage' ? '日本人這樣說' : '會話' }),
           item.scene ? h('span', { class: 'small muted', text: item.scene }) : null
         ]),
-        actionRow(item, favSet)
+        actionRow(item, favSet, onFav)
       ]),
       h('div', { class: 'detail-main jp', style: 'font-size:18px;margin-top:6px', text: item.jp }),
       item.kana ? h('div', { class: 'small muted', text: item.kana }) : null,
@@ -99,7 +100,7 @@ export function detailCard(item, favSet) {
           showKana ? h('span', { class: 'muted', text: item.kana }) : null,
           item.pos ? h('span', { class: 'pill', text: item.pos }) : null
         ]),
-        actionRow(item, favSet)
+        actionRow(item, favSet, onFav)
       ]),
       h('div', { class: 'detail-meaning', text: item.meaning }),
       item.example ? h('div', { class: 'detail-example' }, [
@@ -115,7 +116,7 @@ export function detailCard(item, favSet) {
         h('span', { class: `pill ${lv}`, text: item.level }),
         h('span', { class: 'detail-main jp', style: 'font-size:20px', text: item.pattern })
       ]),
-      actionRow(item, favSet)
+      actionRow(item, favSet, onFav)
     ]),
     h('div', { class: 'detail-meaning', style: 'font-size:16px', text: item.meaning }),
     item.structure ? h('div', { class: 'small pill', text: item.structure }) : null,

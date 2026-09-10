@@ -11,17 +11,21 @@ export default async function statsView() {
   const wrap = h('div');
   wrap.append(spinner());
 
-  const [man, tm, prog, daily, st, goal, favs, autoSpeak] = await Promise.all([
+  const [man, tm, progAll, daily, st, goal, favs, autoSpeak] = await Promise.all([
     getManifest(), getTravelManifest(), allProgress(), allDaily(), streak(),
     getDailyGoal(), allFavorites(), getAutoSpeak()
   ]);
   wrap.replaceChildren();
 
+  // 舊版本練過、現已隱藏的跨級別重複詞：不計入掌握度，否則會超過分母
+  const dupSet = new Set(man.dupIds || []);
+  const prog = progAll.filter((r) => !dupSet.has(r.itemId));
+
   // ---- 總覽（JLPT + 生活旅行 合計）----
   const learned = prog.filter((r) => r.box >= LEARNED_BOX).length;
   const seen = prog.length;
-  const totalCorrect = prog.reduce((s, r) => s + (r.correct || 0), 0);
-  const totalWrong = prog.reduce((s, r) => s + (r.wrong || 0), 0);
+  const totalCorrect = progAll.reduce((s, r) => s + (r.correct || 0), 0);
+  const totalWrong = progAll.reduce((s, r) => s + (r.wrong || 0), 0);
   const acc = pct(totalCorrect, totalCorrect + totalWrong);
   const setCount = (s) => (s.activeCount ?? s.count); // 扣掉跨級別重複隱藏的條目
   const totalItems = man.sets.reduce((s, x) => s + setCount(x), 0) + (tm.total || 0);
@@ -178,7 +182,7 @@ export default async function statsView() {
   mgmt.append(h('button', { class: 'btn ghost', style: 'color:var(--bad);border-color:var(--bad)', onclick: doReset }, '🗑 重置所有進度'));
   wrap.append(mgmt);
 
-  wrap.append(h('p', { class: 'small muted', style: 'text-align:center;margin-top:16px' }, 'JLPT 練習 v1.6.0・資料僅儲存在此瀏覽器'));
+  wrap.append(h('p', { class: 'small muted', style: 'text-align:center;margin-top:16px' }, 'JLPT 練習 v1.6.1・資料僅儲存在此瀏覽器'));
 
   async function doExport() {
     const data = await exportAll();

@@ -41,8 +41,9 @@ export async function getManifest() {
   return _manifest;
 }
 
-/** 回傳某級別某類型的題目陣列（已正規化欄位） */
-export async function loadSet(type, level) {
+/** 內部：完整清單（含標記 dup 的跨級別重複），供 findItem 反查舊 id 用。
+ *  一般出題／統計請用 loadSet，不要用這個。 */
+async function loadSetRaw(type, level) {
   const cacheKey = `${type}:${level}`;
   if (_cache.has(cacheKey)) return _cache.get(cacheKey);
 
@@ -59,6 +60,13 @@ export async function loadSet(type, level) {
   return items;
 }
 
+/** 回傳某級別某類型「可練習」的題目陣列（已正規化欄位、已濾除跨級別重複）。
+ *  跨級別重複的那一筆（較低級別已收錄同一個詞）不會被出題、不計入掌握度分母，
+ *  但仍留在 JSON 且 id 不變 → findItem() 照常反查得到，既有學習進度不受影響。 */
+export async function loadSet(type, level) {
+  return (await loadSetRaw(type, level)).filter((it) => !it.dup);
+}
+
 /** 併發上限的 map（同時最多 limit 個，避免壓垮本機 dev server） */
 async function mapLimit(items, limit, fn) {
   const out = new Array(items.length);
@@ -73,13 +81,10 @@ async function mapLimit(items, limit, fn) {
   return out;
 }
 
-/** 一次載入多個級別（複習 / 混合模式 / 搜尋用）。
- *  會濾掉標記 dup 的跨級別重複條目（較低級別已收錄同一個詞），
- *  避免同一詞在混合出題／誘答／搜尋結果裡重複出現。
- *  單級別的 loadSet 不濾 → findItem() 仍解析得到，既有進度不受影響。 */
+/** 一次載入多個級別（複習 / 混合模式 / 搜尋用）。loadSet 已濾除跨級別重複。 */
 export async function loadMany(type, levels) {
   const groups = await mapLimit(levels, 3, (lv) => loadSet(type, lv));
-  return groups.flat().filter((it) => !it.dup);
+  return groups.flat();
 }
 
 /* ---------- 生活旅行 ---------- */
@@ -125,7 +130,8 @@ export async function findItem(itemId) {
   if (j) {
     const level = j[1].toUpperCase();
     const type = j[2] === 'v' ? 'vocab' : 'grammar';
-    const list = await loadSet(type, level);
+    // 用 raw：被標記 dup 的條目也要找得到，否則舊進度會變孤兒
+    const list = await loadSetRaw(type, level);
     const hit = list.find((x) => x.id === itemId);
     if (hit) return { item: hit, type, level };
   }

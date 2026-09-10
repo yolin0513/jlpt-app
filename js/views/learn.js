@@ -9,6 +9,7 @@ export default async function learnView(ctx) {
   const wrap = h('div');
   wrap.append(spinner());
   const [man, pmap] = await Promise.all([getManifest(), progressMap()]);
+  const dupSet = new Set(man.dupIds || []);
   wrap.replaceChildren();
 
   const state = {
@@ -37,9 +38,11 @@ export default async function learnView(ctx) {
 
     // 該組進度摘要
     const set = man.sets.find((s) => s.type === state.type && s.level === state.level);
-    const total = set ? set.count : 0;
+    // 用 activeCount（扣掉跨級別重複），與首頁／統計頁的掌握度分母一致
+    const total = set ? (set.activeCount ?? set.count) : 0;
     let learned = 0;
     for (const r of pmap.values()) {
+      if (dupSet.has(r.itemId)) continue; // 舊版本練過、現已隱藏的重複詞不計入
       if (r.type === state.type && r.level === state.level && r.box >= LEARNED_BOX) learned += 1;
     }
     wrap.append(h('div', { class: 'card', style: 'margin-top:10px' }, [

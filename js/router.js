@@ -9,14 +9,28 @@ export function route(pattern, handler) {
 }
 export function setNotFound(fn) { notFound = fn; }
 
+/** decodeURIComponent 但不會因為畸形編碼（例如單獨一個 %）而拋錯 */
+function safeDecode(s) {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+}
+
 export function parseHash() {
-  let hash = location.hash.slice(1) || '/home';
-  const [path, qs] = hash.split('?');
+  const hash = location.hash.slice(1) || '/home';
+  const qi = hash.indexOf('?');
+  const path = qi === -1 ? hash : hash.slice(0, qi);
+  const qs = qi === -1 ? '' : hash.slice(qi + 1);
   const query = {};
   if (qs) {
     for (const pair of qs.split('&')) {
-      const [k, v] = pair.split('=');
-      query[decodeURIComponent(k)] = decodeURIComponent(v || '');
+      if (!pair) continue;
+      const eq = pair.indexOf('=');
+      const k = eq === -1 ? pair : pair.slice(0, eq);
+      const v = eq === -1 ? '' : pair.slice(eq + 1); // 值裡的 '=' 保留
+      query[safeDecode(k)] = safeDecode(v);
     }
   }
   return { path: path || '/home', query, hash };
@@ -61,10 +75,18 @@ async function dispatch() {
   } catch (err) {
     if (gen !== dispatchGen) return;
     console.error(err);
-    view.replaceChildren(Object.assign(document.createElement('div'), {
-      className: 'empty',
-      innerHTML: `<div class="big">⚠️</div><p>載入發生錯誤</p><p class="small muted">${err.message}</p>`
-    }));
+    const box = document.createElement('div');
+    box.className = 'empty';
+    const big = document.createElement('div');
+    big.className = 'big';
+    big.textContent = '⚠️';
+    const p1 = document.createElement('p');
+    p1.textContent = '載入發生錯誤';
+    const p2 = document.createElement('p');
+    p2.className = 'small muted';
+    p2.textContent = err && err.message ? err.message : String(err); // textContent，不用 innerHTML
+    box.append(big, p1, p2);
+    view.replaceChildren(box);
   }
 }
 

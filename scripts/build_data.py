@@ -255,6 +255,9 @@ def main():
             print(f"  {typ:7s} {level}: {len(items):4d} 條 -> {out.relative_to(ROOT)} {tag}")
 
     sets.sort(key=lambda s: (s["type"], LEVELS.index(s["level"])))
+    # 被隱藏的 id 清單（很小，27 筆左右）：前端統計要用它排除
+    # 「舊版本曾練過、現在已隱藏」的進度紀錄，否則掌握度會超過分母。
+    dup_ids = sorted(it["id"] for items in by_set.values() for it in items if it.get("dup"))
     print(f"  跨級別重複隱藏共 {hidden} 筆")
 
     # ---- 生活旅行 ----
@@ -282,6 +285,7 @@ def main():
         "types": [{"key": "vocab", "label": "單字"}, {"key": "grammar", "label": "文法"}],
         "totalItems": total,
         "activeItems": active_total,
+        "dupIds": dup_ids,
         "sets": sets,
         "travel": {"total": travel_total, "sets": travel_sets},
     }

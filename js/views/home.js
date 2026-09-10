@@ -108,7 +108,9 @@ export default async function homeView() {
     totals[s.level] = totals[s.level] || { total: 0, learned: 0 };
     totals[s.level].total += (s.activeCount ?? s.count); // 扣掉跨級別重複隱藏的條目
   }
+  const dupSet = new Set(man.dupIds || []);
   for (const r of pmap.values()) {
+    if (dupSet.has(r.itemId)) continue; // 舊版本練過、現已隱藏的重複詞不計入
     if (r.box >= LEARNED_BOX && totals[r.level]) totals[r.level].learned += 1;
   }
   for (const lv of LEVELS) {

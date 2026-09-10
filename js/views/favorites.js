@@ -51,10 +51,18 @@ export default async function favoritesView() {
     ]));
 
     for (const it of shown) {
-      wrap.append(detailCard(it, favSet));
+      // 取消 ★ 時即時把卡片從清單移除，不必重新進頁
+      wrap.append(detailCard(it, favSet, (nowFav) => {
+        if (nowFav) return;
+        const i = rows.findIndex((r) => r.id === it.id);
+        if (i >= 0) rows.splice(i, 1);
+        if (!rows.length) {
+          favoritesView().then((n) => document.getElementById('view').replaceChildren(n));
+          return;
+        }
+        render();
+      }));
     }
-    wrap.append(h('p', { class: 'small muted', style: 'text-align:center;margin-top:14px' },
-      '取消 ★ 後，重新進入此頁即會移除。'));
   }
 
   function chip(label, active, on) {
