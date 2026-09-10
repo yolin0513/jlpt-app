@@ -270,7 +270,7 @@ def main():
         out = TRAVEL_OUT / f"{cat_key}.json"
         out.write_text(json.dumps(
             {"cat": cat_key, "label": label, "count": len(items), "items": items},
-            ensure_ascii=False, indent=1), encoding="utf-8")
+            ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
         travel_sets.append({
             "cat": cat_key, "label": label, "icon": icon,
             "file": f"travel/{cat_key}.json", "count": len(items),
