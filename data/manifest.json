@@ -1,7 +1,7 @@
 {
  "app": "JLPT 練習",
  "generated": true,
- "dataVersion": "3519b6782aed",
+ "dataVersion": "8e326781c84b",
  "levels": [
   "N5",
   "N4",
@@ -19,8 +19,8 @@
    "label": "文法"
   }
  ],
- "totalItems": 2548,
- "activeItems": 2521,
+ "totalItems": 3041,
+ "activeItems": 3013,
  "dupIds": [
   "n1-v-0056",
   "n1-v-0091",
@@ -28,6 +28,7 @@
   "n1-v-0115",
   "n1-v-0118",
   "n1-v-0192",
+  "n1-v-0301",
   "n2-g-0013",
   "n2-v-0035",
   "n2-v-0037",
@@ -111,15 +112,15 @@
    "type": "vocab",
    "level": "N2",
    "file": "vocab/n2.json",
-   "count": 260,
-   "activeCount": 250
+   "count": 502,
+   "activeCount": 492
   },
   {
    "type": "vocab",
    "level": "N1",
    "file": "vocab/n1.json",
-   "count": 263,
-   "activeCount": 257
+   "count": 514,
+   "activeCount": 507
   }
  ],
  "travel": {
