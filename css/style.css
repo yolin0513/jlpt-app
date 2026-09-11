@@ -515,3 +515,48 @@ input.switch { width: 44px; height: 26px; accent-color: var(--primary); flex-shr
   margin: 10px 0 2px;
   flex-wrap: wrap;
 }
+
+/* ---------- 模擬考 ---------- */
+.exam-head {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px;
+}
+.exam-head .exam-sec { flex: 1; font-weight: 700; font-size: 15px; }
+.exam-timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700; font-size: 17px;
+  padding: 3px 10px; border-radius: 999px;
+  background: var(--surface-2); color: var(--text-dim);
+}
+.exam-timer.urgent { background: var(--bad-bg); color: var(--bad); }
+/* 題號導覽：一眼看出哪幾題還沒作答，也能直接跳過去改 */
+.exam-nav {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-bottom: 14px;
+}
+.exam-no {
+  min-width: 30px; height: 30px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  background: var(--surface); color: var(--text-dim);
+  font-size: 13px; font-variant-numeric: tabular-nums; cursor: pointer;
+}
+.exam-no.done { background: var(--surface-2); color: var(--text); font-weight: 700; }
+.exam-no.cur { border-color: var(--primary); color: var(--primary); font-weight: 700; }
+/* 模擬考作答當下不揭曉對錯，所以選取狀態只能是中性色，不能用對/錯的綠紅 */
+.opt.picked { border-color: var(--primary); background: var(--surface-2); font-weight: 600; }
+.pill.ok { background: var(--good-bg); color: var(--good); border-color: var(--good); }
+.pill.no { background: var(--bad-bg); color: var(--bad); border-color: var(--bad); }
+
+/* ---------- 複習預測日曆 ---------- */
+.fc-row { display: flex; align-items: flex-end; gap: 3px; }
+.fc-col { flex: 1; min-width: 0; text-align: center; }
+.fc-n { font-size: 10px; color: var(--text-dim); height: 13px; font-variant-numeric: tabular-nums; }
+.fc-track { height: 60px; display: flex; align-items: flex-end; }
+.fc-bar {
+  display: block; width: 100%; border-radius: 3px 3px 0 0;
+  background: var(--primary); opacity: .75;
+}
+.fc-col.today .fc-bar { opacity: 1; }
+.fc-col.today .fc-lab { color: var(--primary); font-weight: 700; }
+.fc-lab { font-size: 9.5px; color: var(--text-dim); margin-top: 3px; line-height: 1.2; }
+.fc-wk { font-size: 9px; color: var(--text-dim); opacity: .7; }

@@ -90,6 +90,10 @@ export default async function learnView(ctx) {
         onclick: () => start('quiz', { qtype: 'cloze' })
       }, '✏️ 例句填空')
     ]));
+    wrap.append(h('button', {
+      class: 'btn secondary', style: 'margin-top:10px',
+      onclick: () => navigate('/exam', { level: state.level })
+    }, '⏱️ 模擬考（計時）'));
   }
 
   async function start(mode, extra) {

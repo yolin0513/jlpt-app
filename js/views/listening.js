@@ -16,22 +16,10 @@ import {
   voiceStatus, primeSpeech, speakChecked, stop as stopSpeech
 } from '../speech.js';
 import { bindKeys } from '../keys.js';
+import { audioOf } from '../qtypes.js';   // 與模擬考共用
 
 const LIMIT = 10;
 const SLOW_RATE = 0.7;
-
-/** 取出「可以拿來聽」的題目：要有完整日文句子與對應中文 */
-function audioOf(item) {
-  if (item.type === 'travel') {
-    if (item.cat === 'kanji') {
-      return item.example && item.exampleMeaning
-        ? { jp: item.example, kana: item.exampleKana, zh: item.exampleMeaning } : null;
-    }
-    return item.jp && item.zh ? { jp: item.jp, kana: item.kana, zh: item.zh } : null;
-  }
-  return item.example && item.exampleMeaning
-    ? { jp: item.example, kana: item.exampleKana, zh: item.exampleMeaning } : null;
-}
 
 export default async function listeningView(ctx) {
   const wrap = h('div');

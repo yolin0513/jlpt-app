@@ -22,6 +22,7 @@ export default async function reviewView() {
         : h('p', { class: 'small muted' }, '先去學習一些單字或文法吧'),
       h('button', { class: 'btn', style: 'max-width:220px;margin:12px auto 0', onclick: () => navigate('/learn') }, '開始學習')
     ]));
+    wrap.append(...forecastBlock(all));
     return wrap;
   }
 
@@ -68,10 +69,73 @@ export default async function reviewView() {
     onclick: () => navigate('/study', { mode: 'quiz', src: 'review' })
   }, '📝 測驗複習'));
 
+  wrap.append(...forecastBlock(all));
+
   wrap.append(h('p', { class: 'small muted', style: 'margin-top:14px' },
     '答對的項目會依間隔重複法逐步拉長複習間隔；答錯會重新排入近期複習並記入錯題本。'));
 
   return wrap;
+}
+
+/* ---------- 複習預測日曆 ----------
+ * 只顯示「下一次複習是什麼時候」看不出負擔會不會塞車：
+ * SRS 的間隔是倍增的，同一天學的東西會在未來同一天一起到期。
+ * 把未來 14 天的到期量畫出來，才看得到哪天會爆量、可以提前分攤。 */
+const DAYS = 14;
+const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+
+export function forecast(all, days = DAYS, now = Date.now()) {
+  const startOfDay = (t) => { const x = new Date(t); x.setHours(0, 0, 0, 0); return x.getTime(); };
+  const today = startOfDay(now);
+  const end = today + days * 86400000;
+  const buckets = Array.from({ length: days }, (_, i) => ({ ts: today + i * 86400000, n: 0 }));
+  let overdue = 0, later = 0;
+  for (const r of all) {
+    if (!Number.isFinite(r.due)) continue;
+    if (r.due <= now) { overdue += 1; continue; }
+    if (r.due >= end) { later += 1; continue; }
+    const i = Math.round((startOfDay(r.due) - today) / 86400000);
+    if (i >= 0 && i < days) buckets[i].n += 1;
+  }
+  return { buckets, overdue, later };
+}
+
+function forecastBlock(all) {
+  const { buckets, overdue, later } = forecast(all);
+  if (!all.length) return [];
+  const max = Math.max(1, ...buckets.map((b) => b.n));
+  const week1 = buckets.slice(0, 7).reduce((a, b) => a + b.n, 0);
+  const week2 = buckets.slice(7).reduce((a, b) => a + b.n, 0);
+  const peak = buckets.reduce((a, b) => (b.n > a.n ? b : a), buckets[0]);
+
+  const row = h('div', { class: 'fc-row', role: 'img', 'aria-label':
+    `未來 ${DAYS} 天複習預測：` + buckets.map((b) => {
+      const d = new Date(b.ts);
+      return `${d.getMonth() + 1}月${d.getDate()}日 ${b.n} 項`;
+    }).join('、') });
+  buckets.forEach((b, i) => {
+    const d = new Date(b.ts);
+    row.append(h('div', { class: 'fc-col' + (i === 0 ? ' today' : '') }, [
+      h('div', { class: 'fc-n', text: b.n ? String(b.n) : '' }),
+      h('div', { class: 'fc-track' }, [
+        h('i', { class: 'fc-bar', style: `height:${b.n ? Math.max(8, Math.round(b.n / max * 100)) : 0}%` })
+      ]),
+      h('div', { class: 'fc-lab', text: i === 0 ? '今天' : `${d.getMonth() + 1}/${d.getDate()}` }),
+      h('div', { class: 'fc-wk', text: WEEK[d.getDay()] })
+    ]));
+  });
+
+  return [
+    h('div', { class: 'section-title', style: 'margin-top:18px', text: `複習預測（未來 ${DAYS} 天）` }),
+    h('div', { class: 'card', style: 'padding:12px 10px' }, [
+      row,
+      h('div', { class: 'small muted', style: 'margin-top:10px;line-height:1.6' },
+        `本週 ${week1} 項・下週 ${week2} 項` +
+        (peak.n > 0 ? `　最多是 ${new Date(peak.ts).getMonth() + 1}/${new Date(peak.ts).getDate()} 的 ${peak.n} 項` : '') +
+        (overdue ? `　已逾期 ${overdue} 項` : '') +
+        (later ? `　${DAYS} 天後還有 ${later} 項` : ''))
+    ])
+  ];
 }
 
 function fmtWhen(ts) {

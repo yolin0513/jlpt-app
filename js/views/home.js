@@ -90,6 +90,15 @@ export default async function homeView() {
     h('span', { class: 'chev', text: '›' })
   ]));
 
+  wrap.append(h('button', { class: 'tile', onclick: () => navigate('/exam') }, [
+    h('span', { style: 'font-size:24px' }, '⏱️'),
+    h('div', { class: 'tile-main' }, [
+      h('div', { class: 'tile-title', text: '模擬考' }),
+      h('div', { class: 'tile-sub', text: '照真實考試節奏計時分科，作答中不給答案，最後一次結算' })
+    ]),
+    h('span', { class: 'chev', text: '›' })
+  ]));
+
   // ---- 快速開始 ----
   wrap.append(h('div', { class: 'section-title', text: '快速開始' }));
   wrap.append(h('div', { class: 'btn-grid' }, [

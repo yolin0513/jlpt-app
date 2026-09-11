@@ -9,6 +9,23 @@ import { shuffle } from './ui.js';
 const HAN = /[一-鿿]/;
 
 /* ============================================================
+ *  聽力素材
+ * ============================================================ */
+
+/** 取出「可以拿來聽」的題目：要有完整日文句子與對應中文（聽力練習與模擬考共用） */
+export function audioOf(item) {
+  if (item.type === 'travel') {
+    if (item.cat === 'kanji') {
+      return item.example && item.exampleMeaning
+        ? { jp: item.example, kana: item.exampleKana, zh: item.exampleMeaning } : null;
+    }
+    return item.jp && item.zh ? { jp: item.jp, kana: item.kana, zh: item.zh } : null;
+  }
+  return item.example && item.exampleMeaning
+    ? { jp: item.example, kana: item.exampleKana, zh: item.exampleMeaning } : null;
+}
+
+/* ============================================================
  *  漢字讀音
  * ============================================================ */
 

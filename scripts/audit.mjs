@@ -1,7 +1,7 @@
-/* 全面功能檢測回歸套件（45 項）
+/* 全面功能檢測回歸套件（74 項）
  * 用法：先跑 python scripts/serve.py，再 node scripts/audit.mjs [baseUrl]
  * 涵蓋 verify-full 沒測到的：資料層一致性、掌握度分母、路由健壯性、
- * 匯出匯入、孤兒紀錄、搜尋、收藏即時性、重置、SRS 邊界。
+ * 匯出匯入、孤兒紀錄、搜尋、收藏即時性、重置、SRS 邊界、聽力、特殊題型、模擬考。
  */
 import puppeteer from 'puppeteer';
 import { tmpdir } from 'node:os';
@@ -599,6 +599,157 @@ for (const [label, hash, markers] of [
   }));
   ok(r.n === 4 && r.uniq === 4 && markers.some((m) => r.q.includes(m)),
     `${label} 出題正常（${r.n} 個相異選項）`, r.q);
+}
+
+/* ================= 15. 模擬考計時模式 ================= */
+console.log('\n[15] 模擬考計時模式');
+{
+  const p2 = await b.newPage();
+  await p2.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  const e2 = [];
+  p2.on('pageerror', (e) => e2.push('pageerror: ' + e.message));
+  p2.on('console', (m) => { if (m.type() === 'error') e2.push('console: ' + m.text()); });
+  p2.on('dialog', async (d) => { await d.accept(); });
+  const click = (t) => p2.evaluate((s) => {
+    const el = [...document.querySelectorAll('button')].find((x) => x.innerText.includes(s));
+    if (el) el.click();
+    return !!el;
+  }, t);
+
+  await p2.goto(BASE + '#/exam?level=N3', { waitUntil: 'networkidle2' });
+  await sleep(700);
+
+  // 時間不是隨便訂的：N3 每題 55 秒（真實考試總時間 ÷ 題數），快速版 10 題 = 9:10
+  const planText = await p2.$$eval('.card .li-sub', (els) => els.map((e) => e.innerText));
+  ok(planText[0] === '10 題・9:10', `科目時間依真實考試節奏換算（N3 10 題 = 9:10）`, planText.join(' / '));
+
+  const before = await p2.evaluate(async () => (await (await import('./js/store.js')).allProgress()).length);
+
+  await click('開始模擬考'); await sleep(3000);
+  const introOk = await p2.evaluate(() => document.body.innerText.includes('第 1 科'));
+  await click('開始作答'); await sleep(500);
+
+  // 作答當下不可以揭曉對錯，否則就只是有計時的一般測驗
+  await p2.evaluate(() => document.querySelectorAll('.opt')[0].click());
+  await sleep(250);
+  const noReveal = await p2.evaluate(() => ({
+    graded: document.querySelectorAll('.opt.correct, .opt.wrong').length,
+    fb: !!document.getElementById('fb'),
+    done: document.querySelectorAll('.exam-no.done').length
+  }));
+  ok(introOk && noReveal.graded === 0 && !noReveal.fb && noReveal.done === 1,
+    `作答中不揭曉對錯，只標記已作答`, JSON.stringify(noReveal));
+
+  // 回頭改答案：跳回第 1 題，原本選的要還在，改掉後要換成新的
+  const revisit = await p2.evaluate(async () => {
+    document.querySelectorAll('.exam-no')[0].click();
+    await new Promise((r) => setTimeout(r, 80));
+    const keptAt = [...document.querySelectorAll('.opt')].findIndex((o) => o.classList.contains('picked'));
+    document.querySelectorAll('.opt')[3].click();
+    await new Promise((r) => setTimeout(r, 80));
+    document.querySelectorAll('.exam-no')[0].click();
+    await new Promise((r) => setTimeout(r, 80));
+    const nowAt = [...document.querySelectorAll('.opt')].findIndex((o) => o.classList.contains('picked'));
+    return { keptAt, nowAt };
+  });
+  ok(revisit.keptAt === 0 && revisit.nowAt === 3,
+    `可跳題回頭改答案且保留選擇 (原 ${revisit.keptAt + 1} → 改成 ${revisit.nowAt + 1})`, JSON.stringify(revisit));
+
+  // 計時器真的在倒數
+  const t1 = await p2.evaluate(() => document.querySelector('.exam-timer').textContent);
+  await sleep(2600);
+  const t2 = await p2.evaluate(() => document.querySelector('.exam-timer').textContent);
+  const secs = (s) => { const [m, x] = s.split(':').map(Number); return m * 60 + x; };
+  ok(secs(t1) - secs(t2) >= 2, `計時器持續倒數 (${t1} → ${t2})`);
+  await p2.close();
+}
+{
+  // 時間到自動交卷：把 setInterval 加速 100 倍，讓整段計時真的跑完（不是模擬）
+  const p3 = await b.newPage();
+  await p3.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  p3.on('dialog', async (d) => { await d.accept(); });
+  await p3.evaluateOnNewDocument(() => {
+    const real = window.setInterval;
+    window.setInterval = (fn, ms, ...a) => real(fn, ms >= 1000 ? ms / 100 : ms, ...a);
+  });
+  const click3 = (t) => p3.evaluate((s) => {
+    const el = [...document.querySelectorAll('button')].find((x) => x.innerText.includes(s));
+    if (el) el.click();
+    return !!el;
+  }, t);
+  await p3.goto(BASE + '#/exam?level=N5', { waitUntil: 'networkidle2' });
+  await sleep(700);
+  const p0 = await p3.evaluate(async () => (await (await import('./js/store.js')).allProgress()).length);
+  await click3('開始模擬考'); await sleep(3000);
+  await click3('開始作答');
+  // 只答 2 題就放著，其餘留白等時間到
+  await sleep(300);
+  await p3.evaluate(() => { document.querySelectorAll('.opt')[0].click(); });
+  await sleep(150);
+  await p3.evaluate(() => { document.querySelectorAll('.opt')[0].click(); });
+  // 10 題 × 45 秒 = 450 秒，加速 100 倍 ≈ 4.5 秒
+  await sleep(9000);
+  const state = await p3.evaluate(() => document.body.innerText);
+  const autoSubmitted = /第 2 科|各科表現/.test(state);
+  ok(autoSubmitted, `時間到自動交卷並進入下一科`, state.slice(0, 80));
+  // 未作答不該寫進 SRS（時間到來不及寫 ≠ 學錯了）
+  const p1 = await p3.evaluate(async () => (await (await import('./js/store.js')).allProgress()).length);
+  ok(p1 - p0 <= 2, `未作答的題目不寫入 SRS (新增 ${p1 - p0} 筆，實際作答 2 題)`,
+    `寫了 ${p1 - p0} 筆，超過實際作答數 → 空白題被當成答錯記進進度`);
+  await p3.close();
+}
+
+/* ================= 16. 複習預測日曆 ================= */
+console.log('\n[16] 複習預測日曆');
+{
+  const p4 = await b.newPage();
+  await p4.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  const e4 = [];
+  p4.on('pageerror', (e) => e4.push('pageerror: ' + e.message));
+  await p4.goto(BASE + '#/home', { waitUntil: 'networkidle2' });
+  // 種下已知的到期分佈：逾期 3、今天稍後 2、第 3 天 5、第 13 天 4、第 20 天（超出範圍）6
+  const planted = await p4.evaluate(async () => {
+    const { idb } = await import('./js/db.js');
+    for (const r of await idb.getAll('progress')) await idb.del('progress', r.itemId);
+    const now = Date.now();
+    const mid = new Date(); mid.setHours(23, 30, 0, 0);            // 今天稍晚
+    const day = (n) => { const d = new Date(); d.setDate(d.getDate() + n); d.setHours(12, 0, 0, 0); return d.getTime(); };
+    const spec = [[3, now - 3600000], [2, mid.getTime()], [5, day(3)], [4, day(13)], [6, day(20)]];
+    let i = 0;
+    for (const [n, due] of spec) {
+      for (let k = 0; k < n; k++, i++) {
+        await idb.put('progress', { itemId: `n5-v-${String(i + 1).padStart(4, '0')}`, level: 'N5', type: 'vocab', box: 2, due, reps: 2, correct: 2, wrong: 0, updated: now });
+      }
+    }
+    return spec;
+  });
+  await p4.goto('about:blank');
+  await p4.goto(BASE + '#/review', { waitUntil: 'networkidle2' });
+  await sleep(800);
+  const fc = await p4.evaluate(() => ({
+    cols: document.querySelectorAll('.fc-col').length,
+    nums: [...document.querySelectorAll('.fc-n')].map((e) => +(e.textContent || 0)),
+    summary: document.querySelector('.fc-row')?.parentElement?.querySelector('.small.muted')?.textContent || '',
+    aria: !!document.querySelector('.fc-row')?.getAttribute('aria-label'),
+    overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth
+  }));
+  ok(fc.cols === 14 && fc.aria && !fc.overflow,
+    `預測日曆 14 欄、有 aria 替代文字、390px 無橫向溢出`, JSON.stringify({ cols: fc.cols, aria: fc.aria, overflow: fc.overflow }));
+  // 分桶必須落在正確的日子：今天 2、第 3 天 5、第 13 天 4，其餘 0
+  const want = Array(14).fill(0);
+  want[0] = 2; want[3] = 5; want[13] = 4;
+  ok(JSON.stringify(fc.nums) === JSON.stringify(want),
+    `到期量分到正確的日子 (今天 ${fc.nums[0]}／第3天 ${fc.nums[3]}／第13天 ${fc.nums[13]})`,
+    `實際 ${JSON.stringify(fc.nums)} 期望 ${JSON.stringify(want)}`);
+  // 逾期與超出 14 天的要另外計，不能混進當日長條
+  ok(/已逾期 3 項/.test(fc.summary) && /14 天後還有 6 項/.test(fc.summary),
+    `逾期 3 項與 14 天後 6 項另外標示，未混入當日長條`, fc.summary);
+  await p4.evaluate(async () => {
+    const { idb } = await import('./js/db.js');
+    for (const r of await idb.getAll('progress')) await idb.del('progress', r.itemId);
+  });
+  ok(e4.length === 0, '預測日曆頁面無 console 錯誤', e4.join(' | '));
+  await p4.close();
 }
 
 /* ================= 14. console ================= */
