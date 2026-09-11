@@ -1,8 +1,8 @@
 {
  "level": "N4",
  "type": "grammar",
- "count": 92,
- "activeCount": 91,
+ "count": 120,
+ "activeCount": 119,
  "items": [
   {
    "id": "n4-g-0001",
@@ -925,6 +925,286 @@
    "example": "毎日運動することが大切です。",
    "exampleKana": "まいにちうんどうすることがたいせつです。",
    "exampleMeaning": "每天運動很重要。"
+  },
+  {
+   "id": "n4-g-0093",
+   "pattern": "疑問詞＋か",
+   "reading": "",
+   "meaning": "「間接疑問（不知道～、決定了～）」",
+   "structure": "疑問詞＋普通形＋か",
+   "example": "何を買うか決めました。",
+   "exampleKana": "なにをかうかきめました。",
+   "exampleMeaning": "決定好要買什麼了。"
+  },
+  {
+   "id": "n4-g-0094",
+   "pattern": "自動詞・他動詞",
+   "reading": "じどうし・たどうし",
+   "meaning": "「成對的自他動詞（開く／開ける）」",
+   "structure": "自動詞＋が／他動詞＋を",
+   "example": "ドアが開いた。私はドアを開けた。",
+   "exampleKana": "ドアがあいた。わたしはドアをあけた。",
+   "exampleMeaning": "門開了。我把門打開了。"
+  },
+  {
+   "id": "n4-g-0095",
+   "pattern": "～なくて",
+   "reading": "",
+   "meaning": "「因為不～（表原因）」",
+   "structure": "動詞ない形（去い）＋くて",
+   "example": "意味が分からなくて困った。",
+   "exampleKana": "いみがわからなくてこまった。",
+   "exampleMeaning": "因為不懂意思而感到困擾。"
+  },
+  {
+   "id": "n4-g-0096",
+   "pattern": "～なければ",
+   "reading": "",
+   "meaning": "「如果不～的話」",
+   "structure": "動詞ない形（去い）＋ければ",
+   "example": "急がなければ間に合わない。",
+   "exampleKana": "いそがなければまにあわない。",
+   "exampleMeaning": "不快點就趕不上。"
+  },
+  {
+   "id": "n4-g-0097",
+   "pattern": "使役受身形",
+   "reading": "しえきうけみけい",
+   "meaning": "「被迫做～（～させられる）」",
+   "structure": "動詞使役受身形",
+   "example": "部長にお酒を飲まされた。",
+   "exampleKana": "ぶちょうにおさけをのまされた。",
+   "exampleMeaning": "被部長逼著喝了酒。"
+  },
+  {
+   "id": "n4-g-0098",
+   "pattern": "命令形",
+   "reading": "めいれいけい",
+   "meaning": "「命令語氣（行け・見ろ）」",
+   "structure": "動詞命令形",
+   "example": "早く行け。",
+   "exampleKana": "はやくいけ。",
+   "exampleMeaning": "快去。"
+  },
+  {
+   "id": "n4-g-0099",
+   "pattern": "禁止形",
+   "reading": "きんしけい",
+   "meaning": "「禁止（動詞辭書形＋な）」",
+   "structure": "動詞辭書形＋な",
+   "example": "ここに入るな。",
+   "exampleKana": "ここにはいるな。",
+   "exampleMeaning": "不准進入這裡。"
+  },
+  {
+   "id": "n4-g-0100",
+   "pattern": "～など",
+   "reading": "",
+   "meaning": "「～等等」",
+   "structure": "名詞＋など",
+   "example": "果物などを買いました。",
+   "exampleKana": "くだものなどをかいました。",
+   "exampleMeaning": "買了水果之類的東西。"
+  },
+  {
+   "id": "n4-g-0101",
+   "pattern": "～に似ている",
+   "reading": "～ににている",
+   "meaning": "「和～相似」",
+   "structure": "名詞＋に似ている",
+   "example": "弟は父に似ている。",
+   "exampleKana": "おとうとはちちににている。",
+   "exampleMeaning": "弟弟長得像父親。"
+  },
+  {
+   "id": "n4-g-0102",
+   "pattern": "～てくださいませんか",
+   "reading": "",
+   "meaning": "「能否請您～（更禮貌的請託）」",
+   "structure": "動詞て形＋くださいませんか",
+   "example": "もう一度説明してくださいませんか。",
+   "exampleKana": "もういちどせつめいしてくださいませんか。",
+   "exampleMeaning": "能否請您再說明一次？"
+  },
+  {
+   "id": "n4-g-0103",
+   "pattern": "～させてもらう",
+   "reading": "",
+   "meaning": "「請允許我～」",
+   "structure": "動詞使役形＋てもらう",
+   "example": "明日休ませてもらいます。",
+   "exampleKana": "あしたやすませてもらいます。",
+   "exampleMeaning": "明天請讓我休假。"
+  },
+  {
+   "id": "n4-g-0104",
+   "pattern": "～てさしあげる",
+   "reading": "",
+   "meaning": "「為長輩做～（謙讓）」",
+   "structure": "動詞て形＋さしあげる",
+   "example": "社長に道を教えてさしあげた。",
+   "exampleKana": "しゃちょうにみちをおしえてさしあげた。",
+   "exampleMeaning": "為社長指了路。"
+  },
+  {
+   "id": "n4-g-0105",
+   "pattern": "お目にかかる",
+   "reading": "おめにかかる",
+   "meaning": "「拜見、見面（謙讓語）」",
+   "structure": "人に＋お目にかかる",
+   "example": "先生にお目にかかりたいです。",
+   "exampleKana": "せんせいにおめにかかりたいです。",
+   "exampleMeaning": "想拜見老師。"
+  },
+  {
+   "id": "n4-g-0106",
+   "pattern": "存じる・存じ上げる",
+   "reading": "ぞんじる・ぞんじあげる",
+   "meaning": "「知道・認識（謙讓語）」",
+   "structure": "名詞を＋存じております",
+   "example": "お名前は存じております。",
+   "exampleKana": "おなまえはぞんじております。",
+   "exampleMeaning": "久仰大名。"
+  },
+  {
+   "id": "n4-g-0107",
+   "pattern": "伺う",
+   "reading": "うかがう",
+   "meaning": "「拜訪・請教（謙讓語）」",
+   "structure": "場所へ／人に＋伺う",
+   "example": "明日お宅へ伺います。",
+   "exampleKana": "あしたおたくへうかがいます。",
+   "exampleMeaning": "明天到府上拜訪。"
+  },
+  {
+   "id": "n4-g-0108",
+   "pattern": "おる",
+   "reading": "",
+   "meaning": "「在（いる的謙讓語）」",
+   "structure": "人＋がおる",
+   "example": "父は今家におります。",
+   "exampleKana": "ちちはいまいえにおります。",
+   "exampleMeaning": "父親現在在家。"
+  },
+  {
+   "id": "n4-g-0109",
+   "pattern": "くださる",
+   "reading": "",
+   "meaning": "「給我（くれる的尊敬語）」",
+   "structure": "人が＋くださる",
+   "example": "先生が本をくださった。",
+   "exampleKana": "せんせいがほんをくださった。",
+   "exampleMeaning": "老師給了我書。"
+  },
+  {
+   "id": "n4-g-0110",
+   "pattern": "～てよかった",
+   "reading": "",
+   "meaning": "「幸好～、～真是太好了」",
+   "structure": "動詞て形＋よかった",
+   "example": "早く来てよかった。",
+   "exampleKana": "はやくきてよかった。",
+   "exampleMeaning": "幸好早點來了。"
+  },
+  {
+   "id": "n4-g-0111",
+   "pattern": "～ばよかった",
+   "reading": "",
+   "meaning": "「早知道就～（後悔）」",
+   "structure": "動詞ば形＋よかった",
+   "example": "もっと勉強すればよかった。",
+   "exampleKana": "もっとべんきょうすればよかった。",
+   "exampleMeaning": "早知道就多唸點書了。"
+  },
+  {
+   "id": "n4-g-0112",
+   "pattern": "～たらいい",
+   "reading": "",
+   "meaning": "「～就好了（建議）」",
+   "structure": "動詞た形＋らいい",
+   "example": "医者に相談したらいいですよ。",
+   "exampleKana": "いしゃにそうだんしたらいいですよ。",
+   "exampleMeaning": "找醫生商量就好了。"
+  },
+  {
+   "id": "n4-g-0113",
+   "pattern": "～はずだった",
+   "reading": "",
+   "meaning": "「本來應該～（結果沒發生）」",
+   "structure": "動詞辭書形＋はずだった",
+   "example": "今日着くはずだった荷物が来ない。",
+   "exampleKana": "きょうつくはずだったにもつがこない。",
+   "exampleMeaning": "本來今天該到的行李沒來。"
+  },
+  {
+   "id": "n4-g-0114",
+   "pattern": "～そうにない",
+   "reading": "",
+   "meaning": "「看起來不會～」",
+   "structure": "動詞ます形＋そうにない",
+   "example": "雨はやみそうにない。",
+   "exampleKana": "あめはやみそうにない。",
+   "exampleMeaning": "雨看起來不會停。"
+  },
+  {
+   "id": "n4-g-0115",
+   "pattern": "～ないでほしい",
+   "reading": "",
+   "meaning": "「希望你不要～」",
+   "structure": "動詞ない形＋でほしい",
+   "example": "ここでは騒がないでほしい。",
+   "exampleKana": "ここではさわがないでほしい。",
+   "exampleMeaning": "希望你別在這裡吵鬧。"
+  },
+  {
+   "id": "n4-g-0116",
+   "pattern": "～のは～だ",
+   "reading": "",
+   "meaning": "「強調句型（～的是～）」",
+   "structure": "普通形＋のは＋名詞＋だ",
+   "example": "私が生まれたのは京都だ。",
+   "exampleKana": "わたしがうまれたのはきょうとだ。",
+   "exampleMeaning": "我出生的地方是京都。"
+  },
+  {
+   "id": "n4-g-0117",
+   "pattern": "～のを",
+   "reading": "",
+   "meaning": "「把動詞子句名詞化再接を」",
+   "structure": "動詞辭書形＋のを",
+   "example": "窓を閉めるのを忘れた。",
+   "exampleKana": "まどをしめるのをわすれた。",
+   "exampleMeaning": "忘了關窗戶。"
+  },
+  {
+   "id": "n4-g-0118",
+   "pattern": "～ということ",
+   "reading": "",
+   "meaning": "「～這件事（子句名詞化）」",
+   "structure": "普通形＋ということ",
+   "example": "彼が来ないということを聞いた。",
+   "exampleKana": "かれがこないということをきいた。",
+   "exampleMeaning": "聽說了他不來這件事。"
+  },
+  {
+   "id": "n4-g-0119",
+   "pattern": "～てもかまわない",
+   "reading": "",
+   "meaning": "「～也沒關係」",
+   "structure": "動詞て形＋もかまわない",
+   "example": "写真を撮ってもかまいませんか。",
+   "exampleKana": "しゃしんをとってもかまいませんか。",
+   "exampleMeaning": "可以拍照嗎？"
+  },
+  {
+   "id": "n4-g-0120",
+   "pattern": "～必要がある",
+   "reading": "～ひつようがある",
+   "meaning": "「有必要～」",
+   "structure": "動詞辭書形＋必要がある",
+   "example": "予約する必要がありますか。",
+   "exampleKana": "よやくするひつようがありますか。",
+   "exampleMeaning": "需要預約嗎？"
   }
  ]
 }

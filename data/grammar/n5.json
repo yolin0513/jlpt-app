@@ -1,8 +1,8 @@
 {
  "level": "N5",
  "type": "grammar",
- "count": 88,
- "activeCount": 88,
+ "count": 116,
+ "activeCount": 116,
  "items": [
   {
    "id": "n5-g-0001",
@@ -883,6 +883,286 @@
    "example": "料理はまだですか。",
    "exampleKana": "りょうりはまだですか。",
    "exampleMeaning": "菜還沒好嗎？"
+  },
+  {
+   "id": "n5-g-0089",
+   "pattern": "～けど",
+   "reading": "",
+   "meaning": "「雖然～但是（口語）」",
+   "structure": "普通形＋けど",
+   "example": "高いけど買います。",
+   "exampleKana": "たかいけどかいます。",
+   "exampleMeaning": "雖然貴但我要買。"
+  },
+  {
+   "id": "n5-g-0090",
+   "pattern": "でも・しかし",
+   "reading": "",
+   "meaning": "「但是（放句首的接續詞）」",
+   "structure": "句子。＋でも＋句子",
+   "example": "雨です。でも、出かけます。",
+   "exampleKana": "あめです。でも、でかけます。",
+   "exampleMeaning": "下雨了。但是我要出門。"
+  },
+  {
+   "id": "n5-g-0091",
+   "pattern": "そして・それから",
+   "reading": "",
+   "meaning": "「然後、接著」",
+   "structure": "句子。＋それから＋句子",
+   "example": "朝ご飯を食べました。それから、学校へ行きました。",
+   "exampleKana": "あさごはんをたべました。それから、がっこうへいきました。",
+   "exampleMeaning": "吃了早餐，然後去了學校。"
+  },
+  {
+   "id": "n5-g-0092",
+   "pattern": "だから・ですから",
+   "reading": "",
+   "meaning": "「所以（放句首的接續詞）」",
+   "structure": "句子。＋だから＋句子",
+   "example": "明日は休みです。だから、今日は忙しいです。",
+   "exampleKana": "あしたはやすみです。だから、きょうはいそがしいです。",
+   "exampleMeaning": "明天休假，所以今天很忙。"
+  },
+  {
+   "id": "n5-g-0093",
+   "pattern": "普通形",
+   "reading": "ふつうけい",
+   "meaning": "「不加です／ます的簡體說法」",
+   "structure": "動詞辭書形・ない形・た形",
+   "example": "明日は学校へ行く。",
+   "exampleKana": "あしたはがっこうへいく。",
+   "exampleMeaning": "明天要去學校。"
+  },
+  {
+   "id": "n5-g-0094",
+   "pattern": "～じゃない・～じゃなかった",
+   "reading": "",
+   "meaning": "「不是～（常體否定）」",
+   "structure": "名詞／な形容詞＋じゃない",
+   "example": "これは私の本じゃない。",
+   "exampleKana": "これはわたしのほんじゃない。",
+   "exampleMeaning": "這不是我的書。"
+  },
+  {
+   "id": "n5-g-0095",
+   "pattern": "～の？",
+   "reading": "",
+   "meaning": "「～嗎？（常體疑問）」",
+   "structure": "普通形＋の？",
+   "example": "もう食べたの？",
+   "exampleKana": "もうたべたの？",
+   "exampleMeaning": "已經吃了嗎？"
+  },
+  {
+   "id": "n5-g-0096",
+   "pattern": "いつ・どこ・だれ",
+   "reading": "",
+   "meaning": "「何時・哪裡・誰（基本疑問詞）」",
+   "structure": "疑問詞＋助詞＋疑問句",
+   "example": "あの人はだれですか。",
+   "exampleKana": "あのひとはだれですか。",
+   "exampleMeaning": "那個人是誰？"
+  },
+  {
+   "id": "n5-g-0097",
+   "pattern": "どうして～んですか",
+   "reading": "",
+   "meaning": "「為什麼～呢」",
+   "structure": "どうして＋普通形＋んですか",
+   "example": "どうして遅れたんですか。",
+   "exampleKana": "どうしておくれたんですか。",
+   "exampleMeaning": "為什麼遲到了呢？"
+  },
+  {
+   "id": "n5-g-0098",
+   "pattern": "どうやって",
+   "reading": "",
+   "meaning": "「怎麼做、用什麼方式」",
+   "structure": "どうやって＋動詞",
+   "example": "駅までどうやって行きますか。",
+   "exampleKana": "えきまでどうやっていきますか。",
+   "exampleMeaning": "到車站要怎麼去？"
+  },
+  {
+   "id": "n5-g-0099",
+   "pattern": "どのくらい・いくつ",
+   "reading": "",
+   "meaning": "「多久・多少・幾個」",
+   "structure": "どのくらい／いくつ＋疑問句",
+   "example": "ここから駅までどのくらいかかりますか。",
+   "exampleKana": "ここからえきまでどのくらいかかりますか。",
+   "exampleMeaning": "從這裡到車站要花多久時間？"
+  },
+  {
+   "id": "n5-g-0100",
+   "pattern": "～はいくらですか",
+   "reading": "",
+   "meaning": "「～多少錢」",
+   "structure": "名詞＋はいくらですか",
+   "example": "この傘はいくらですか。",
+   "exampleKana": "このかさはいくらですか。",
+   "exampleMeaning": "這把傘多少錢？"
+  },
+  {
+   "id": "n5-g-0101",
+   "pattern": "～枚・～本・～冊",
+   "reading": "～まい・～ほん・～さつ",
+   "meaning": "「張・支・本（助數詞）」",
+   "structure": "數字＋助數詞",
+   "example": "紙を三枚ください。",
+   "exampleKana": "かみをさんまいください。",
+   "exampleMeaning": "請給我三張紙。"
+  },
+  {
+   "id": "n5-g-0102",
+   "pattern": "～人・～つ",
+   "reading": "～にん・～つ",
+   "meaning": "「～人・～個（助數詞）」",
+   "structure": "數字＋人／つ",
+   "example": "りんごを二つ買いました。",
+   "exampleKana": "りんごをふたつかいました。",
+   "exampleMeaning": "買了兩個蘋果。"
+  },
+  {
+   "id": "n5-g-0103",
+   "pattern": "～時・～分",
+   "reading": "～じ・～ふん",
+   "meaning": "「～點～分（時刻）」",
+   "structure": "數字＋時／分",
+   "example": "会議は九時半に始まります。",
+   "exampleKana": "かいぎはくじはんにはじまります。",
+   "exampleMeaning": "會議九點半開始。"
+  },
+  {
+   "id": "n5-g-0104",
+   "pattern": "～月・～日",
+   "reading": "～がつ・～にち",
+   "meaning": "「～月～日（日期）」",
+   "structure": "數字＋月／日",
+   "example": "誕生日は五月十日です。",
+   "exampleKana": "たんじょうびはごがつとおかです。",
+   "exampleMeaning": "生日是五月十日。"
+  },
+  {
+   "id": "n5-g-0105",
+   "pattern": "～曜日",
+   "reading": "～ようび",
+   "meaning": "「星期～」",
+   "structure": "曜日名＋曜日",
+   "example": "日曜日は休みです。",
+   "exampleKana": "にちようびはやすみです。",
+   "exampleMeaning": "星期日休息。"
+  },
+  {
+   "id": "n5-g-0106",
+   "pattern": "～ごろ",
+   "reading": "",
+   "meaning": "「～左右（時間點）」",
+   "structure": "時間名詞＋ごろ",
+   "example": "七時ごろ家を出ます。",
+   "exampleKana": "しちじごろいえをでます。",
+   "exampleMeaning": "七點左右出門。"
+  },
+  {
+   "id": "n5-g-0107",
+   "pattern": "～で（原因）",
+   "reading": "",
+   "meaning": "「因為～（名詞當原因）」",
+   "structure": "名詞＋で",
+   "example": "風邪で学校を休みました。",
+   "exampleKana": "かぜでがっこうをやすみました。",
+   "exampleMeaning": "因為感冒向學校請假了。"
+  },
+  {
+   "id": "n5-g-0108",
+   "pattern": "～に会う・～に乗る",
+   "reading": "～にあう・～にのる",
+   "meaning": "「和～見面・搭乘～（固定用に）」",
+   "structure": "人に会う／乗り物に乗る",
+   "example": "駅で友達に会います。",
+   "exampleKana": "えきでともだちにあいます。",
+   "exampleMeaning": "在車站和朋友見面。"
+  },
+  {
+   "id": "n5-g-0109",
+   "pattern": "～も～も",
+   "reading": "",
+   "meaning": "「～也～也（並列）」",
+   "structure": "名詞＋も＋名詞＋も",
+   "example": "父も母も元気です。",
+   "exampleKana": "ちちもははもげんきです。",
+   "exampleMeaning": "父親和母親都很好。"
+  },
+  {
+   "id": "n5-g-0110",
+   "pattern": "お～・ご～",
+   "reading": "",
+   "meaning": "「美化語（表示禮貌）」",
+   "structure": "お＋和語名詞／ご＋漢語名詞",
+   "example": "お茶をどうぞ。",
+   "exampleKana": "おちゃをどうぞ。",
+   "exampleMeaning": "請喝茶。"
+  },
+  {
+   "id": "n5-g-0111",
+   "pattern": "～さん・～ちゃん・～君",
+   "reading": "～さん・～ちゃん・～くん",
+   "meaning": "「人名後面的稱呼語」",
+   "structure": "人名＋さん／ちゃん／君",
+   "example": "田中さんは先生です。",
+   "exampleKana": "たなかさんはせんせいです。",
+   "exampleMeaning": "田中先生是老師。"
+  },
+  {
+   "id": "n5-g-0112",
+   "pattern": "～たち",
+   "reading": "",
+   "meaning": "「～們（表示複數）」",
+   "structure": "人物名詞＋たち",
+   "example": "学生たちが集まりました。",
+   "exampleKana": "がくせいたちがあつまりました。",
+   "exampleMeaning": "學生們聚集了。"
+  },
+  {
+   "id": "n5-g-0113",
+   "pattern": "～という意味です",
+   "reading": "～といういみです",
+   "meaning": "「是～的意思」",
+   "structure": "名詞／句子＋という意味です",
+   "example": "この漢字は水という意味です。",
+   "exampleKana": "このかんじはみずといういみです。",
+   "exampleMeaning": "這個漢字是水的意思。"
+  },
+  {
+   "id": "n5-g-0114",
+   "pattern": "～が見えます・～が聞こえます",
+   "reading": "～がみえます・～がきこえます",
+   "meaning": "「看得見～・聽得見～」",
+   "structure": "名詞＋が見えます",
+   "example": "窓から海が見えます。",
+   "exampleKana": "まどからうみがみえます。",
+   "exampleMeaning": "從窗戶看得見海。"
+  },
+  {
+   "id": "n5-g-0115",
+   "pattern": "～に住んでいます",
+   "reading": "～にすんでいます",
+   "meaning": "「住在～」",
+   "structure": "地點＋に住んでいます",
+   "example": "私は東京に住んでいます。",
+   "exampleKana": "わたしはとうきょうにすんでいます。",
+   "exampleMeaning": "我住在東京。"
+  },
+  {
+   "id": "n5-g-0116",
+   "pattern": "～を知っています",
+   "reading": "～をしっています",
+   "meaning": "「知道～」",
+   "structure": "名詞＋を知っています",
+   "example": "あの店を知っていますか。",
+   "exampleKana": "あのみせをしっていますか。",
+   "exampleMeaning": "你知道那家店嗎？"
   }
  ]
 }

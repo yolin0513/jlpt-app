@@ -1,8 +1,8 @@
 {
  "level": "N3",
  "type": "grammar",
- "count": 91,
- "activeCount": 91,
+ "count": 125,
+ "activeCount": 125,
  "items": [
   {
    "id": "n3-g-0001",
@@ -913,6 +913,346 @@
    "example": "そんなに休んでばかりいるようでは困ります。",
    "exampleKana": "そんなにやすんでばかりいるようではこまります。",
    "exampleMeaning": "老是這樣請假可不行。"
+  },
+  {
+   "id": "n3-g-0092",
+   "pattern": "～ては",
+   "reading": "",
+   "meaning": "「反覆～（動作循環）」",
+   "structure": "動詞て形＋は",
+   "example": "書いては消し、書いては消した。",
+   "exampleKana": "かいてはけし、かいてはけした。",
+   "exampleMeaning": "寫了又擦，寫了又擦。"
+  },
+  {
+   "id": "n3-g-0093",
+   "pattern": "～ところだった",
+   "reading": "",
+   "meaning": "「差一點就～了」",
+   "structure": "動詞辭書形＋ところだった",
+   "example": "もう少しで転ぶところだった。",
+   "exampleKana": "もうすこしでころぶところだった。",
+   "exampleMeaning": "差一點就跌倒了。"
+  },
+  {
+   "id": "n3-g-0094",
+   "pattern": "～そうになる",
+   "reading": "",
+   "meaning": "「差點就要～」",
+   "structure": "動詞ます形＋そうになる",
+   "example": "眠くて居眠りしそうになった。",
+   "exampleKana": "ねむくていねむりしそうになった。",
+   "exampleMeaning": "太睏差點打起瞌睡。"
+  },
+  {
+   "id": "n3-g-0095",
+   "pattern": "～てしょうがない",
+   "reading": "",
+   "meaning": "「～得受不了」",
+   "structure": "動詞て形／形容詞くて＋しょうがない",
+   "example": "暑くてしょうがない。",
+   "exampleKana": "あつくてしょうがない。",
+   "exampleMeaning": "熱得受不了。"
+  },
+  {
+   "id": "n3-g-0096",
+   "pattern": "～よりほかない",
+   "reading": "",
+   "meaning": "「除了～別無他法」",
+   "structure": "動詞辭書形＋よりほかない",
+   "example": "結果が出るまで待つよりほかない。",
+   "exampleKana": "けっかがでるまでまつよりほかない。",
+   "exampleMeaning": "在結果出來前只能等待。"
+  },
+  {
+   "id": "n3-g-0097",
+   "pattern": "～ように言う",
+   "reading": "～ようにいう",
+   "meaning": "「轉達要求（間接命令）」",
+   "structure": "動詞辭書形／ない形＋ように言う",
+   "example": "静かにするように言われた。",
+   "exampleKana": "しずかにするようにいわれた。",
+   "exampleMeaning": "被要求要安靜。"
+  },
+  {
+   "id": "n3-g-0098",
+   "pattern": "～ため",
+   "reading": "",
+   "meaning": "「因為～（書面體的原因）」",
+   "structure": "普通形／名詞の＋ため",
+   "example": "事故のため電車が遅れた。",
+   "exampleKana": "じこのためでんしゃがおくれた。",
+   "exampleMeaning": "因為事故電車誤點了。"
+  },
+  {
+   "id": "n3-g-0099",
+   "pattern": "～なんか",
+   "reading": "",
+   "meaning": "「～之類的（輕視・舉例）」",
+   "structure": "名詞＋なんか",
+   "example": "掃除なんかしたくない。",
+   "exampleKana": "そうじなんかしたくない。",
+   "exampleMeaning": "才不想打掃呢。"
+  },
+  {
+   "id": "n3-g-0100",
+   "pattern": "～てもらいたい",
+   "reading": "",
+   "meaning": "「希望對方為我～」",
+   "structure": "動詞て形＋もらいたい",
+   "example": "もう少し考えてもらいたい。",
+   "exampleKana": "もうすこしかんがえてもらいたい。",
+   "exampleMeaning": "希望你再考慮一下。"
+  },
+  {
+   "id": "n3-g-0101",
+   "pattern": "～させてほしい",
+   "reading": "",
+   "meaning": "「希望讓我～」",
+   "structure": "動詞使役形＋てほしい",
+   "example": "一度挑戦させてほしい。",
+   "exampleKana": "いちどちょうせんさせてほしい。",
+   "exampleMeaning": "希望讓我挑戰一次。"
+  },
+  {
+   "id": "n3-g-0102",
+   "pattern": "～ことにしている",
+   "reading": "",
+   "meaning": "「習慣性地～（自己決定的習慣）」",
+   "structure": "動詞辭書形＋ことにしている",
+   "example": "毎朝走ることにしている。",
+   "exampleKana": "まいあさはしることにしている。",
+   "exampleMeaning": "我習慣每天早上跑步。"
+  },
+  {
+   "id": "n3-g-0103",
+   "pattern": "～風",
+   "reading": "～ふう",
+   "meaning": "「～風格的」",
+   "structure": "名詞＋風",
+   "example": "和風の部屋に泊まった。",
+   "exampleKana": "わふうのへやにとまった。",
+   "exampleMeaning": "住了日式風格的房間。"
+  },
+  {
+   "id": "n3-g-0104",
+   "pattern": "～的",
+   "reading": "～てき",
+   "meaning": "「～的（把漢語名詞形容詞化）」",
+   "structure": "漢語名詞＋的",
+   "example": "具体的に説明してください。",
+   "exampleKana": "ぐたいてきにせつめいしてください。",
+   "exampleMeaning": "請具體說明。"
+  },
+  {
+   "id": "n3-g-0105",
+   "pattern": "～化",
+   "reading": "～か",
+   "meaning": "「～化（變成～）」",
+   "structure": "漢語名詞＋化",
+   "example": "町の高齢化が進んでいる。",
+   "exampleKana": "まちのこうれいかがすすんでいる。",
+   "exampleMeaning": "城鎮的高齡化正在加劇。"
+  },
+  {
+   "id": "n3-g-0106",
+   "pattern": "～以来",
+   "reading": "～いらい",
+   "meaning": "「自從～以來」",
+   "structure": "名詞／動詞て形＋以来",
+   "example": "卒業以来、彼に会っていない。",
+   "exampleKana": "そつぎょういらい、かれにあっていない。",
+   "exampleMeaning": "畢業以來就沒見過他。"
+  },
+  {
+   "id": "n3-g-0107",
+   "pattern": "～おきに",
+   "reading": "",
+   "meaning": "「每隔～」",
+   "structure": "數量詞＋おきに",
+   "example": "バスは十分おきに来る。",
+   "exampleKana": "バスはじゅっぷんおきにくる。",
+   "exampleMeaning": "公車每隔十分鐘來一班。"
+  },
+  {
+   "id": "n3-g-0108",
+   "pattern": "～ごとに",
+   "reading": "",
+   "meaning": "「每～都…」",
+   "structure": "名詞／動詞辭書形＋ごとに",
+   "example": "会うごとに背が伸びている。",
+   "exampleKana": "あうごとにせがのびている。",
+   "exampleMeaning": "每次見面都長高了。"
+  },
+  {
+   "id": "n3-g-0109",
+   "pattern": "～なくちゃ・～なきゃ",
+   "reading": "",
+   "meaning": "「不～不行（口語）」",
+   "structure": "動詞ない形（去ない）＋なくちゃ",
+   "example": "もう行かなくちゃ。",
+   "exampleKana": "もういかなくちゃ。",
+   "exampleMeaning": "我得走了。"
+  },
+  {
+   "id": "n3-g-0110",
+   "pattern": "～ちゃう・～じゃう",
+   "reading": "",
+   "meaning": "「～掉了（てしまう的口語）」",
+   "structure": "動詞て形＋ちゃう",
+   "example": "全部食べちゃった。",
+   "exampleKana": "ぜんぶたべちゃった。",
+   "exampleMeaning": "全部吃光了。"
+  },
+  {
+   "id": "n3-g-0111",
+   "pattern": "～とく",
+   "reading": "",
+   "meaning": "「先～好（ておく的口語）」",
+   "structure": "動詞て形＋とく",
+   "example": "席を取っとくね。",
+   "exampleKana": "せきをとっとくね。",
+   "exampleMeaning": "我先幫你佔位子喔。"
+  },
+  {
+   "id": "n3-g-0112",
+   "pattern": "～てる",
+   "reading": "",
+   "meaning": "「正在～（ている的口語）」",
+   "structure": "動詞て形＋る",
+   "example": "今何してる？",
+   "exampleKana": "いまなにしてる？",
+   "exampleMeaning": "你現在在做什麼？"
+  },
+  {
+   "id": "n3-g-0113",
+   "pattern": "～かな・～かしら",
+   "reading": "",
+   "meaning": "「～吧？（自言自語的疑問）」",
+   "structure": "普通形＋かな",
+   "example": "明日は晴れるかな。",
+   "exampleKana": "あしたははれるかな。",
+   "exampleMeaning": "明天會放晴嗎。"
+  },
+  {
+   "id": "n3-g-0114",
+   "pattern": "～っけ",
+   "reading": "",
+   "meaning": "「是～來著？（確認記憶）」",
+   "structure": "普通形＋っけ",
+   "example": "会議は何時からだっけ。",
+   "exampleKana": "かいぎはなんじからだっけ。",
+   "exampleMeaning": "會議是幾點開始來著？"
+  },
+  {
+   "id": "n3-g-0115",
+   "pattern": "～だって",
+   "reading": "",
+   "meaning": "「就連～也…（口語）」",
+   "structure": "名詞＋だって",
+   "example": "子どもだって分かる話だ。",
+   "exampleKana": "こどもだってわかるはなしだ。",
+   "exampleMeaning": "這種事連小孩都懂。"
+  },
+  {
+   "id": "n3-g-0116",
+   "pattern": "～たって",
+   "reading": "",
+   "meaning": "「即使～（ても的口語）」",
+   "structure": "動詞た形＋って",
+   "example": "今から走ったって間に合わない。",
+   "exampleKana": "いまからはしったってまにあわない。",
+   "exampleMeaning": "現在跑也來不及了。"
+  },
+  {
+   "id": "n3-g-0117",
+   "pattern": "～たところが",
+   "reading": "",
+   "meaning": "「～結果卻…（出乎意料）」",
+   "structure": "動詞た形＋ところが",
+   "example": "店に行ったところが、閉まっていた。",
+   "exampleKana": "みせにいったところが、しまっていた。",
+   "exampleMeaning": "去了店裡，結果沒開。"
+  },
+  {
+   "id": "n3-g-0118",
+   "pattern": "～というのは",
+   "reading": "",
+   "meaning": "「所謂的～是…」",
+   "structure": "名詞＋というのは",
+   "example": "敬語というのは難しいものだ。",
+   "exampleKana": "けいごというのはむずかしいものだ。",
+   "exampleMeaning": "所謂敬語是很難的東西。"
+  },
+  {
+   "id": "n3-g-0119",
+   "pattern": "その上・それに",
+   "reading": "そのうえ・それに",
+   "meaning": "「而且（追加的接續詞）」",
+   "structure": "句子。＋その上＋句子",
+   "example": "安いです。その上、味もいい。",
+   "exampleKana": "やすいです。そのうえ、あじもいい。",
+   "exampleMeaning": "便宜，而且味道也好。"
+  },
+  {
+   "id": "n3-g-0120",
+   "pattern": "ところで",
+   "reading": "",
+   "meaning": "「話說回來（轉換話題）」",
+   "structure": "句子。＋ところで＋句子",
+   "example": "ところで、来週の予定は決まりましたか。",
+   "exampleKana": "ところで、らいしゅうのよていはきまりましたか。",
+   "exampleMeaning": "話說回來，下週的行程定了嗎？"
+  },
+  {
+   "id": "n3-g-0121",
+   "pattern": "すると",
+   "reading": "",
+   "meaning": "「於是、結果（接續詞）」",
+   "structure": "句子。＋すると＋句子",
+   "example": "ボタンを押した。すると、音が鳴った。",
+   "exampleKana": "ボタンをおした。すると、おとがなった。",
+   "exampleMeaning": "按了按鈕，結果發出了聲音。"
+  },
+  {
+   "id": "n3-g-0122",
+   "pattern": "つまり・すなわち",
+   "reading": "",
+   "meaning": "「也就是說（換句話說）」",
+   "structure": "句子。＋つまり＋句子",
+   "example": "彼は母の兄、つまり私の伯父だ。",
+   "exampleKana": "かれはははのあに、つまりわたしのおじだ。",
+   "exampleMeaning": "他是我母親的哥哥，也就是我的伯父。"
+  },
+  {
+   "id": "n3-g-0123",
+   "pattern": "ところが",
+   "reading": "",
+   "meaning": "「然而（出乎意料的轉折）」",
+   "structure": "句子。＋ところが＋句子",
+   "example": "出かけようとした。ところが、雨が降ってきた。",
+   "exampleKana": "でかけようとした。ところが、あめがふってきた。",
+   "exampleMeaning": "正要出門，然而下起雨來了。"
+  },
+  {
+   "id": "n3-g-0124",
+   "pattern": "そこで・それで",
+   "reading": "",
+   "meaning": "「因此（承接前因）」",
+   "structure": "句子。＋そこで＋句子",
+   "example": "道が混んでいた。そこで、電車にした。",
+   "exampleKana": "みちがこんでいた。そこで、でんしゃにした。",
+   "exampleMeaning": "路上塞車，因此改搭電車。"
+  },
+  {
+   "id": "n3-g-0125",
+   "pattern": "なぜなら～からだ",
+   "reading": "",
+   "meaning": "「因為～（說明理由）」",
+   "structure": "なぜなら＋普通形＋からだ",
+   "example": "行けない。なぜなら用事があるからだ。",
+   "exampleKana": "いけない。なぜならようじがあるからだ。",
+   "exampleMeaning": "不能去。因為有事。"
   }
  ]
 }

@@ -1,8 +1,8 @@
 {
  "level": "N1",
  "type": "grammar",
- "count": 47,
- "activeCount": 47,
+ "count": 120,
+ "activeCount": 120,
  "items": [
   {
    "id": "n1-g-0001",
@@ -473,6 +473,736 @@
    "example": "今から急いだところで間に合わない。",
    "exampleKana": "いまからいそいだところでまにあわない。",
    "exampleMeaning": "現在趕也來不及了。"
+  },
+  {
+   "id": "n1-g-0048",
+   "pattern": "～かたがた",
+   "reading": "",
+   "meaning": "「順便～、兼作～（鄭重）」",
+   "structure": "名詞＋かたがた",
+   "example": "お礼かたがたご報告申し上げます。",
+   "exampleKana": "おれいかたがたごほうこくもうしあげます。",
+   "exampleMeaning": "藉致謝之便向您報告。"
+  },
+  {
+   "id": "n1-g-0049",
+   "pattern": "～かたわら",
+   "reading": "",
+   "meaning": "「一邊～一邊…（長期兼做）」",
+   "structure": "名詞の／動詞辭書形＋かたわら",
+   "example": "彼は会社勤めのかたわら小説を書いている。",
+   "exampleKana": "かれはかいしゃづとめのかたわらしょうせつをかいている。",
+   "exampleMeaning": "他一邊上班一邊寫小說。"
+  },
+  {
+   "id": "n1-g-0050",
+   "pattern": "～がてら",
+   "reading": "",
+   "meaning": "「順便～」",
+   "structure": "名詞／動詞ます形＋がてら",
+   "example": "散歩がてら買い物をしてきた。",
+   "exampleKana": "さんぽがてらかいものをしてきた。",
+   "exampleMeaning": "散步順便買了東西。"
+  },
+  {
+   "id": "n1-g-0051",
+   "pattern": "～そばから",
+   "reading": "",
+   "meaning": "「才剛～就又…」",
+   "structure": "動詞辭書形／た形＋そばから",
+   "example": "片付けるそばから子どもが散らかす。",
+   "exampleKana": "かたづけるそばからこどもがちらかす。",
+   "exampleMeaning": "才剛收拾好孩子就又弄亂。"
+  },
+  {
+   "id": "n1-g-0052",
+   "pattern": "～なり～なり",
+   "reading": "",
+   "meaning": "「～也好～也好（舉例建議）」",
+   "structure": "名詞／動詞辭書形＋なり",
+   "example": "電話なりメールなり連絡してください。",
+   "exampleKana": "でんわなりメールなりれんらくしてください。",
+   "exampleMeaning": "打電話也好寄信也好，請聯絡一下。"
+  },
+  {
+   "id": "n1-g-0053",
+   "pattern": "～であれ～であれ",
+   "reading": "",
+   "meaning": "「不論是～還是～」",
+   "structure": "名詞＋であれ＋名詞＋であれ",
+   "example": "大人であれ子どもであれ規則は同じだ。",
+   "exampleKana": "おとなであれこどもであれきそくはおなじだ。",
+   "exampleMeaning": "不論大人小孩規則都一樣。"
+  },
+  {
+   "id": "n1-g-0054",
+   "pattern": "～からある／～からする",
+   "reading": "",
+   "meaning": "「多達～（強調數量之大）」",
+   "structure": "數量詞＋からある",
+   "example": "百キロからある荷物を運んだ。",
+   "exampleKana": "ひゃくキロからあるにもつをはこんだ。",
+   "exampleMeaning": "搬運了重達一百公斤的行李。"
+  },
+  {
+   "id": "n1-g-0055",
+   "pattern": "～に即して",
+   "reading": "～にそくして",
+   "meaning": "「依照～（事實・規定）」",
+   "structure": "名詞＋に即して",
+   "example": "現状に即して計画を見直す。",
+   "exampleKana": "げんじょうにそくしてけいかくをみなおす。",
+   "exampleMeaning": "依照現狀重新檢討計畫。"
+  },
+  {
+   "id": "n1-g-0056",
+   "pattern": "～に照らして",
+   "reading": "～にてらして",
+   "meaning": "「對照～來判斷」",
+   "structure": "名詞＋に照らして",
+   "example": "法律に照らして処分を決める。",
+   "exampleKana": "ほうりつにてらしてしょぶんをきめる。",
+   "exampleMeaning": "對照法律決定處分。"
+  },
+  {
+   "id": "n1-g-0057",
+   "pattern": "～に難くない",
+   "reading": "～にかたくない",
+   "meaning": "「不難～（想像等）」",
+   "structure": "名詞／動詞辭書形＋に難くない",
+   "example": "彼の気持ちは想像に難くない。",
+   "exampleKana": "かれのきもちはそうぞうにかたくない。",
+   "exampleMeaning": "他的心情不難想像。"
+  },
+  {
+   "id": "n1-g-0058",
+   "pattern": "～を踏まえて",
+   "reading": "～をふまえて",
+   "meaning": "「基於～、考量～之後」",
+   "structure": "名詞＋を踏まえて",
+   "example": "結果を踏まえて方針を決めた。",
+   "exampleKana": "けっかをふまえてほうしんをきめた。",
+   "exampleMeaning": "基於結果決定了方針。"
+  },
+  {
+   "id": "n1-g-0059",
+   "pattern": "～はおろか",
+   "reading": "",
+   "meaning": "「別說～，連…也」",
+   "structure": "名詞＋はおろか",
+   "example": "彼は海外はおろか、県外にも出たことがない。",
+   "exampleKana": "かれはかいがいはおろか、けんがいにもでたことがない。",
+   "exampleMeaning": "他別說出國，連鄰縣都沒去過。"
+  },
+  {
+   "id": "n1-g-0060",
+   "pattern": "～もさることながら",
+   "reading": "",
+   "meaning": "「～固然如此，更…」",
+   "structure": "名詞＋もさることながら",
+   "example": "味もさることながら、盛り付けが美しい。",
+   "exampleKana": "あじもさることながら、もりつけがうつくしい。",
+   "exampleMeaning": "味道自不待言，擺盤更是漂亮。"
+  },
+  {
+   "id": "n1-g-0061",
+   "pattern": "～といえども",
+   "reading": "",
+   "meaning": "「即使是～也…」",
+   "structure": "名詞／普通形＋といえども",
+   "example": "専門家といえども間違うことはある。",
+   "exampleKana": "せんもんかといえどもまちがうことはある。",
+   "exampleMeaning": "即使是專家也會出錯。"
+  },
+  {
+   "id": "n1-g-0062",
+   "pattern": "～といったらない",
+   "reading": "",
+   "meaning": "「～得不得了（程度極端）」",
+   "structure": "名詞／形容詞＋といったらない",
+   "example": "あの時の悔しさといったらなかった。",
+   "exampleKana": "あのときのくやしさといったらなかった。",
+   "exampleMeaning": "當時的懊悔真是難以形容。"
+  },
+  {
+   "id": "n1-g-0063",
+   "pattern": "～の至り",
+   "reading": "～のいたり",
+   "meaning": "「不勝～（極致，正式）」",
+   "structure": "名詞＋の至り",
+   "example": "受賞できて光栄の至りです。",
+   "exampleKana": "じゅしょうできてこうえいのいたりです。",
+   "exampleMeaning": "能夠獲獎不勝光榮。"
+  },
+  {
+   "id": "n1-g-0064",
+   "pattern": "～の極み",
+   "reading": "～のきわみ",
+   "meaning": "「～之極、極度的～」",
+   "structure": "名詞＋の極み",
+   "example": "連日の残業で疲労の極みに達した。",
+   "exampleKana": "れんじつのざんぎょうでひろうのきわみにたっした。",
+   "exampleMeaning": "連日加班，疲勞到了極點。"
+  },
+  {
+   "id": "n1-g-0065",
+   "pattern": "～限りだ",
+   "reading": "～かぎりだ",
+   "meaning": "「非常～（感情強烈）」",
+   "structure": "形容詞＋限りだ",
+   "example": "一人で行くとは心細い限りだ。",
+   "exampleKana": "ひとりでいくとはこころぼそいかぎりだ。",
+   "exampleMeaning": "要一個人去實在令人不安。"
+  },
+  {
+   "id": "n1-g-0066",
+   "pattern": "～てやまない",
+   "reading": "",
+   "meaning": "「衷心～不已」",
+   "structure": "動詞て形＋やまない",
+   "example": "ご成功をお祈りしてやみません。",
+   "exampleKana": "ごせいこうをおいのりしてやみません。",
+   "exampleMeaning": "衷心祝您成功。"
+  },
+  {
+   "id": "n1-g-0067",
+   "pattern": "～てはばからない",
+   "reading": "",
+   "meaning": "「毫不顧忌地～」",
+   "structure": "動詞て形＋はばからない",
+   "example": "彼は自分が一番だと公言してはばからない。",
+   "exampleKana": "かれはじぶんがいちばんだとこうげんしてはばからない。",
+   "exampleMeaning": "他毫不避諱地公開宣稱自己最強。"
+  },
+  {
+   "id": "n1-g-0068",
+   "pattern": "～を顧みず",
+   "reading": "～をかえりみず",
+   "meaning": "「不顧～」",
+   "structure": "名詞＋を顧みず",
+   "example": "危険を顧みず人を助けた。",
+   "exampleKana": "きけんをかえりみずひとをたすけた。",
+   "exampleMeaning": "不顧危險救了人。"
+  },
+  {
+   "id": "n1-g-0069",
+   "pattern": "～たる者",
+   "reading": "～たるもの",
+   "meaning": "「身為～的人就應該…」",
+   "structure": "名詞＋たる者",
+   "example": "教師たる者、模範であるべきだ。",
+   "exampleKana": "きょうしたるもの、もはんであるべきだ。",
+   "exampleMeaning": "身為教師，就該以身作則。"
+  },
+  {
+   "id": "n1-g-0070",
+   "pattern": "～ともあろう",
+   "reading": "",
+   "meaning": "「堂堂～竟然…」",
+   "structure": "名詞＋ともあろう",
+   "example": "大臣ともあろう人が失言するとは。",
+   "exampleKana": "だいじんともあろうひとがしつげんするとは。",
+   "exampleMeaning": "堂堂一位大臣竟然失言。"
+  },
+  {
+   "id": "n1-g-0071",
+   "pattern": "～じみる",
+   "reading": "",
+   "meaning": "「帶有～的樣子（多為負面）」",
+   "structure": "名詞＋じみる",
+   "example": "彼の言い方は説教じみている。",
+   "exampleKana": "かれのいいかたはせっきょうじみている。",
+   "exampleMeaning": "他的說法帶著說教意味。"
+  },
+  {
+   "id": "n1-g-0072",
+   "pattern": "～ずには済まない",
+   "reading": "～ずにはすまない",
+   "meaning": "「不～不行、勢必得～」",
+   "structure": "動詞ない形（去ない）＋ずには済まない",
+   "example": "壊したのだから弁償せずには済まない。",
+   "exampleKana": "こわしたのだからべんしょうせずにはすまない。",
+   "exampleMeaning": "既然弄壞了就非賠不可。"
+  },
+  {
+   "id": "n1-g-0073",
+   "pattern": "～ではあるまいし",
+   "reading": "",
+   "meaning": "「又不是～」",
+   "structure": "名詞＋ではあるまいし",
+   "example": "子どもではあるまいし、自分でやりなさい。",
+   "exampleKana": "こどもではあるまいし、じぶんでやりなさい。",
+   "exampleMeaning": "又不是小孩，自己做。"
+  },
+  {
+   "id": "n1-g-0074",
+   "pattern": "～ないものでもない",
+   "reading": "",
+   "meaning": "「也不是不能～」",
+   "structure": "動詞ない形＋ものでもない",
+   "example": "条件次第では引き受けないものでもない。",
+   "exampleKana": "じょうけんしだいではひきうけないものでもない。",
+   "exampleMeaning": "看條件也不是不能接下。"
+  },
+  {
+   "id": "n1-g-0075",
+   "pattern": "～なくもない",
+   "reading": "",
+   "meaning": "「也不是沒有～」",
+   "structure": "動詞ない形（去い）＋くもない",
+   "example": "言いたいことは分からなくもない。",
+   "exampleKana": "いいたいことはわからなくもない。",
+   "exampleMeaning": "你想說的我也不是不懂。"
+  },
+  {
+   "id": "n1-g-0076",
+   "pattern": "～ないまでも",
+   "reading": "",
+   "meaning": "「即使沒到～的程度，至少…」",
+   "structure": "動詞ない形＋までも",
+   "example": "毎日とは言わないまでも、週に一度は運動したい。",
+   "exampleKana": "まいにちとはいわないまでも、しゅうにいちどはうんどうしたい。",
+   "exampleMeaning": "就算做不到每天，至少想一週運動一次。"
+  },
+  {
+   "id": "n1-g-0077",
+   "pattern": "～までのことだ",
+   "reading": "",
+   "meaning": "「大不了就～」",
+   "structure": "動詞辭書形＋までのことだ",
+   "example": "断られたら諦めるまでのことだ。",
+   "exampleKana": "ことわられたらあきらめるまでのことだ。",
+   "exampleMeaning": "被拒絕的話大不了就放棄。"
+  },
+  {
+   "id": "n1-g-0078",
+   "pattern": "～ばこそ",
+   "reading": "",
+   "meaning": "「正因為～才…」",
+   "structure": "動詞ば形＋こそ",
+   "example": "君を信じればこそ任せたのだ。",
+   "exampleKana": "きみをしんじればこそまかせたのだ。",
+   "exampleMeaning": "正因為相信你才交給你。"
+  },
+  {
+   "id": "n1-g-0079",
+   "pattern": "～こそすれ",
+   "reading": "",
+   "meaning": "「只會～，絕不…」",
+   "structure": "名詞／動詞ます形＋こそすれ",
+   "example": "感謝こそすれ、恨むことはない。",
+   "exampleKana": "かんしゃこそすれ、うらむことはない。",
+   "exampleMeaning": "只有感謝，絕不怨恨。"
+  },
+  {
+   "id": "n1-g-0080",
+   "pattern": "～たら最後",
+   "reading": "～たらさいご",
+   "meaning": "「一旦～就完了」",
+   "structure": "動詞た形＋ら最後",
+   "example": "彼が話し始めたら最後、止まらない。",
+   "exampleKana": "かれがはなしはじめたらさいご、とまらない。",
+   "exampleMeaning": "他一旦開口就停不下來。"
+  },
+  {
+   "id": "n1-g-0081",
+   "pattern": "～にして",
+   "reading": "",
+   "meaning": "「到了～才…／既是～又是～」",
+   "structure": "名詞＋にして",
+   "example": "六十歳にして初めて海外へ行った。",
+   "exampleKana": "ろくじゅっさいにしてはじめてかいがいへいった。",
+   "exampleMeaning": "到了六十歲才第一次出國。"
+  },
+  {
+   "id": "n1-g-0082",
+   "pattern": "～ならまだしも",
+   "reading": "",
+   "meaning": "「如果是～還說得過去」",
+   "structure": "名詞／普通形＋ならまだしも",
+   "example": "一度ならまだしも、三度も遅刻とは。",
+   "exampleKana": "いちどならまだしも、さんどもちこくとは。",
+   "exampleMeaning": "一次還說得過去，竟然遲到三次。"
+  },
+  {
+   "id": "n1-g-0083",
+   "pattern": "～はさておき",
+   "reading": "",
+   "meaning": "「～先擱一邊」",
+   "structure": "名詞＋はさておき",
+   "example": "冗談はさておき、本題に入ろう。",
+   "exampleKana": "じょうだんはさておき、ほんだいにはいろう。",
+   "exampleMeaning": "玩笑先不說，進入正題吧。"
+  },
+  {
+   "id": "n1-g-0084",
+   "pattern": "～に当たらない",
+   "reading": "～にあたらない",
+   "meaning": "「不值得～、用不著～」",
+   "structure": "動詞辭書形＋に当たらない",
+   "example": "その程度なら驚くに当たらない。",
+   "exampleKana": "そのていどならおどろくにあたらない。",
+   "exampleMeaning": "那種程度用不著驚訝。"
+  },
+  {
+   "id": "n1-g-0085",
+   "pattern": "～には及ばない",
+   "reading": "～にはおよばない",
+   "meaning": "「不必～、比不上～」",
+   "structure": "動詞辭書形／名詞＋には及ばない",
+   "example": "わざわざ来るには及びません。",
+   "exampleKana": "わざわざくるにはおよびません。",
+   "exampleMeaning": "不必特地前來。"
+  },
+  {
+   "id": "n1-g-0086",
+   "pattern": "～べからず／～べからざる",
+   "reading": "",
+   "meaning": "「不可～（告示・書面）」",
+   "structure": "動詞辭書形＋べからず",
+   "example": "芝生に入るべからず。",
+   "exampleKana": "しばふにはいるべからず。",
+   "exampleMeaning": "禁止進入草坪。"
+  },
+  {
+   "id": "n1-g-0087",
+   "pattern": "～べくもない",
+   "reading": "",
+   "meaning": "「根本無法～」",
+   "structure": "動詞辭書形＋べくもない",
+   "example": "結果は知るべくもなかった。",
+   "exampleKana": "けっかはしるべくもなかった。",
+   "exampleMeaning": "當時根本無從得知結果。"
+  },
+  {
+   "id": "n1-g-0088",
+   "pattern": "～んばかり",
+   "reading": "",
+   "meaning": "「幾乎要～的樣子」",
+   "structure": "動詞ない形（去ない）＋んばかり",
+   "example": "泣かんばかりの表情で訴えた。",
+   "exampleKana": "なかんばかりのひょうじょうでうったえた。",
+   "exampleMeaning": "以幾乎要哭出來的表情訴說。"
+  },
+  {
+   "id": "n1-g-0089",
+   "pattern": "～とばかりに",
+   "reading": "",
+   "meaning": "「像在說～似的」",
+   "structure": "普通形／引用＋とばかりに",
+   "example": "早く帰れとばかりに時計を見た。",
+   "exampleKana": "はやくかえれとばかりにとけいをみた。",
+   "exampleMeaning": "像在催我快回去似地看了看錶。"
+  },
+  {
+   "id": "n1-g-0090",
+   "pattern": "～と思いきや",
+   "reading": "～とおもいきや",
+   "meaning": "「本以為～沒想到…」",
+   "structure": "普通形＋と思いきや",
+   "example": "簡単だと思いきや、意外に難しかった。",
+   "exampleKana": "かんたんだとおもいきや、いがいにむずかしかった。",
+   "exampleMeaning": "本以為很簡單，沒想到意外地難。"
+  },
+  {
+   "id": "n1-g-0091",
+   "pattern": "～ともなく／～ともなしに",
+   "reading": "",
+   "meaning": "「無意間～、漫不經心地～」",
+   "structure": "動詞辭書形＋ともなく",
+   "example": "見るともなく窓の外を眺めていた。",
+   "exampleKana": "みるともなくまどのそとをながめていた。",
+   "exampleMeaning": "漫不經心地望著窗外。"
+  },
+  {
+   "id": "n1-g-0092",
+   "pattern": "～を境に",
+   "reading": "～をさかいに",
+   "meaning": "「以～為分界（前後轉變）」",
+   "structure": "名詞＋を境に",
+   "example": "入院を境に生活習慣を改めた。",
+   "exampleKana": "にゅういんをさかいにせいかつしゅうかんをあらためた。",
+   "exampleMeaning": "以住院為分界改變了生活習慣。"
+  },
+  {
+   "id": "n1-g-0093",
+   "pattern": "～を限りに",
+   "reading": "～をかぎりに",
+   "meaning": "「以～為最後一次」",
+   "structure": "時間名詞＋を限りに",
+   "example": "今日を限りに煙草をやめる。",
+   "exampleKana": "きょうをかぎりにたばこをやめる。",
+   "exampleMeaning": "從今天起戒菸。"
+  },
+  {
+   "id": "n1-g-0094",
+   "pattern": "～こととて",
+   "reading": "",
+   "meaning": "「因為是～（理由，鄭重）」",
+   "structure": "名詞の／普通形＋こととて",
+   "example": "慣れぬこととて失礼いたしました。",
+   "exampleKana": "なれぬこととてしつれいいたしました。",
+   "exampleMeaning": "因為還不熟悉，失禮了。"
+  },
+  {
+   "id": "n1-g-0095",
+   "pattern": "～と相まって",
+   "reading": "～とあいまって",
+   "meaning": "「與～相互作用」",
+   "structure": "名詞＋と相まって",
+   "example": "好天と相まって客足が伸びた。",
+   "exampleKana": "こうてんとあいまってきゃくあしがのびた。",
+   "exampleMeaning": "加上天氣好，來客數增加了。"
+  },
+  {
+   "id": "n1-g-0096",
+   "pattern": "～もそこそこに",
+   "reading": "",
+   "meaning": "「草草結束～就…」",
+   "structure": "名詞＋もそこそこに",
+   "example": "食事もそこそこに家を出た。",
+   "exampleKana": "しょくじもそこそこにいえをでた。",
+   "exampleMeaning": "草草吃完飯就出門了。"
+  },
+  {
+   "id": "n1-g-0097",
+   "pattern": "～をいいことに",
+   "reading": "",
+   "meaning": "「趁著～（帶不正當意味）」",
+   "structure": "名詞／普通形の＋をいいことに",
+   "example": "親が留守なのをいいことに遊び回った。",
+   "exampleKana": "おやがるすなのをいいことにあそびまわった。",
+   "exampleMeaning": "趁父母不在到處玩。"
+  },
+  {
+   "id": "n1-g-0098",
+   "pattern": "～ことなしに",
+   "reading": "",
+   "meaning": "「不～就…」",
+   "structure": "動詞辭書形＋ことなしに",
+   "example": "努力することなしに成功はない。",
+   "exampleKana": "どりょくすることなしにせいこうはない。",
+   "exampleMeaning": "不努力就不會成功。"
+  },
+  {
+   "id": "n1-g-0099",
+   "pattern": "～なくして",
+   "reading": "",
+   "meaning": "「沒有～就…」",
+   "structure": "名詞＋なくして",
+   "example": "支援なくしては続けられない。",
+   "exampleKana": "しえんなくしてはつづけられない。",
+   "exampleMeaning": "沒有支援就無法繼續下去。"
+  },
+  {
+   "id": "n1-g-0100",
+   "pattern": "～ゆえに／～がゆえに",
+   "reading": "",
+   "meaning": "「因為～（書面語）」",
+   "structure": "名詞／普通形＋ゆえに",
+   "example": "若さゆえに無茶をした。",
+   "exampleKana": "わかさゆえにむちゃをした。",
+   "exampleMeaning": "因為年輕而胡來。"
+  },
+  {
+   "id": "n1-g-0101",
+   "pattern": "～あっての",
+   "reading": "",
+   "meaning": "「有～才有…」",
+   "structure": "名詞＋あっての",
+   "example": "客あっての商売だ。",
+   "exampleKana": "きゃくあってのしょうばいだ。",
+   "exampleMeaning": "有客人才有生意。"
+  },
+  {
+   "id": "n1-g-0102",
+   "pattern": "～ばそれまでだ",
+   "reading": "",
+   "meaning": "「如果～就全完了」",
+   "structure": "動詞ば形＋それまでだ",
+   "example": "どんな名機も壊れればそれまでだ。",
+   "exampleKana": "どんなめいきもこわれればそれまでだ。",
+   "exampleMeaning": "再好的機器壞了也就沒用了。"
+  },
+  {
+   "id": "n1-g-0103",
+   "pattern": "～といったところだ",
+   "reading": "",
+   "meaning": "「頂多～的程度」",
+   "structure": "名詞／數量＋といったところだ",
+   "example": "収穫は例年の半分といったところだ。",
+   "exampleKana": "しゅうかくはれいねんのはんぶんといったところだ。",
+   "exampleMeaning": "收成頂多是往年的一半。"
+  },
+  {
+   "id": "n1-g-0104",
+   "pattern": "～ぐるみ",
+   "reading": "",
+   "meaning": "「整個～一起」",
+   "structure": "名詞＋ぐるみ",
+   "example": "町ぐるみで祭りを支える。",
+   "exampleKana": "まちぐるみでまつりをささえる。",
+   "exampleMeaning": "全鎮一起支撐這個祭典。"
+  },
+  {
+   "id": "n1-g-0105",
+   "pattern": "～きっての",
+   "reading": "",
+   "meaning": "「～當中首屈一指的」",
+   "structure": "名詞＋きっての",
+   "example": "彼は当代きっての名優だ。",
+   "exampleKana": "かれはとうだいきってのめいゆうだ。",
+   "exampleMeaning": "他是當代首屈一指的名演員。"
+  },
+  {
+   "id": "n1-g-0106",
+   "pattern": "～この上ない",
+   "reading": "～このうえない",
+   "meaning": "「再～不過了」",
+   "structure": "形容詞／名詞＋この上ない",
+   "example": "迷惑この上ない話だ。",
+   "exampleKana": "めいわくこのうえないはなしだ。",
+   "exampleMeaning": "這事再擾人不過了。"
+  },
+  {
+   "id": "n1-g-0107",
+   "pattern": "～に足りない",
+   "reading": "～にたりない",
+   "meaning": "「不值得～、微不足道」",
+   "structure": "動詞辭書形＋に足りない",
+   "example": "取るに足りない問題だ。",
+   "exampleKana": "とるにたりないもんだいだ。",
+   "exampleMeaning": "是微不足道的問題。"
+  },
+  {
+   "id": "n1-g-0108",
+   "pattern": "～てからというもの",
+   "reading": "",
+   "meaning": "「自從～以來就一直…」",
+   "structure": "動詞て形＋からというもの",
+   "example": "引っ越してからというもの、体調がいい。",
+   "exampleKana": "ひっこしてからというもの、たいちょうがいい。",
+   "exampleMeaning": "自從搬家以來身體就一直很好。"
+  },
+  {
+   "id": "n1-g-0109",
+   "pattern": "～というもの",
+   "reading": "",
+   "meaning": "「這～期間一直（強調時間長）」",
+   "structure": "期間名詞＋というもの",
+   "example": "この一年というもの、休みがなかった。",
+   "exampleKana": "このいちねんというもの、やすみがなかった。",
+   "exampleMeaning": "這一年來都沒休息過。"
+  },
+  {
+   "id": "n1-g-0110",
+   "pattern": "～にあって",
+   "reading": "",
+   "meaning": "「處於～的情況下」",
+   "structure": "名詞＋にあって",
+   "example": "非常時にあって冷静さを失わない。",
+   "exampleKana": "ひじょうじにあってれいせいさをうしなわない。",
+   "exampleMeaning": "處於非常時期仍不失冷靜。"
+  },
+  {
+   "id": "n1-g-0111",
+   "pattern": "～ずじまい",
+   "reading": "",
+   "meaning": "「結果終究沒能～」",
+   "structure": "動詞ない形（去ない）＋ずじまい",
+   "example": "会いたかったが、結局会えずじまいだった。",
+   "exampleKana": "あいたかったが、けっきょくあえずじまいだった。",
+   "exampleMeaning": "雖然想見，結果終究沒能見到。"
+  },
+  {
+   "id": "n1-g-0112",
+   "pattern": "～こそあれ",
+   "reading": "",
+   "meaning": "「雖有～但…」",
+   "structure": "名詞＋こそあれ",
+   "example": "多少の差こそあれ、内容は同じだ。",
+   "exampleKana": "たしょうのさこそあれ、ないようはおなじだ。",
+   "exampleMeaning": "雖有些許差異，內容是相同的。"
+  },
+  {
+   "id": "n1-g-0113",
+   "pattern": "～に忍びない",
+   "reading": "～にしのびない",
+   "meaning": "「不忍心～」",
+   "structure": "動詞辭書形＋に忍びない",
+   "example": "古い写真は捨てるに忍びない。",
+   "exampleKana": "ふるいしゃしんはすてるにしのびない。",
+   "exampleMeaning": "舊照片不忍心丟掉。"
+  },
+  {
+   "id": "n1-g-0114",
+   "pattern": "～てしかるべきだ",
+   "reading": "",
+   "meaning": "「理應～」",
+   "structure": "動詞て形＋しかるべきだ",
+   "example": "説明があってしかるべきだ。",
+   "exampleKana": "せつめいがあってしかるべきだ。",
+   "exampleMeaning": "理應要有個說明。"
+  },
+  {
+   "id": "n1-g-0115",
+   "pattern": "～を経て",
+   "reading": "～をへて",
+   "meaning": "「經過～」",
+   "structure": "名詞＋を経て",
+   "example": "長い交渉を経て合意に達した。",
+   "exampleKana": "ながいこうしょうをへてごういにたっした。",
+   "exampleMeaning": "經過長期談判達成了共識。"
+  },
+  {
+   "id": "n1-g-0116",
+   "pattern": "～はずみに",
+   "reading": "",
+   "meaning": "「～的一瞬間（無意中）」",
+   "structure": "動詞た形＋はずみに",
+   "example": "転んだはずみに眼鏡を落とした。",
+   "exampleKana": "ころんだはずみにめがねをおとした。",
+   "exampleMeaning": "跌倒的瞬間掉了眼鏡。"
+  },
+  {
+   "id": "n1-g-0117",
+   "pattern": "～折に",
+   "reading": "～おりに",
+   "meaning": "「～之際（鄭重）」",
+   "structure": "名詞の／動詞辭書形＋折に",
+   "example": "お近くへお越しの折にはお寄りください。",
+   "exampleKana": "おちかくへおこしのおりにはおよりください。",
+   "exampleMeaning": "來附近時請順道來坐坐。"
+  },
+  {
+   "id": "n1-g-0118",
+   "pattern": "～ようによっては",
+   "reading": "",
+   "meaning": "「看怎麼～，也可以說…」",
+   "structure": "動詞ます形＋ようによっては",
+   "example": "考えようによっては幸運だった。",
+   "exampleKana": "かんがえようによってはこううんだった。",
+   "exampleMeaning": "換個角度想也算幸運。"
+  },
+  {
+   "id": "n1-g-0119",
+   "pattern": "～ときたら",
+   "reading": "",
+   "meaning": "「說到～（多含不滿）」",
+   "structure": "名詞＋ときたら",
+   "example": "うちの犬ときたら、全然言うことを聞かない。",
+   "exampleKana": "うちのいぬときたら、ぜんぜんいうことをきかない。",
+   "exampleMeaning": "說到我家那隻狗，完全不聽話。"
+  },
+  {
+   "id": "n1-g-0120",
+   "pattern": "～にもまして",
+   "reading": "",
+   "meaning": "「比～更加」",
+   "structure": "名詞＋にもまして",
+   "example": "今年は去年にもまして暑い。",
+   "exampleKana": "ことしはきょねんにもましてあつい。",
+   "exampleMeaning": "今年比去年更熱。"
   }
  ]
 }

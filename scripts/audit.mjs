@@ -58,6 +58,19 @@ const dupExposed = Object.entries(d1.levels).filter(([, v]) => v.loadSetDup > 0)
 ok(dupExposed.length === 0, `單級別出題池不含已隱藏的重複詞`,
   dupExposed.map(([k, v]) => `${k} 仍含 ${v.loadSetDup} 筆`).join('; '));
 
+// 題庫份量在各級之間不得失衡：任一級不足最多者的 70%，就是該級沒補齊
+// （曾發生 N2/N1 文法只有 51/47 點，不到 N5 的 60%，但三套測試都測不出來）
+for (const t of ['vocab', 'grammar']) {
+  const counts = Object.entries(d1.levels)
+    .filter(([k]) => k.endsWith('-' + t))
+    .map(([k, v]) => [k.split('-')[0], v.manActive]);
+  const max = Math.max(...counts.map(([, n]) => n));
+  const thin = counts.filter(([, n]) => n < max * 0.7);
+  ok(thin.length === 0,
+    `${t} 五級份量均衡（最多 ${max}，最少 ${Math.min(...counts.map(([, n]) => n))}）`,
+    thin.map(([lv, n]) => `${lv} 只有 ${n} 條，不到最多者 ${max} 的 70%`).join('; '));
+}
+
 /* ================= 2. 掌握度分母一致性 ================= */
 console.log('\n[2] 掌握度分母一致性');
 // 直接比對兩個畫面實際渲染出來的分母

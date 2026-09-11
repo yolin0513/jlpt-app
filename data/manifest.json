@@ -1,7 +1,7 @@
 {
  "app": "JLPT 練習",
  "generated": true,
- "dataVersion": "8e326781c84b",
+ "dataVersion": "6b4928ff43cc",
  "levels": [
   "N5",
   "N4",
@@ -19,8 +19,8 @@
    "label": "文法"
   }
  ],
- "totalItems": 3041,
- "activeItems": 3013,
+ "totalItems": 3279,
+ "activeItems": 3251,
  "dupIds": [
   "n1-v-0056",
   "n1-v-0091",
@@ -56,36 +56,36 @@
    "type": "grammar",
    "level": "N5",
    "file": "grammar/n5.json",
-   "count": 88,
-   "activeCount": 88
+   "count": 116,
+   "activeCount": 116
   },
   {
    "type": "grammar",
    "level": "N4",
    "file": "grammar/n4.json",
-   "count": 92,
-   "activeCount": 91
+   "count": 120,
+   "activeCount": 119
   },
   {
    "type": "grammar",
    "level": "N3",
    "file": "grammar/n3.json",
-   "count": 91,
-   "activeCount": 91
+   "count": 125,
+   "activeCount": 125
   },
   {
    "type": "grammar",
    "level": "N2",
    "file": "grammar/n2.json",
-   "count": 52,
-   "activeCount": 51
+   "count": 127,
+   "activeCount": 126
   },
   {
    "type": "grammar",
    "level": "N1",
    "file": "grammar/n1.json",
-   "count": 47,
-   "activeCount": 47
+   "count": 120,
+   "activeCount": 120
   },
   {
    "type": "vocab",
