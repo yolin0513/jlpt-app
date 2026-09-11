@@ -73,9 +73,13 @@ export default async function learnView(ctx) {
       onclick: () => start('flash')
     }, '🃏 閃卡背誦'));
     wrap.append(h('button', {
-      class: 'btn secondary', disabled,
+      class: 'btn secondary', style: 'margin-bottom:10px', disabled,
       onclick: () => start('quiz')
     }, '📝 四選一測驗'));
+    wrap.append(h('button', {
+      class: 'btn secondary', disabled,
+      onclick: () => navigate('/listening', { level: state.level, scope: state.scope })
+    }, '🎧 聽力練習'));
   }
 
   async function start(mode) {

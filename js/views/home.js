@@ -80,6 +80,16 @@ export default async function homeView() {
     ]));
   }
 
+  // ---- 聽力練習 ----
+  wrap.append(h('button', { class: 'tile', onclick: () => navigate('/listening', { level: 'ALL', scope: 'random' }) }, [
+    h('span', { style: 'font-size:24px' }, '🎧'),
+    h('div', { class: 'tile-main' }, [
+      h('div', { class: 'tile-title', text: '聽力練習' }),
+      h('div', { class: 'tile-sub', text: '聽日文句子選出中文意思（用裝置內建語音，可離線）' })
+    ]),
+    h('span', { class: 'chev', text: '›' })
+  ]));
+
   // ---- 快速開始 ----
   wrap.append(h('div', { class: 'section-title', text: '快速開始' }));
   wrap.append(h('div', { class: 'btn-grid' }, [

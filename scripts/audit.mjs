@@ -480,6 +480,53 @@ ok(impMode.ver === 3 && impMode.idScheme === 'positional-v1',
   `備份檔帶版本與 id 方案 (v${impMode.ver} / ${impMode.idScheme})`);
 ok(impMode.rejected, '拒絕 id 方案不同的備份檔');
 
+/* ================= 13c. 聽力練習 ================= */
+console.log('\n[13c] 聽力練習');
+await go('#/listening?level=N5&scope=random');
+await p.waitForSelector('.play-btn, .btn', { timeout: 15000 }).catch(() => {});
+const li = await p.evaluate(() => ({
+  play: !!document.querySelector('.play-btn'),
+  opts: document.querySelectorAll('.opt').length,
+  uniq: new Set([...document.querySelectorAll('.opt')].map((o) => o.innerText)).size
+}));
+ok(li.play && li.opts === 4 && li.uniq === 4, `聽力出題：播放鈕 + 4 個相異選項 (${li.opts}/${li.uniq})`);
+
+// 播放時長要跟文字長度成正比（證明引擎真的在唸，不是空轉）
+const spoke = await p.evaluate(async () => {
+  const s = await import('./js/speech.js');
+  await s.whenVoicesReady();
+  if (!s.hasJapaneseVoice()) return { skipped: true };
+  const short = await s.speakChecked('はい。');
+  const long = await s.speakChecked('すみません、この電車は東京駅に止まりますか。');
+  return { short, long };
+});
+ok(spoke.skipped || (spoke.short.ok && spoke.long.ok && spoke.long.ms > spoke.short.ms),
+  spoke.skipped ? '（此環境無日文語音，跳過發聲檢查）'
+    : `speakChecked 回報有效播放且長句較久 (${spoke.short.ms}ms → ${spoke.long.ms}ms)`);
+
+// 沒有日文語音時，不能給死按鈕
+const noVoice = await (async () => {
+  const p2 = await b.newPage();
+  await p2.evaluateOnNewDocument(() => {
+    Object.defineProperty(window.speechSynthesis, 'getVoices', { value: () => [], configurable: true });
+  });
+  await p2.goto(BASE + '#/listening?level=N5', { waitUntil: 'networkidle2' });
+  await sleep(2500);
+  const r = await p2.evaluate(() => {
+    const t = document.querySelector('#view')?.innerText || '';
+    return {
+      play: !!document.querySelector('.play-btn'),
+      retry: [...document.querySelectorAll('button')].some((x) => /重新偵測/.test(x.textContent)),
+      howto: /iPhone|Android|Windows/.test(t)
+    };
+  });
+  await p2.close();
+  return r;
+})();
+ok(!noVoice.play && noVoice.retry && noVoice.howto,
+  '無日文語音時：不顯示播放鈕，改給安裝說明與「重新偵測」',
+  JSON.stringify(noVoice));
+
 /* ================= 14. console ================= */
 console.log('\n[14] Console');
 ok(errs.length === 0, `全程 console 無錯誤`, errs.slice(0, 5).join(' | '));

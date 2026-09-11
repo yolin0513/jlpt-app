@@ -17,6 +17,7 @@ route('/stats', lazy(() => import('./views/stats.js')));
 route('/search', lazy(() => import('./views/search.js')));
 route('/favorites', lazy(() => import('./views/favorites.js')));
 route('/travel', lazy(() => import('./views/travel.js')));
+route('/listening', lazy(() => import('./views/listening.js')));
 setNotFound(() => h('div', { class: 'empty', html: '<div class="big">🔍</div><p>找不到頁面</p>' }));
 
 /* ---- 標題 / 返回鍵 / 分頁高亮 ---- */
@@ -29,12 +30,13 @@ const TITLES = {
   '/stats': '學習統計',
   '/search': '搜尋',
   '/favorites': '重點複習',
-  '/travel': '生活旅行'
+  '/travel': '生活旅行',
+  '/listening': '聽力練習'
 };
 const TAB_OF = {
   '/home': 'home', '/learn': 'learn', '/study': 'learn',
   '/review': 'review', '/mistakes': 'mistakes', '/stats': 'stats',
-  '/search': null, '/favorites': null, '/travel': 'learn'
+  '/search': null, '/favorites': null, '/travel': 'learn', '/listening': 'learn'
 };
 
 /** 各畫面的「上一層」— 返回鍵用，永遠不會離開 App */
@@ -42,6 +44,7 @@ function parentOf(ctx) {
   if (ctx.path === '/study') {
     return { travel: '/travel', review: '/review', mistakes: '/mistakes', favorites: '/favorites' }[ctx.query.src] || '/learn';
   }
+  if (ctx.path === '/listening') return ctx.query.src === 'travel' ? '/travel' : '/learn';
   if (ctx.path === '/favorites') return '/home';
   return '/home';
 }

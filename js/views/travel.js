@@ -62,6 +62,10 @@ export default async function travelView() {
     h('button', { class: 'btn secondary', onclick: () => go('all', 'flash') }, '🃏 全部混合閃卡'),
     h('button', { class: 'btn secondary', onclick: () => go('all', 'quiz') }, '📝 全部混合測驗')
   ]));
+  wrap.append(h('button', {
+    class: 'btn secondary', style: 'margin-top:10px',
+    onclick: () => navigate('/listening', { src: 'travel', scope: 'random' })
+  }, '🎧 旅行用語聽力'));
 
   function go(cat, mode, scene) {
     const q = { mode, src: 'travel', cat, scope: 'smart' };
