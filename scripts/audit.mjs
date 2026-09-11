@@ -571,9 +571,11 @@ const qt = await p.evaluate(async () => {
 ok(qt.badCount === 0, `漢字讀音 500 題 + 填空 400 題，0 個正確性違規（候選 ${qt.readingPool} / ${qt.poolSize}）`, qt.bad.join('; '));
 ok(qt.hintLeak === 0, '填空題目不外洩中譯（作答後才顯示）', `${qt.hintLeak} 題有洩題`);
 
-for (const [label, hash, marker] of [
-  ['漢字讀音', '#/study?level=N3&mode=quiz&scope=random&qtype=reading', '這個詞怎麼唸'],
-  ['例句填空', '#/study?level=N3&mode=quiz&scope=random&qtype=cloze', '填入空格']
+// 注意：讀音題有兩個方向（漢字→讀音 70% / 讀音→漢字 30%，對應 JLPT 文字語彙
+// 第 1 大題「漢字読み」與第 2 大題「表記」），所以題目文字要接受兩種寫法。
+for (const [label, hash, markers] of [
+  ['漢字讀音', '#/study?level=N3&mode=quiz&scope=random&qtype=reading', ['這個詞怎麼唸', '對應哪個漢字']],
+  ['例句填空', '#/study?level=N3&mode=quiz&scope=random&qtype=cloze', ['填入空格']]
 ]) {
   await go(hash);
   await p.waitForSelector('.opt', { timeout: 15000 }).catch(() => {});
@@ -582,7 +584,8 @@ for (const [label, hash, marker] of [
     n: document.querySelectorAll('.opt').length,
     uniq: new Set([...document.querySelectorAll('.opt')].map((o) => o.innerText)).size
   }));
-  ok(r.n === 4 && r.uniq === 4 && r.q.includes(marker), `${label} 出題正常（${r.n} 個相異選項）`, r.q);
+  ok(r.n === 4 && r.uniq === 4 && markers.some((m) => r.q.includes(m)),
+    `${label} 出題正常（${r.n} 個相異選項）`, r.q);
 }
 
 /* ================= 14. console ================= */
