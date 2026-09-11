@@ -1,8 +1,8 @@
 {
  "level": "N5",
  "type": "grammar",
- "count": 46,
- "activeCount": 46,
+ "count": 88,
+ "activeCount": 88,
  "items": [
   {
    "id": "n5-g-0001",
@@ -463,6 +463,426 @@
    "example": "もう昼ご飯を食べました。",
    "exampleKana": "もうひるごはんをたべました。",
    "exampleMeaning": "已經吃過午餐了。"
+  },
+  {
+   "id": "n5-g-0047",
+   "pattern": "～と（並列）",
+   "reading": "",
+   "meaning": "「和」（名詞並列，完全列舉）",
+   "structure": "名詞＋と＋名詞",
+   "example": "パンと牛乳を買いました。",
+   "exampleKana": "パンとぎゅうにゅうをかいました。",
+   "exampleMeaning": "買了麵包和牛奶。"
+  },
+  {
+   "id": "n5-g-0048",
+   "pattern": "～や～など",
+   "reading": "",
+   "meaning": "「～啦～之類的」（部分列舉）",
+   "structure": "名詞＋や＋名詞＋など",
+   "example": "机の上に本やノートなどがあります。",
+   "exampleKana": "つくえのうえにほんやノートなどがあります。",
+   "exampleMeaning": "桌上有書和筆記本之類的東西。"
+  },
+  {
+   "id": "n5-g-0049",
+   "pattern": "～か（選擇）",
+   "reading": "",
+   "meaning": "「或是」（二選一）",
+   "structure": "名詞＋か＋名詞",
+   "example": "コーヒーかお茶を飲みます。",
+   "exampleKana": "コーヒーかおちゃをのみます。",
+   "exampleMeaning": "喝咖啡或茶。"
+  },
+  {
+   "id": "n5-g-0050",
+   "pattern": "～に（對象）",
+   "reading": "",
+   "meaning": "動作的對象「向～、跟～」",
+   "structure": "名詞（人）＋に＋動詞",
+   "example": "友達に電話をかけます。",
+   "exampleKana": "ともだちにでんわをかけます。",
+   "exampleMeaning": "打電話給朋友。"
+  },
+  {
+   "id": "n5-g-0051",
+   "pattern": "～に（目的）",
+   "reading": "",
+   "meaning": "「去做～」表移動的目的",
+   "structure": "動詞ます形／動作性名詞＋に＋行く／来る／帰る",
+   "example": "デパートへ買い物に行きます。",
+   "exampleKana": "デパートへかいものにいきます。",
+   "exampleMeaning": "去百貨公司買東西。"
+  },
+  {
+   "id": "n5-g-0052",
+   "pattern": "～を（離開・經過）",
+   "reading": "",
+   "meaning": "表示離開或經過的場所",
+   "structure": "場所＋を＋出る／降りる／渡る／散歩する",
+   "example": "毎朝七時に家を出ます。",
+   "exampleKana": "まいあさしちじにいえをでます。",
+   "exampleMeaning": "每天早上七點出門。"
+  },
+  {
+   "id": "n5-g-0053",
+   "pattern": "～から（起點）",
+   "reading": "",
+   "meaning": "「從～」表起點（時間、場所、來源）",
+   "structure": "名詞＋から",
+   "example": "この電車は東京から来ました。",
+   "exampleKana": "このでんしゃはとうきょうからきました。",
+   "exampleMeaning": "這班電車從東京來的。"
+  },
+  {
+   "id": "n5-g-0054",
+   "pattern": "～までに",
+   "reading": "",
+   "meaning": "「在～之前（完成）」表期限",
+   "structure": "名詞（時間）＋までに",
+   "example": "五時までに帰ってください。",
+   "exampleKana": "ごじまでにかえってください。",
+   "exampleMeaning": "請在五點前回來。"
+  },
+  {
+   "id": "n5-g-0055",
+   "pattern": "～ぐらい",
+   "reading": "",
+   "meaning": "「大約～」表概數",
+   "structure": "數量詞＋ぐらい／くらい",
+   "example": "駅まで十分ぐらいかかります。",
+   "exampleKana": "えきまでじゅっぷんぐらいかかります。",
+   "exampleMeaning": "到車站大約要十分鐘。"
+  },
+  {
+   "id": "n5-g-0056",
+   "pattern": "～だけ",
+   "reading": "",
+   "meaning": "「只有～」",
+   "structure": "名詞／數量詞＋だけ",
+   "example": "水は一本だけ買いました。",
+   "exampleKana": "みずはいっぽんだけかいました。",
+   "exampleMeaning": "水只買了一瓶。"
+  },
+  {
+   "id": "n5-g-0057",
+   "pattern": "～しか～ない",
+   "reading": "",
+   "meaning": "「只有～」（帶「不夠」語感，後接否定）",
+   "structure": "名詞／數量詞＋しか＋否定",
+   "example": "千円しかありません。",
+   "exampleKana": "せんえんしかありません。",
+   "exampleMeaning": "我只有一千日圓。"
+  },
+  {
+   "id": "n5-g-0058",
+   "pattern": "～ずつ",
+   "reading": "",
+   "meaning": "「各～、每次～」",
+   "structure": "數量詞＋ずつ",
+   "example": "一人に三枚ずつ配ります。",
+   "exampleKana": "ひとりにさんまいずつくばります。",
+   "exampleMeaning": "每人各發三張。"
+  },
+  {
+   "id": "n5-g-0059",
+   "pattern": "～でも（例示）",
+   "reading": "",
+   "meaning": "「～之類的吧」提議時委婉舉例",
+   "structure": "名詞＋でも",
+   "example": "お茶でも飲みませんか。",
+   "exampleKana": "おちゃでものみませんか。",
+   "exampleMeaning": "要不要喝個茶什麼的？"
+  },
+  {
+   "id": "n5-g-0060",
+   "pattern": "～も（數量強調）",
+   "reading": "",
+   "meaning": "「竟然有～之多」",
+   "structure": "數量詞＋も",
+   "example": "昨日は十時間も寝ました。",
+   "exampleKana": "きのうはじゅうじかんもねました。",
+   "exampleMeaning": "昨天竟然睡了十個小時。"
+  },
+  {
+   "id": "n5-g-0061",
+   "pattern": "～の（名詞化）",
+   "reading": "",
+   "meaning": "把句子變成名詞「～這件事」",
+   "structure": "動詞普通形＋の",
+   "example": "音楽を聞くのが好きです。",
+   "exampleKana": "おんがくをきくのがすきです。",
+   "exampleMeaning": "我喜歡聽音樂。"
+  },
+  {
+   "id": "n5-g-0062",
+   "pattern": "何か・誰か・どこか",
+   "reading": "",
+   "meaning": "「某個～」不特定的人事物",
+   "structure": "疑問詞＋か",
+   "example": "部屋に誰かいますか。",
+   "exampleKana": "へやにだれかいますか。",
+   "exampleMeaning": "房間裡有人嗎？"
+  },
+  {
+   "id": "n5-g-0063",
+   "pattern": "何も・誰も・どこも～ない",
+   "reading": "",
+   "meaning": "「什麼都不～」全面否定",
+   "structure": "疑問詞＋も＋否定",
+   "example": "冷蔵庫には何もありません。",
+   "exampleKana": "れいぞうこにはなにもありません。",
+   "exampleMeaning": "冰箱裡什麼都沒有。"
+  },
+  {
+   "id": "n5-g-0064",
+   "pattern": "いつも・よく・時々・あまり・全然",
+   "reading": "",
+   "meaning": "頻率副詞（由高到低）",
+   "structure": "副詞＋動詞（あまり／全然接否定）",
+   "example": "私はあまりテレビを見ません。",
+   "exampleKana": "わたしはあまりテレビをみません。",
+   "exampleMeaning": "我不太看電視。"
+  },
+  {
+   "id": "n5-g-0065",
+   "pattern": "この・その・あの・どの",
+   "reading": "",
+   "meaning": "連體指示詞「這個～／那個～」",
+   "structure": "この／その／あの／どの＋名詞",
+   "example": "この本はとても面白いです。",
+   "exampleKana": "このほんはとてもおもしろいです。",
+   "exampleMeaning": "這本書非常有趣。"
+  },
+  {
+   "id": "n5-g-0066",
+   "pattern": "こんな・そんな・あんな・どんな",
+   "reading": "",
+   "meaning": "「這樣的～／什麼樣的～」",
+   "structure": "こんな／そんな／あんな／どんな＋名詞",
+   "example": "どんな音楽が好きですか。",
+   "exampleKana": "どんなおんがくがすきですか。",
+   "exampleMeaning": "你喜歡什麼樣的音樂？"
+  },
+  {
+   "id": "n5-g-0067",
+   "pattern": "～はどうですか",
+   "reading": "",
+   "meaning": "「～如何？」詢問感想或提議",
+   "structure": "名詞＋はどうですか",
+   "example": "日本の生活はどうですか。",
+   "exampleKana": "にほんのせいかつはどうですか。",
+   "exampleMeaning": "在日本的生活如何？"
+  },
+  {
+   "id": "n5-g-0068",
+   "pattern": "～をください",
+   "reading": "",
+   "meaning": "「請給我～」",
+   "structure": "名詞＋をください",
+   "example": "このりんごを三つください。",
+   "exampleKana": "このりんごをみっつください。",
+   "exampleMeaning": "請給我三個這種蘋果。"
+  },
+  {
+   "id": "n5-g-0069",
+   "pattern": "～をお願いします",
+   "reading": "",
+   "meaning": "「麻煩你～」比ください更禮貌",
+   "structure": "名詞＋をお願いします",
+   "example": "チェックインをお願いします。",
+   "exampleKana": "チェックインをおねがいします。",
+   "exampleMeaning": "麻煩幫我辦入住。"
+  },
+  {
+   "id": "n5-g-0070",
+   "pattern": "～ましょうか",
+   "reading": "",
+   "meaning": "「我來～好嗎？」提議幫忙",
+   "structure": "動詞ます形＋ましょうか",
+   "example": "荷物を持ちましょうか。",
+   "exampleKana": "にもつをもちましょうか。",
+   "exampleMeaning": "我幫你拿行李好嗎？"
+  },
+  {
+   "id": "n5-g-0071",
+   "pattern": "～ないで",
+   "reading": "",
+   "meaning": "「不做～就（做別的）」",
+   "structure": "動詞ない形＋で",
+   "example": "朝ご飯を食べないで学校へ行きました。",
+   "exampleKana": "あさごはんをたべないでがっこうへいきました。",
+   "exampleMeaning": "沒吃早餐就去學校了。"
+  },
+  {
+   "id": "n5-g-0072",
+   "pattern": "～て、～て（順序）",
+   "reading": "",
+   "meaning": "「先～然後～」動作依序發生",
+   "structure": "動詞て形＋、～",
+   "example": "朝起きて、顔を洗って、ご飯を食べます。",
+   "exampleKana": "あさおきて、かおをあらって、ごはんをたべます。",
+   "exampleMeaning": "早上起床、洗臉、然後吃飯。"
+  },
+  {
+   "id": "n5-g-0073",
+   "pattern": "～くなる・～になる",
+   "reading": "",
+   "meaning": "「變得～」狀態變化",
+   "structure": "い形容詞＋くなる／な形容詞・名詞＋になる",
+   "example": "日本語が上手になりました。",
+   "exampleKana": "にほんごがじょうずになりました。",
+   "exampleMeaning": "日文變厲害了。"
+  },
+  {
+   "id": "n5-g-0074",
+   "pattern": "～くする・～にする",
+   "reading": "",
+   "meaning": "「把～弄成～」人為改變",
+   "structure": "い形容詞＋くする／な形容詞・名詞＋にする",
+   "example": "部屋をきれいにします。",
+   "exampleKana": "へやをきれいにします。",
+   "exampleMeaning": "把房間弄乾淨。"
+  },
+  {
+   "id": "n5-g-0075",
+   "pattern": "～にします（決定）",
+   "reading": "",
+   "meaning": "「我要～」點餐或選擇時",
+   "structure": "名詞＋にします",
+   "example": "私はカレーにします。",
+   "exampleKana": "わたしはカレーにします。",
+   "exampleMeaning": "我要咖哩。"
+  },
+  {
+   "id": "n5-g-0076",
+   "pattern": "～が上手です・～が下手です",
+   "reading": "",
+   "meaning": "「擅長／不擅長～」",
+   "structure": "名詞＋が＋上手です／下手です",
+   "example": "姉は料理が上手です。",
+   "exampleKana": "あねはりょうりがじょうずです。",
+   "exampleMeaning": "姊姊很會做菜。"
+  },
+  {
+   "id": "n5-g-0077",
+   "pattern": "～が好きです・～が嫌いです",
+   "reading": "",
+   "meaning": "「喜歡／討厭～」",
+   "structure": "名詞＋が＋好きです／嫌いです",
+   "example": "私は魚が好きです。",
+   "exampleKana": "わたしはさかながすきです。",
+   "exampleMeaning": "我喜歡魚。"
+  },
+  {
+   "id": "n5-g-0078",
+   "pattern": "～が分かります",
+   "reading": "",
+   "meaning": "「懂得～」（用 が 不用 を）",
+   "structure": "名詞＋が分かります",
+   "example": "少し日本語が分かります。",
+   "exampleKana": "すこしにほんごがわかります。",
+   "exampleMeaning": "我懂一點日文。"
+  },
+  {
+   "id": "n5-g-0079",
+   "pattern": "～と同じです",
+   "reading": "",
+   "meaning": "「和～一樣」",
+   "structure": "名詞＋と同じです",
+   "example": "この本は私のと同じです。",
+   "exampleKana": "このほんはわたしのとおなじです。",
+   "exampleMeaning": "這本書和我的一樣。"
+  },
+  {
+   "id": "n5-g-0080",
+   "pattern": "～中（じゅう）・～中（ちゅう）",
+   "reading": "",
+   "meaning": "「整個～／～期間中」",
+   "structure": "名詞＋中",
+   "example": "一日中、家で本を読んでいました。",
+   "exampleKana": "いちにちじゅう、いえでほんをよんでいました。",
+   "exampleMeaning": "一整天都在家看書。"
+  },
+  {
+   "id": "n5-g-0081",
+   "pattern": "～目（じゅんばん）",
+   "reading": "",
+   "meaning": "「第～個」序數",
+   "structure": "數量詞＋目",
+   "example": "二つ目の角を右に曲がってください。",
+   "exampleKana": "ふたつめのかどをみぎにまがってください。",
+   "exampleMeaning": "請在第二個轉角右轉。"
+  },
+  {
+   "id": "n5-g-0082",
+   "pattern": "～んです",
+   "reading": "",
+   "meaning": "「是因為～」說明理由或強調",
+   "structure": "普通形（な形・名詞＋な）＋んです",
+   "example": "どうして遅れたんですか。",
+   "exampleKana": "どうしておくれたんですか。",
+   "exampleMeaning": "你為什麼遲到了呢？"
+  },
+  {
+   "id": "n5-g-0083",
+   "pattern": "～でしょうか",
+   "reading": "",
+   "meaning": "「～呢？」比ですか更委婉的疑問",
+   "structure": "普通形／名詞＋でしょうか",
+   "example": "この電車は東京へ行くでしょうか。",
+   "exampleKana": "このでんしゃはとうきょうへいくでしょうか。",
+   "exampleMeaning": "這班電車是往東京的嗎？"
+  },
+  {
+   "id": "n5-g-0084",
+   "pattern": "～ないといけません",
+   "reading": "",
+   "meaning": "「不～不行」＝必須",
+   "structure": "動詞ない形（去い）＋といけません",
+   "example": "薬を飲まないといけません。",
+   "exampleKana": "くすりをのまないといけません。",
+   "exampleMeaning": "必須吃藥。"
+  },
+  {
+   "id": "n5-g-0085",
+   "pattern": "～く・～に（副詞化）",
+   "reading": "",
+   "meaning": "形容詞修飾動詞時的變化",
+   "structure": "い形容詞＋く／な形容詞＋に＋動詞",
+   "example": "もっと大きく書いてください。",
+   "exampleKana": "もっとおおきくかいてください。",
+   "exampleMeaning": "請寫大一點。"
+  },
+  {
+   "id": "n5-g-0086",
+   "pattern": "～という名前です",
+   "reading": "",
+   "meaning": "「叫做～」",
+   "structure": "名詞＋という名前です",
+   "example": "この花は桜という名前です。",
+   "exampleKana": "このはなはさくらというなまえです。",
+   "exampleMeaning": "這種花叫做櫻花。"
+  },
+  {
+   "id": "n5-g-0087",
+   "pattern": "～は～が～です",
+   "reading": "",
+   "meaning": "大主題＋小主語的雙主語句",
+   "structure": "名詞は＋名詞が＋形容詞です",
+   "example": "象は鼻が長いです。",
+   "exampleKana": "ぞうははながながいです。",
+   "exampleMeaning": "大象鼻子很長。"
+  },
+  {
+   "id": "n5-g-0088",
+   "pattern": "～はまだですか",
+   "reading": "",
+   "meaning": "「～還沒好嗎？」催促",
+   "structure": "名詞＋はまだですか",
+   "example": "料理はまだですか。",
+   "exampleKana": "りょうりはまだですか。",
+   "exampleMeaning": "菜還沒好嗎？"
   }
  ]
 }

@@ -1,8 +1,8 @@
 {
  "level": "N4",
  "type": "grammar",
- "count": 55,
- "activeCount": 54,
+ "count": 92,
+ "activeCount": 91,
  "items": [
   {
    "id": "n4-g-0001",
@@ -555,6 +555,376 @@
    "example": "昼ご飯はまだ食べていません。",
    "exampleKana": "ひるごはんはまだたべていません。",
    "exampleMeaning": "還沒吃午餐。"
+  },
+  {
+   "id": "n4-g-0056",
+   "pattern": "お～になる",
+   "reading": "",
+   "meaning": "尊敬語：抬高對方的動作",
+   "structure": "お＋動詞ます形（去ます）＋になる",
+   "example": "社長はもうお帰りになりました。",
+   "exampleKana": "しゃちょうはもうおかえりになりました。",
+   "exampleMeaning": "社長已經回去了。"
+  },
+  {
+   "id": "n4-g-0057",
+   "pattern": "ご～になる",
+   "reading": "",
+   "meaning": "尊敬語（漢語動詞用ご）",
+   "structure": "ご＋漢語名詞＋になる",
+   "example": "先生がご説明になります。",
+   "exampleKana": "せんせいがごせつめいになります。",
+   "exampleMeaning": "老師會做說明。"
+  },
+  {
+   "id": "n4-g-0058",
+   "pattern": "～れる／～られる（尊敬）",
+   "reading": "",
+   "meaning": "尊敬語：與被動同形，但表敬意",
+   "structure": "動詞受身形",
+   "example": "部長はいつ帰られますか。",
+   "exampleKana": "ぶちょうはいつかえられますか。",
+   "exampleMeaning": "部長什麼時候回去呢？"
+  },
+  {
+   "id": "n4-g-0059",
+   "pattern": "いらっしゃる",
+   "reading": "",
+   "meaning": "特殊尊敬語＝いる／行く／来る",
+   "structure": "いらっしゃいます／いらっしゃいました",
+   "example": "先生は教室にいらっしゃいます。",
+   "exampleKana": "せんせいはきょうしつにいらっしゃいます。",
+   "exampleMeaning": "老師在教室裡。"
+  },
+  {
+   "id": "n4-g-0060",
+   "pattern": "おっしゃる",
+   "reading": "",
+   "meaning": "特殊尊敬語＝言う",
+   "structure": "おっしゃいます（注意不是おっしゃります）",
+   "example": "先生がおっしゃったとおりにしました。",
+   "exampleKana": "せんせいがおっしゃったとおりにしました。",
+   "exampleMeaning": "我照老師說的做了。"
+  },
+  {
+   "id": "n4-g-0061",
+   "pattern": "なさる",
+   "reading": "",
+   "meaning": "特殊尊敬語＝する",
+   "structure": "なさいます（注意不是なさります）",
+   "example": "何になさいますか。",
+   "exampleKana": "なんになさいますか。",
+   "exampleMeaning": "您要點什麼呢？"
+  },
+  {
+   "id": "n4-g-0062",
+   "pattern": "召し上がる",
+   "reading": "",
+   "meaning": "特殊尊敬語＝食べる／飲む",
+   "structure": "召し上がります",
+   "example": "どうぞ召し上がってください。",
+   "exampleKana": "どうぞめしあがってください。",
+   "exampleMeaning": "請享用。"
+  },
+  {
+   "id": "n4-g-0063",
+   "pattern": "ご覧になる",
+   "reading": "",
+   "meaning": "特殊尊敬語＝見る",
+   "structure": "ご覧になります",
+   "example": "こちらの資料をご覧になりましたか。",
+   "exampleKana": "こちらのしりょうをごらんになりましたか。",
+   "exampleMeaning": "您看過這份資料了嗎？"
+  },
+  {
+   "id": "n4-g-0064",
+   "pattern": "お～する",
+   "reading": "",
+   "meaning": "謙讓語：降低自己的動作以示敬意",
+   "structure": "お＋動詞ます形（去ます）＋する",
+   "example": "荷物をお持ちします。",
+   "exampleKana": "にもつをおもちします。",
+   "exampleMeaning": "我來幫您拿行李。"
+  },
+  {
+   "id": "n4-g-0065",
+   "pattern": "ご～する",
+   "reading": "",
+   "meaning": "謙讓語（漢語動詞用ご）",
+   "structure": "ご＋漢語名詞＋する",
+   "example": "後ほどご連絡します。",
+   "exampleKana": "のちほどごれんらくします。",
+   "exampleMeaning": "稍後我會與您聯絡。"
+  },
+  {
+   "id": "n4-g-0066",
+   "pattern": "参る",
+   "reading": "",
+   "meaning": "謙讓語＝行く／来る",
+   "structure": "参ります",
+   "example": "明日、そちらへ参ります。",
+   "exampleKana": "あした、そちらへまいります。",
+   "exampleMeaning": "明天我會過去您那邊。"
+  },
+  {
+   "id": "n4-g-0067",
+   "pattern": "申す・申し上げる",
+   "reading": "",
+   "meaning": "謙讓語＝言う",
+   "structure": "申します／申し上げます",
+   "example": "林と申します。よろしくお願いします。",
+   "exampleKana": "りんともうします。よろしくおねがいします。",
+   "exampleMeaning": "敝姓林，請多指教。"
+  },
+  {
+   "id": "n4-g-0068",
+   "pattern": "いたす",
+   "reading": "",
+   "meaning": "謙讓語＝する",
+   "structure": "いたします",
+   "example": "ご案内いたします。",
+   "exampleKana": "ごあんないいたします。",
+   "exampleMeaning": "由我為您帶路。"
+  },
+  {
+   "id": "n4-g-0069",
+   "pattern": "拝見する",
+   "reading": "",
+   "meaning": "謙讓語＝見る",
+   "structure": "拝見します",
+   "example": "メールを拝見しました。",
+   "exampleKana": "メールをはいけんしました。",
+   "exampleMeaning": "我已拜讀您的郵件。"
+  },
+  {
+   "id": "n4-g-0070",
+   "pattern": "～ていただく",
+   "reading": "",
+   "meaning": "謙讓語：請對方為我做（＝てもらう的謙讓）",
+   "structure": "動詞て形＋いただく",
+   "example": "先生に推薦状を書いていただきました。",
+   "exampleKana": "せんせいにすいせんじょうをかいていただきました。",
+   "exampleMeaning": "請老師幫我寫了推薦信。"
+  },
+  {
+   "id": "n4-g-0071",
+   "pattern": "～ていただけませんか",
+   "reading": "",
+   "meaning": "「能否請您～」最客氣的請求",
+   "structure": "動詞て形＋いただけませんか",
+   "example": "もう一度説明していただけませんか。",
+   "exampleKana": "もういちどせつめいしていただけませんか。",
+   "exampleMeaning": "能否請您再說明一次？"
+  },
+  {
+   "id": "n4-g-0072",
+   "pattern": "～させていただきます",
+   "reading": "",
+   "meaning": "「請容我～」最謙遜的自我動作宣告",
+   "structure": "動詞使役形＋ていただきます",
+   "example": "本日は休ませていただきます。",
+   "exampleKana": "ほんじつはやすませていただきます。",
+   "exampleMeaning": "今天請容我請假。"
+  },
+  {
+   "id": "n4-g-0073",
+   "pattern": "～でございます",
+   "reading": "",
+   "meaning": "丁寧語＝です（商業場合）",
+   "structure": "名詞＋でございます",
+   "example": "受付は二階でございます。",
+   "exampleKana": "うけつけはにかいでございます。",
+   "exampleMeaning": "櫃檯在二樓。"
+  },
+  {
+   "id": "n4-g-0074",
+   "pattern": "～間（あいだ）",
+   "reading": "",
+   "meaning": "「～期間一直」持續狀態",
+   "structure": "名詞の／動詞ている＋間",
+   "example": "夏休みの間、ずっと日本にいました。",
+   "exampleKana": "なつやすみのあいだ、ずっとにほんにいました。",
+   "exampleMeaning": "暑假期間一直待在日本。"
+  },
+  {
+   "id": "n4-g-0075",
+   "pattern": "～間に",
+   "reading": "",
+   "meaning": "「趁～的時候」期間內發生一次",
+   "structure": "名詞の／動詞ている＋間に",
+   "example": "母が寝ている間に掃除をしました。",
+   "exampleKana": "ははがねているあいだにそうじをしました。",
+   "exampleMeaning": "趁媽媽睡覺時打掃了。"
+  },
+  {
+   "id": "n4-g-0076",
+   "pattern": "～ところです",
+   "reading": "",
+   "meaning": "「正要～」動作即將開始",
+   "structure": "動詞辭書形＋ところです",
+   "example": "今から出かけるところです。",
+   "exampleKana": "いまからでかけるところです。",
+   "exampleMeaning": "我正要出門。"
+  },
+  {
+   "id": "n4-g-0077",
+   "pattern": "～たところです",
+   "reading": "",
+   "meaning": "「剛剛～完」動作剛結束",
+   "structure": "動詞た形＋ところです",
+   "example": "今ご飯を食べたところです。",
+   "exampleKana": "いまごはんをたべたところです。",
+   "exampleMeaning": "我剛吃完飯。"
+  },
+  {
+   "id": "n4-g-0078",
+   "pattern": "～ているところです",
+   "reading": "",
+   "meaning": "「正在～」動作進行中",
+   "structure": "動詞て形＋いるところです",
+   "example": "今、資料を作っているところです。",
+   "exampleKana": "いま、しりょうをつくっているところです。",
+   "exampleMeaning": "我正在做資料。"
+  },
+  {
+   "id": "n4-g-0079",
+   "pattern": "～まで（持續）",
+   "reading": "",
+   "meaning": "「到～為止一直」",
+   "structure": "名詞／動詞辭書形＋まで",
+   "example": "雨がやむまでここで待ちます。",
+   "exampleKana": "あめがやむまでここでまちます。",
+   "exampleMeaning": "在這裡等到雨停為止。"
+  },
+  {
+   "id": "n4-g-0080",
+   "pattern": "～ことがあります（頻率）",
+   "reading": "",
+   "meaning": "「有時候會～」",
+   "structure": "動詞辭書形／ない形＋ことがあります",
+   "example": "たまに朝ご飯を抜くことがあります。",
+   "exampleKana": "たまにあさごはんをぬくことがあります。",
+   "exampleMeaning": "偶爾會不吃早餐。"
+  },
+  {
+   "id": "n4-g-0081",
+   "pattern": "～ても",
+   "reading": "",
+   "meaning": "「即使～也」",
+   "structure": "動詞て形／い形容詞くて／名詞・な形容詞で＋も",
+   "example": "雨が降っても行きます。",
+   "exampleKana": "あめがふってもいきます。",
+   "exampleMeaning": "就算下雨也要去。"
+  },
+  {
+   "id": "n4-g-0082",
+   "pattern": "～でも（讓步）",
+   "reading": "",
+   "meaning": "「就算是～也」",
+   "structure": "名詞＋でも",
+   "example": "子供でも分かる問題です。",
+   "exampleKana": "こどもでもわかるもんだいです。",
+   "exampleMeaning": "是連小孩都懂的題目。"
+  },
+  {
+   "id": "n4-g-0083",
+   "pattern": "～ようと思います",
+   "reading": "",
+   "meaning": "「我打算～」當下的意志",
+   "structure": "動詞意向形＋と思います",
+   "example": "来年、日本へ留学しようと思います。",
+   "exampleKana": "らいねん、にほんへりゅうがくしようとおもいます。",
+   "exampleMeaning": "我打算明年去日本留學。"
+  },
+  {
+   "id": "n4-g-0084",
+   "pattern": "～ないと",
+   "reading": "",
+   "meaning": "「不～的話（不行）」口語的必須",
+   "structure": "動詞ない形（去い）＋と",
+   "example": "もう行かないと。",
+   "exampleKana": "もういかないと。",
+   "exampleMeaning": "該走了（不走不行）。"
+  },
+  {
+   "id": "n4-g-0085",
+   "pattern": "～って（引用）",
+   "reading": "",
+   "meaning": "口語的引用「說～」＝と",
+   "structure": "普通形＋って",
+   "example": "田中さん、来ないって。",
+   "exampleKana": "たなかさん、こないって。",
+   "exampleMeaning": "田中說他不來。"
+  },
+  {
+   "id": "n4-g-0086",
+   "pattern": "～出す",
+   "reading": "",
+   "meaning": "「突然開始～」",
+   "structure": "動詞ます形＋出す",
+   "example": "急に赤ちゃんが泣き出しました。",
+   "exampleKana": "きゅうにあかちゃんがなきだしました。",
+   "exampleMeaning": "嬰兒突然哭了起來。"
+  },
+  {
+   "id": "n4-g-0087",
+   "pattern": "～直す",
+   "reading": "",
+   "meaning": "「重新～一次」",
+   "structure": "動詞ます形＋直す",
+   "example": "間違えたので書き直します。",
+   "exampleKana": "まちがえたのでかきなおします。",
+   "exampleMeaning": "寫錯了所以重寫。"
+  },
+  {
+   "id": "n4-g-0088",
+   "pattern": "～合う",
+   "reading": "",
+   "meaning": "「互相～」",
+   "structure": "動詞ます形＋合う",
+   "example": "困ったときは助け合いましょう。",
+   "exampleKana": "こまったときはたすけあいましょう。",
+   "exampleMeaning": "有困難時互相幫忙吧。"
+  },
+  {
+   "id": "n4-g-0089",
+   "pattern": "～込む",
+   "reading": "",
+   "meaning": "「～進去／深入～」",
+   "structure": "動詞ます形＋込む",
+   "example": "電車に駆け込むのは危ないです。",
+   "exampleKana": "でんしゃにかけこむのはあぶないです。",
+   "exampleMeaning": "衝進電車很危險。"
+  },
+  {
+   "id": "n4-g-0090",
+   "pattern": "～がち",
+   "reading": "",
+   "meaning": "「容易～、常常～」（多為負面）",
+   "structure": "動詞ます形／名詞＋がち",
+   "example": "冬は風邪をひきがちです。",
+   "exampleKana": "ふゆはかぜをひきがちです。",
+   "exampleMeaning": "冬天容易感冒。"
+  },
+  {
+   "id": "n4-g-0091",
+   "pattern": "～っぽい",
+   "reading": "",
+   "meaning": "「有點～的樣子」",
+   "structure": "名詞／動詞ます形＋っぽい",
+   "example": "この味は水っぽいです。",
+   "exampleKana": "このあじはみずっぽいです。",
+   "exampleMeaning": "這個味道有點水水的。"
+  },
+  {
+   "id": "n4-g-0092",
+   "pattern": "～こと（名詞化）",
+   "reading": "",
+   "meaning": "把句子變成名詞「～這件事」",
+   "structure": "動詞辭書形＋こと",
+   "example": "毎日運動することが大切です。",
+   "exampleKana": "まいにちうんどうすることがたいせつです。",
+   "exampleMeaning": "每天運動很重要。"
   }
  ]
 }
