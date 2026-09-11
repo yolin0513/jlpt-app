@@ -5,7 +5,7 @@
  *    傳訊要求 SW 於背景暖機（WARM_DATA），避免拖慢首屏
  *  - 其他請求：network-first，失敗時回退快取
  */
-const VERSION = 'jlpt-v1.6.2';
+const VERSION = 'jlpt-v1.7.0';
 const SHELL_CACHE = `${VERSION}-shell`;
 const DATA_CACHE = `${VERSION}-data`;
 
@@ -47,7 +47,8 @@ const DATA_ASSETS = [
   './data/vocab/n2.json', './data/vocab/n1.json',
   './data/grammar/n5.json', './data/grammar/n4.json', './data/grammar/n3.json',
   './data/grammar/n2.json', './data/grammar/n1.json',
-  './data/travel/phrases.json', './data/travel/usage.json', './data/travel/kanji.json'
+  './data/travel/phrases.json', './data/travel/usage.json', './data/travel/kanji.json',
+  './data/search-index.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -67,20 +68,47 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-self.addEventListener('message', (event) => {
-  if (event.data === 'SKIP_WAITING') self.skipWaiting();
-  if (event.data === 'WARM_DATA') {
-    event.waitUntil((async () => {
-      const cache = await caches.open(DATA_CACHE);
-      await Promise.all(DATA_ASSETS.map(async (u) => {
-        try {
-          if (await cache.match(u)) return;
-          const res = await fetch(u, { cache: 'no-cache' });
-          if (res && res.ok) await cache.put(u, res.clone());
-        } catch (e) { /* 下次再試 */ }
-      }));
-    })());
+/* 題庫快取的內容標記：存 manifest 的 dataVersion。
+ * 只要題庫有任何變動，build_data.py 產生的 dataVersion 就會變，
+ * 這裡比對後就整批清掉重抓 —— 不必再依賴人工 bump VERSION。 */
+const STAMP_URL = './__data_version__';
+
+async function currentStamp(cache) {
+  try {
+    const res = await cache.match(STAMP_URL);
+    return res ? await res.text() : null;
+  } catch (e) {
+    return null;
   }
+}
+
+async function warmData(dataVersion) {
+  const cache = await caches.open(DATA_CACHE);
+  const stale = dataVersion && (await currentStamp(cache)) !== dataVersion;
+  if (stale) {
+    // 題庫換版：清掉舊的再抓，避免混用新舊資料
+    for (const u of DATA_ASSETS) await cache.delete(u).catch(() => {});
+  }
+  await Promise.all(DATA_ASSETS.map(async (u) => {
+    try {
+      if (!stale && (await cache.match(u))) return;
+      const res = await fetch(u, { cache: 'no-cache' });
+      if (res && res.ok) await cache.put(u, res.clone());
+    } catch (e) { /* 下次再試 */ }
+  }));
+  if (dataVersion) {
+    await cache.put(STAMP_URL, new Response(dataVersion, {
+      headers: { 'Content-Type': 'text/plain' }
+    }));
+  }
+}
+
+self.addEventListener('message', (event) => {
+  const msg = event.data;
+  if (msg === 'SKIP_WAITING') self.skipWaiting();
+  // 舊版送字串 'WARM_DATA'；新版送 { type:'WARM_DATA', dataVersion }
+  if (msg === 'WARM_DATA') event.waitUntil(warmData(null));
+  else if (msg && msg.type === 'WARM_DATA') event.waitUntil(warmData(msg.dataVersion));
 });
 
 self.addEventListener('fetch', (event) => {
@@ -88,6 +116,24 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+
+  // manifest.json：題庫的索引（很小，但驅動數量、dupIds、dataVersion）
+  // → network-first，確保線上時一定拿到最新的，離線才回退快取
+  if (url.pathname.endsWith('/data/manifest.json')) {
+    event.respondWith((async () => {
+      const cache = await caches.open(DATA_CACHE);
+      try {
+        const res = await fetch(req, { cache: 'no-cache' });
+        if (res && res.ok) cache.put(req, res.clone());
+        return res;
+      } catch (e) {
+        const cached = await cache.match(req, { ignoreSearch: true });
+        if (cached) return cached;
+        throw e;
+      }
+    })());
+    return;
+  }
 
   // 題庫資料：cache-first，背景更新
   if (url.pathname.includes('/data/')) {

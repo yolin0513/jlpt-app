@@ -22,8 +22,8 @@ export default async function homeView() {
   ]);
   wrap.replaceChildren();
 
-  // ---- 首次使用引導 ----
-  if (!seenGuide && pmap.size === 0) {
+  // ---- 首次使用引導（也可從「統計 → 設定 → 重看引導」叫回來）----
+  if (!seenGuide) {
     const guide = h('div', { class: 'card guide-card' }, [
       h('div', { class: 'row spread' }, [
         h('div', { class: 'tile-title', text: '👋 歡迎使用 JLPT 練習' }),

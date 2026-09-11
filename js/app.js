@@ -101,7 +101,16 @@ if ('serviceWorker' in navigator) {
         // 首屏之後，請 SW 在背景把題庫檔快取起來（供離線用），不擋首次載入
         await navigator.serviceWorker.ready;
         const target = reg.active || navigator.serviceWorker.controller;
-        setTimeout(() => target && target.postMessage('WARM_DATA'), 1500);
+        // 帶上題庫內容雜湊：SW 比對後若發現題庫換版就整批清掉重抓
+        setTimeout(async () => {
+          if (!target) return;
+          let dataVersion = null;
+          try {
+            const man = await (await import('./data.js')).getManifest();
+            dataVersion = man.dataVersion || null;
+          } catch (e) { /* 拿不到就退回單純暖機 */ }
+          target.postMessage({ type: 'WARM_DATA', dataVersion });
+        }, 1500);
       })
       .catch((e) => console.warn('SW 註冊失敗', e));
   });

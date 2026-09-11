@@ -403,8 +403,9 @@ console.log('\n[13] 重置');
 const reset = await p.evaluate(async () => {
   const s = await import('./js/store.js');
   await s.setSetting('seenGuide', true);
+  await s.setDailyGoal(45);
   await s.resetAll();
-  const after = {
+  return {
     prog: (await s.allProgress()).length,
     mis: (await s.allMistakes()).length,
     fav: (await s.allFavorites()).length,
@@ -412,14 +413,72 @@ const reset = await p.evaluate(async () => {
     seenGuide: await s.getSetting('seenGuide', false),
     goal: await s.getDailyGoal()
   };
-  return after;
 });
 ok(reset.prog === 0 && reset.mis === 0 && reset.fav === 0 && reset.daily === 0, '重置清空進度/錯題/最愛/每日');
-ok(reset.seenGuide === true, '重置保留設定（seenGuide/目標/主題）', '副作用：重置後首次引導不會再出現');
+ok(reset.seenGuide === null || reset.seenGuide === false, '重置會清掉 seenGuide（引導能再出現）');
+ok(reset.goal === 45, `重置保留偏好設定（每日目標仍為 ${reset.goal}）`);
 
 await go('#/home');
 const guideAfterReset = await p.evaluate(() => !!document.querySelector('.guide-card'));
-ok(!guideAfterReset, '重置後首頁不再顯示引導（已知行為）', guideAfterReset ? '有顯示' : '未顯示 — 新手引導無法重看');
+ok(guideAfterReset, '重置後首頁重新顯示引導');
+
+// 有進度時也能從設定手動叫回引導
+const reGuide = await p.evaluate(async () => {
+  const s = await import('./js/store.js');
+  const { idb } = await import('./js/db.js');
+  await s.setSetting('seenGuide', true);
+  await idb.put('progress', { itemId: 'n5-v-0001', level: 'N5', type: 'vocab', box: 2, due: Date.now() + 1e6, reps: 1, correct: 1, wrong: 0, updated: Date.now() });
+  await s.setSetting('seenGuide', false); // 等同按下「重看引導」
+  return true;
+});
+await go('#/home');
+ok(await p.evaluate(() => !!document.querySelector('.guide-card')),
+  '已有學習進度時，「重看引導」仍能叫回引導');
+await p.evaluate(async () => {
+  const { idb } = await import('./js/db.js');
+  await idb.clear('progress');
+  await (await import('./js/store.js')).setSetting('seenGuide', true);
+});
+
+/* ================= 13b. 搜尋索引 / 匯入語意 ================= */
+console.log('\n[13b] 搜尋索引與匯入語意');
+const idxReq = await (async () => {
+  const p2 = await b.newPage();
+  const reqs = [];
+  p2.on('request', (r) => { if (/\/data\//.test(r.url())) reqs.push(r.url().split('/data/')[1]); });
+  await p2.goto(BASE + '#/search?q=勉強', { waitUntil: 'networkidle2' });
+  await p2.waitForSelector('.detail-card', { timeout: 15000 }).catch(() => {});
+  const dup = {};
+  for (const u of reqs) dup[u] = (dup[u] || 0) + 1;
+  const hasExample = await p2.evaluate(() => !!document.querySelector('.detail-card .detail-example'));
+  await p2.close();
+  return { reqs, dupes: Object.entries(dup).filter(([, n]) => n > 1), hasExample };
+})();
+ok(idxReq.reqs.includes('search-index.json'), '搜尋改用精簡索引 search-index.json');
+ok(idxReq.dupes.length === 0, '同一個 data 檔不會被並行重複請求',
+  idxReq.dupes.map(([u, n]) => `${u}×${n}`).join(', '));
+ok(idxReq.hasExample, '搜尋結果卡片會惰性補上例句');
+
+const impMode = await p.evaluate(async () => {
+  const s = await import('./js/store.js');
+  const { idb } = await import('./js/db.js');
+  await idb.clear('progress');
+  await idb.put('progress', { itemId: 'n5-v-0001', level: 'N5', type: 'vocab', box: 1, due: 1, reps: 1, correct: 1, wrong: 0, updated: 1 });
+  const backup = await s.exportAll({ dataVersion: 'test' });   // 只含 n5-v-0001
+  await idb.put('progress', { itemId: 'n5-v-0002', level: 'N5', type: 'vocab', box: 1, due: 1, reps: 1, correct: 1, wrong: 0, updated: 1 });
+  await s.importAll(backup, 'replace');
+  const after = (await s.allProgress()).map((r) => r.itemId).sort();
+  const info = s.inspectBackup(backup);
+  let rejected = false;
+  try { s.inspectBackup({ version: 3, idScheme: 'something-else' }); } catch { rejected = true; }
+  await idb.clear('progress');
+  return { after, ver: backup.version, idScheme: backup.idScheme, counts: info.progress, rejected };
+});
+ok(impMode.after.length === 1 && impMode.after[0] === 'n5-v-0001',
+  `匯入是「取代」而非合併 (還原後只剩 ${impMode.after.join(',')})`);
+ok(impMode.ver === 3 && impMode.idScheme === 'positional-v1',
+  `備份檔帶版本與 id 方案 (v${impMode.ver} / ${impMode.idScheme})`);
+ok(impMode.rejected, '拒絕 id 方案不同的備份檔');
 
 /* ================= 14. console ================= */
 console.log('\n[14] Console');

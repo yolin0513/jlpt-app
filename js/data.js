@@ -34,11 +34,24 @@ export const TRAVEL_CATS = [
 ];
 export const TRAVEL_CAT_LABEL = Object.fromEntries(TRAVEL_CATS.map((c) => [c.key, c.label]));
 
+/* 快取「進行中的 Promise」而不是只快取結果：
+ * 多個 findItem/loadSet 並行時若只看結果快取，會在第一個請求回來前
+ * 各自再發一次請求（cache stampede）。實測搜尋頁曾同時抓 5 次 manifest.json。 */
+const _inflight = new Map();
+function once(key, fn) {
+  if (_inflight.has(key)) return _inflight.get(key);
+  const pr = fn().catch((e) => { _inflight.delete(key); throw e; });
+  _inflight.set(key, pr);
+  return pr;
+}
+
 export async function getManifest() {
   if (_manifest) return _manifest;
-  const res = await fetchRetry(new URL('manifest.json', BASE));
-  _manifest = await res.json();
-  return _manifest;
+  return once('manifest', async () => {
+    const res = await fetchRetry(new URL('manifest.json', BASE));
+    _manifest = await res.json();
+    return _manifest;
+  });
 }
 
 /** 內部：完整清單（含標記 dup 的跨級別重複），供 findItem 反查舊 id 用。
@@ -46,18 +59,19 @@ export async function getManifest() {
 async function loadSetRaw(type, level) {
   const cacheKey = `${type}:${level}`;
   if (_cache.has(cacheKey)) return _cache.get(cacheKey);
-
-  const man = await getManifest();
-  const entry = man.sets.find((s) => s.type === type && s.level === level);
-  if (!entry) {
-    _cache.set(cacheKey, []);
-    return [];
-  }
-  const res = await fetchRetry(new URL(entry.file, BASE));
-  const raw = await res.json();
-  const items = (raw.items || []).map((it) => normalize(it, type, level));
-  _cache.set(cacheKey, items);
-  return items;
+  return once(cacheKey, async () => {
+    const man = await getManifest();
+    const entry = man.sets.find((s) => s.type === type && s.level === level);
+    if (!entry) {
+      _cache.set(cacheKey, []);
+      return [];
+    }
+    const res = await fetchRetry(new URL(entry.file, BASE));
+    const raw = await res.json();
+    const items = (raw.items || []).map((it) => normalize(it, type, level));
+    _cache.set(cacheKey, items);
+    return items;
+  });
 }
 
 /** 回傳某級別某類型「可練習」的題目陣列（已正規化欄位、已濾除跨級別重複）。
@@ -81,7 +95,24 @@ async function mapLimit(items, limit, fn) {
   return out;
 }
 
-/** 一次載入多個級別（複習 / 混合模式 / 搜尋用）。loadSet 已濾除跨級別重複。 */
+/** 精簡搜尋索引（不含例句欄位，一個檔搞定全題庫＋生活旅行）。
+ *  只給搜尋比對／列表用；要完整內容（例句、朗讀）請再用 findItem(id)。 */
+let _searchIndex = null;
+export async function loadSearchIndex() {
+  if (_searchIndex) return _searchIndex;
+  return once('search-index', async () => {
+    const res = await fetchRetry(new URL('search-index.json', BASE));
+    const raw = await res.json();
+    _searchIndex = [
+      ...(raw.vocab || []).map((it) => normalize(it, 'vocab', it.level)),
+      ...(raw.grammar || []).map((it) => normalize(it, 'grammar', it.level)),
+      ...(raw.travel || []).map((it) => normalizeTravel(it))
+    ];
+    return _searchIndex;
+  });
+}
+
+/** 一次載入多個級別（複習 / 混合模式用）。loadSet 已濾除跨級別重複。 */
 export async function loadMany(type, levels) {
   const groups = await mapLimit(levels, 3, (lv) => loadSet(type, lv));
   return groups.flat();
@@ -97,14 +128,16 @@ export async function getTravelManifest() {
 export async function loadTravel(cat) {
   const cacheKey = `travel:${cat}`;
   if (_cache.has(cacheKey)) return _cache.get(cacheKey);
-  const tm = await getTravelManifest();
-  const entry = tm.sets.find((s) => s.cat === cat);
-  if (!entry) { _cache.set(cacheKey, []); return []; }
-  const res = await fetchRetry(new URL(entry.file, BASE));
-  const raw = await res.json();
-  const items = (raw.items || []).map((it) => normalizeTravel(it));
-  _cache.set(cacheKey, items);
-  return items;
+  return once(cacheKey, async () => {
+    const tm = await getTravelManifest();
+    const entry = tm.sets.find((s) => s.cat === cat);
+    if (!entry) { _cache.set(cacheKey, []); return []; }
+    const res = await fetchRetry(new URL(entry.file, BASE));
+    const raw = await res.json();
+    const items = (raw.items || []).map((it) => normalizeTravel(it));
+    _cache.set(cacheKey, items);
+    return items;
+  });
 }
 
 /** 載入全部生活旅行分類（可指定子集） */

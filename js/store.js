@@ -151,28 +151,76 @@ export async function setDailyGoal(n) {
 }
 
 /* ---------- 匯出 / 匯入 / 重置 ---------- */
-export async function exportAll() {
+export const EXPORT_VERSION = 3;
+
+/** 備份檔格式版本說明：
+ *  v1 無 favorites；v2 有 favorites；
+ *  v3 起多記 idScheme（題庫 id 方案）與 dataVersion（題庫內容雜湊），
+ *     未來若真要重編 id，可據此判斷這份備份是否需要轉換。 */
+export async function exportAll(meta = {}) {
+  const [progress, mistakes, daily, metaRows, favorites] = await Promise.all([
+    idb.getAll('progress'), idb.getAll('mistakes'), idb.getAll('daily'),
+    idb.getAll('meta'), idb.getAll('favorites')
+  ]);
   return {
-    version: 2,
+    version: EXPORT_VERSION,
     exportedAt: new Date().toISOString(),
-    progress: await idb.getAll('progress'),
-    mistakes: await idb.getAll('mistakes'),
-    daily: await idb.getAll('daily'),
-    meta: await idb.getAll('meta'),
-    favorites: await idb.getAll('favorites')
+    idScheme: 'positional-v1',      // id = 來源檔行序（n5-v-0001…）
+    dataVersion: meta.dataVersion || null,
+    counts: {
+      progress: progress.length, mistakes: mistakes.length,
+      daily: daily.length, favorites: favorites.length
+    },
+    progress, mistakes, daily, meta: metaRows, favorites
   };
 }
-export async function importAll(obj) {
-  // 接受 v1（無 favorites）與 v2；未知版本才拒絕
-  if (!obj || !(obj.version === 1 || obj.version === 2)) throw new Error('格式不符');
-  if (obj.progress) await idb.bulkPut('progress', obj.progress);
-  if (obj.mistakes) await idb.bulkPut('mistakes', obj.mistakes);
-  if (obj.daily) await idb.bulkPut('daily', obj.daily);
-  if (obj.meta) await idb.bulkPut('meta', obj.meta);
-  if (obj.favorites) await idb.bulkPut('favorites', obj.favorites);
+
+const STORES = ['progress', 'mistakes', 'daily', 'meta', 'favorites'];
+
+/** 檢查備份檔並回傳摘要，不寫入任何資料。給匯入前的確認對話框用。 */
+export function inspectBackup(obj) {
+  if (!obj || typeof obj !== 'object') throw new Error('不是有效的 JSON 物件');
+  const v = obj.version;
+  if (!(v === 1 || v === 2 || v === 3)) throw new Error(`不支援的備份版本：${v}`);
+  for (const s of STORES) {
+    if (obj[s] != null && !Array.isArray(obj[s])) throw new Error(`欄位 ${s} 格式錯誤（應為陣列）`);
+  }
+  if (obj.idScheme && obj.idScheme !== 'positional-v1') {
+    throw new Error(`備份使用不同的 id 方案（${obj.idScheme}），無法直接匯入`);
+  }
+  return {
+    version: v,
+    exportedAt: obj.exportedAt || null,
+    dataVersion: obj.dataVersion || null,
+    progress: (obj.progress || []).length,
+    mistakes: (obj.mistakes || []).length,
+    daily: (obj.daily || []).length,
+    favorites: (obj.favorites || []).length
+  };
 }
+
+/**
+ * 匯入備份。
+ * @param {object} obj
+ * @param {'replace'|'merge'} mode  預設 replace：還原成備份當下的狀態
+ *   （merge 會保留現有資料、同 id 以備份覆蓋，兩份進度會混在一起）
+ */
+export async function importAll(obj, mode = 'replace') {
+  inspectBackup(obj); // 格式不對就在動資料之前先擋下來
+  if (mode === 'replace') {
+    // 設定（meta）只在備份有帶時才覆蓋，避免把主題/目標一起清掉
+    await Promise.all(['progress', 'mistakes', 'daily', 'favorites'].map((s) => idb.clear(s)));
+    if (Array.isArray(obj.meta) && obj.meta.length) await idb.clear('meta');
+  }
+  for (const s of STORES) {
+    if (Array.isArray(obj[s]) && obj[s].length) await idb.bulkPut(s, obj[s]);
+  }
+}
+
 export async function resetAll() {
   await Promise.all(['progress', 'mistakes', 'daily', 'favorites'].map((s) => idb.clear(s)));
+  // 引導是「新手狀態」不是偏好設定 → 一併重置，讓重置後的 App 真的像第一次打開
+  await idb.del('meta', 'seenGuide');
 }
 
 export { isLearned };

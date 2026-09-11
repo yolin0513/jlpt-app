@@ -1,18 +1,15 @@
 import { h, spinner, clear } from '../ui.js';
-import { loadMany, loadTravelAll, LEVELS } from '../data.js';
+import { loadSearchIndex, findItem, LEVELS } from '../data.js';
 import { favoriteIdSet } from '../store.js';
 import { detailCard } from '../itemview.js';
 
-let _pool = null; // 快取全題庫（含 vocab + grammar + travel）
+/* 搜尋改用不含例句的精簡索引（1 個檔、線路上約 75KB），
+ * 比原本載入全部 13 個題庫檔（gzip 約 192KB）快很多；
+ * 例句等完整欄位在卡片捲進畫面時才用 findItem() 補上。 */
+let _pool = null;
 
 async function getPool() {
-  if (_pool) return _pool;
-  const [v, g, tv] = await Promise.all([
-    loadMany('vocab', LEVELS),
-    loadMany('grammar', LEVELS),
-    loadTravelAll().catch(() => [])
-  ]);
-  _pool = [...v, ...g, ...tv];
+  if (!_pool) _pool = await loadSearchIndex();
   return _pool;
 }
 
@@ -20,26 +17,24 @@ function norm(s) {
   return String(s || '').toLowerCase().replace(/\s+/g, '');
 }
 
+/* 比對欄位＝精簡索引裡有的欄位（不含例句） */
 function matches(item, q) {
   const n = norm(q);
   if (!n) return false;
   if (item.type === 'vocab') {
     return norm(item.kanji).includes(n) || norm(item.kana).includes(n) ||
-      norm(item.romaji).includes(n) || norm(item.meaning).includes(n) ||
-      norm(item.example).includes(n) || norm(item.exampleMeaning).includes(n);
+      norm(item.romaji).includes(n) || norm(item.meaning).includes(n);
   }
   if (item.type === 'travel') {
     if (item.cat === 'kanji') {
       return norm(item.kanji).includes(n) || norm(item.reading).includes(n) ||
-        norm(item.jpMeaning).includes(n) || norm(item.zhMisread).includes(n) ||
-        norm(item.example).includes(n) || norm(item.exampleMeaning).includes(n);
+        norm(item.jpMeaning).includes(n) || norm(item.zhMisread).includes(n);
     }
     return norm(item.jp).includes(n) || norm(item.kana).includes(n) ||
       norm(item.zh).includes(n) || norm(item.scene).includes(n) || norm(item.note).includes(n);
   }
   return norm(item.pattern).includes(n) || norm(item.reading).includes(n) ||
-    norm(item.meaning).includes(n) || norm(item.structure).includes(n) ||
-    norm(item.explanation).includes(n) || norm(item.exampleMeaning).includes(n);
+    norm(item.meaning).includes(n) || norm(item.structure).includes(n);
 }
 
 export default async function searchView(ctx) {
@@ -84,6 +79,30 @@ export default async function searchView(ctx) {
 
   const results = h('div', { class: 'search-results' });
 
+  /* 索引卡片沒有例句；卡片捲進畫面時才去載該級別的完整題庫並換成完整卡片。
+   * 這樣搜尋結果能立刻出現，只有真的被看到的項目才付出載入成本。 */
+  const upgraded = new Set();
+  const io = 'IntersectionObserver' in window
+    ? new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        io.unobserve(e.target);
+        const id = e.target.dataset.itemId;
+        if (!id || upgraded.has(id)) continue;
+        upgraded.add(id);
+        findItem(id).then((found) => {
+          if (!found || !e.target.isConnected) return;
+          e.target.replaceWith(detailCard(found.item, favSet));
+        }).catch(() => {});
+      }
+    }, { rootMargin: '200px' })
+    : null;
+
+  function upgrade(card, item) {
+    card.dataset.itemId = item.id;
+    if (io) io.observe(card);
+  }
+
   function render() {
     clear(results);
     const q = state.q.trim();
@@ -106,7 +125,9 @@ export default async function searchView(ctx) {
 
     results.append(h('div', { class: 'small muted', style: 'margin:4px 0 8px', text: `找到 ${hits.length} 筆${hits.length > 80 ? '（顯示前 80 筆）' : ''}` }));
     for (const it of hits.slice(0, 80)) {
-      results.append(detailCard(it, favSet));
+      const card = detailCard(it, favSet);
+      results.append(card);
+      upgrade(card, it); // 捲進畫面時補上例句等完整內容
     }
     if (!hits.length) {
       results.append(h('div', { class: 'empty' }, [

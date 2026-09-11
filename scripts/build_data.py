@@ -29,6 +29,7 @@ data/src/travel.kanji.txt（中日漢字大不同），每行：
     - id 依行序自動產生（vocab: n5-v-0001；grammar: n5-g-0001；travel: tv-p-0001 / tv-u-0001 / tv-k-0001）
     - 重新執行會覆蓋輸出，id 依當前檔案順序重新編號 → 新增請往檔案末端加
 """
+import hashlib
 import json
 import re
 import sys
@@ -46,6 +47,7 @@ VOCAB_OUT = ROOT / "data" / "vocab"
 GRAMMAR_OUT = ROOT / "data" / "grammar"
 TRAVEL_OUT = ROOT / "data" / "travel"
 MANIFEST = ROOT / "data" / "manifest.json"
+SEARCH_INDEX = ROOT / "data" / "search-index.json"
 
 LEVELS = ["N5", "N4", "N3", "N2", "N1"]
 SPLIT_RE = re.compile(r"\s*[|｜]\s*")
@@ -354,9 +356,47 @@ def main():
         travel_total += len(items)
         print(f"  travel  {cat_key:8s}: {len(items):4d} 條 -> {out.relative_to(ROOT)}")
 
+    # ---- 精簡搜尋索引 ----
+    # 搜尋只需要比對／顯示「詞本身」，例句三欄佔了題庫 57% 的體積。
+    # 拆出一份不含例句的索引，搜尋頁改載這一份（877KB → ~200KB），
+    # 例句等完整內容再由 findItem() 惰性補上（見 js/views/search.js）。
+    EXAMPLE_FIELDS = ("example", "exampleKana", "exampleMeaning")
+    search_vocab, search_grammar, search_travel = [], [], []
+    for (typ, level), items in by_set.items():
+        bucket = search_vocab if typ == "vocab" else search_grammar
+        for it in items:
+            if it.get("dup"):
+                continue  # 跨級別重複不進搜尋結果
+            slim = {k: v for k, v in it.items()
+                    if k not in EXAMPLE_FIELDS and k not in ("dup", "dupOf") and v != ""}
+            slim["level"] = level
+            bucket.append(slim)
+    for cat_key, _abbr, _label, _icon in TRAVEL_CATS:
+        for it in build_travel(cat_key, _abbr):
+            slim = {k: v for k, v in it.items() if k not in EXAMPLE_FIELDS and v != ""}
+            search_travel.append(slim)
+    search_vocab.sort(key=lambda x: x["id"])
+    search_grammar.sort(key=lambda x: x["id"])
+    SEARCH_INDEX.write_text(json.dumps(
+        {"vocab": search_vocab, "grammar": search_grammar, "travel": search_travel},
+        ensure_ascii=False, separators=(",", ":")), encoding="utf-8", newline="\n")
+    idx_kb = SEARCH_INDEX.stat().st_size / 1024
+    print(f"  搜尋索引: {len(search_vocab) + len(search_grammar) + len(search_travel):4d} 條 "
+          f"-> {SEARCH_INDEX.relative_to(ROOT)} ({idx_kb:.0f} KB)")
+
+    # 題庫內容雜湊：只要任何題庫檔有變就會改變。
+    # Service Worker 用它判斷要不要清掉舊的題庫快取重抓，
+    # 不必再依賴人工 bump sw.js 的 VERSION。
+    hasher = hashlib.sha1()
+    for f in sorted([*VOCAB_OUT.glob("*.json"), *GRAMMAR_OUT.glob("*.json"),
+                     *TRAVEL_OUT.glob("*.json"), SEARCH_INDEX]):
+        hasher.update(f.read_bytes())
+    data_version = hasher.hexdigest()[:12]
+
     manifest = {
         "app": "JLPT 練習",
         "generated": True,
+        "dataVersion": data_version,
         "levels": LEVELS,
         "types": [{"key": "vocab", "label": "單字"}, {"key": "grammar", "label": "文法"}],
         "totalItems": total,

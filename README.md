@@ -273,6 +273,20 @@ N5–N3 單字依歷屆出題頻率補至 500 條以上；N2/N1 待後續。
 
 ## 版本紀錄
 
+- **v1.7.0** — 四項效能／健壯性優化：
+  - **搜尋改用精簡索引**：`build_data.py` 另產 `data/search-index.json`（不含例句三欄，
+    佔題庫 57% 體積）。搜尋從「載 13 個題庫檔、gzip 192KB」變成「載 1 個檔、gzip 75KB」，
+    結果立刻出現；例句等完整內容改由卡片捲進畫面時用 `findItem()` 惰性補上。
+  - **題庫快取自動失效**：manifest 新增 `dataVersion`（全題庫內容 SHA-1）。SW 把它存成快取標記，
+    發現題庫換版就整批清掉重抓，不必再靠人工 bump `sw.js` 的 `VERSION`；
+    `manifest.json` 也改成 network-first，避免讀到過期的數量／`dupIds`。
+  - **修 cache stampede**：`getManifest`／`loadSet`／`loadTravel`／`loadSearchIndex` 改快取
+    「進行中的 Promise」。原本並行呼叫會讓同一個檔被重複請求（實測搜尋頁抓了 5 次 manifest.json）。
+  - **匯入語意與備份格式**：匯入從「合併」改為「**取代**」並跳出含備份時間、筆數的確認對話框；
+    備份格式升到 v3，多帶 `idScheme` 與 `dataVersion`，匯入前先驗格式（`inspectBackup`），
+    id 方案不同會直接擋下。
+  - **重置後可以重看引導**：`resetAll()` 一併清掉 `seenGuide`（偏好設定如主題／目標／語速保留），
+    並在「統計 → 設定」加「重看引導」入口——已有學習進度時也叫得回來。
 - **v1.6.2** — 修好一直失效的**羅馬字搜尋**：`romaji` 欄位 2178 筆全是空的，
   但 `search.js` 會比對它、README 也宣告支援 → 羅馬字查詢永遠沒結果。
   `build_data.py` 新增假名→羅馬字（Hepburn，含促音／長音／拗音）自動產生，

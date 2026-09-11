@@ -1,7 +1,7 @@
 import { h, spinner, pct, progressBar, toast } from '../ui.js';
 import { getManifest, getTravelManifest, TRAVEL_CATS, LEVELS } from '../data.js';
-import { allProgress, allDaily, streak, todayKey, exportAll, importAll, resetAll,
-  getDailyGoal, setDailyGoal, allFavorites } from '../store.js';
+import { allProgress, allDaily, streak, todayKey, exportAll, importAll, inspectBackup,
+  resetAll, setSetting, getDailyGoal, setDailyGoal, allFavorites } from '../store.js';
 import { LEARNED_BOX } from '../srs.js';
 import { navigate } from '../router.js';
 import { isSupported as ttsSupported, getAutoSpeak, setAutoSpeak, hasJapaneseVoice,
@@ -166,6 +166,14 @@ export default async function statsView() {
   }
 
   settings.append(h('div', { class: 'toggle-line', style: 'margin-top:6px' }, [
+    h('span', {}, '使用說明'),
+    h('button', {
+      class: 'btn sm secondary',
+      onclick: async () => { await setSetting('seenGuide', false); navigate('/home'); }
+    }, '重看引導 →')
+  ]));
+
+  settings.append(h('div', { class: 'toggle-line', style: 'margin-top:6px' }, [
     h('span', {}, '重點複習項目'),
     h('button', { class: 'btn sm secondary', onclick: () => navigate('/favorites'), text: `${favs.length} 項 →` })
   ]));
@@ -182,10 +190,10 @@ export default async function statsView() {
   mgmt.append(h('button', { class: 'btn ghost', style: 'color:var(--bad);border-color:var(--bad)', onclick: doReset }, '🗑 重置所有進度'));
   wrap.append(mgmt);
 
-  wrap.append(h('p', { class: 'small muted', style: 'text-align:center;margin-top:16px' }, 'JLPT 練習 v1.6.2・資料僅儲存在此瀏覽器'));
+  wrap.append(h('p', { class: 'small muted', style: 'text-align:center;margin-top:16px' }, 'JLPT 練習 v1.7.0・資料僅儲存在此瀏覽器'));
 
   async function doExport() {
-    const data = await exportAll();
+    const data = await exportAll({ dataVersion: man.dataVersion });
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -196,12 +204,21 @@ export default async function statsView() {
   }
   async function doImport(e) {
     const file = e.target.files[0];
+    e.target.value = ''; // 讓同一個檔案可以再選一次
     if (!file) return;
     try {
       const obj = JSON.parse(await file.text());
-      await importAll(obj);
-      toast('匯入完成');
-      navigate('/stats');
+      const info = inspectBackup(obj); // 先驗格式，過了才問使用者
+      const when = info.exportedAt ? new Date(info.exportedAt).toLocaleString('zh-TW') : '時間不明';
+      const okGo = confirm(
+        `要還原這份備份嗎？\n\n` +
+        `備份時間：${when}\n` +
+        `進度 ${info.progress} 筆・錯題 ${info.mistakes} 筆・最愛 ${info.favorites} 筆・每日紀錄 ${info.daily} 天\n\n` +
+        `⚠️ 目前裝置上的學習資料會被這份備份「取代」，不是合併。`
+      );
+      if (!okGo) return;
+      await importAll(obj, 'replace');
+      toast('已還原備份');
       statsView().then((n) => document.getElementById('view').replaceChildren(n));
     } catch (err) {
       toast('匯入失敗：' + err.message);
