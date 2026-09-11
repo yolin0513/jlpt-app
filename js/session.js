@@ -13,7 +13,7 @@ const DEFAULT_LIMIT = 20;
  * @param {'vocab'|'grammar'} o.type
  * @param {string} o.level  'N5'..'N1' 或 'ALL'
  * @param {'smart'|'random'|'order'} o.scope
- * @param {'set'|'review'|'mistakes'|'mix'} o.src
+ * @param {'set'|'review'|'mistakes'|'favorites'|'weak'|'travel'} o.src
  * @param {number} [o.limit]
  * @returns {Promise<{items:any[], type:string, meta:object}>}
  */
@@ -83,8 +83,11 @@ export async function buildSession(o) {
   }
 
   // 一般題庫
+  // 級別一律以 o.level 為準。這裡原本還有個 `|| o.src === 'mix'`，
+  // 會讓任何 src='mix' 的呼叫無視級別直接載入全部五級——首頁「N5 快速測驗」
+  // 明明帶了 level=N5 卻出 N1~N5 的題就是這行造成的。要全級別請用 level='ALL'。
   let pool;
-  if (o.level === 'ALL' || o.src === 'mix') {
+  if (o.level === 'ALL') {
     pool = await loadMany(o.type, LEVELS);
   } else {
     pool = await loadSet(o.type, o.level);
@@ -93,7 +96,7 @@ export async function buildSession(o) {
   // 特殊題型（漢字讀音、例句填空）只有部分題目適用 → 先篩掉不適用的
   if (typeof o.filter === 'function') pool = pool.filter(o.filter);
 
-  const ordered = orderPool(pool, o.scope, pmap);
+  const ordered = orderPool(pool, o.scope, pmap, limit);
 
   return {
     items: ordered.slice(0, limit),
@@ -102,11 +105,20 @@ export async function buildSession(o) {
   };
 }
 
-/** 依 scope 排序題目池 */
-function orderPool(pool, scope, pmap) {
+/** 一輪裡最多有多少比例給到期複習題（其餘留給新題，免得複習債一多就再也看不到新內容） */
+export const DUE_QUOTA = 0.7;
+
+/** 依 scope 排序題目池
+ *
+ * smart 原本是「未學過 → 已到期 → 其他」，但題庫有三千多條，
+ * 未學過的永遠填滿整輪 20 題，**到期的複習題永遠排不進來** →
+ * 使用者一直在把新題推到 box 1，沒有任何項目能升到 box 3（已掌握），
+ * 掌握度就永遠是 0。間隔重複的重點就是複習，所以到期題要排在前面。
+ * 但也不能讓複習債塞滿整輪，保留 (1 - DUE_QUOTA) 給新題。
+ */
+function orderPool(pool, scope, pmap, limit) {
   if (scope === 'order') return pool;
   if (scope === 'random') return shuffle(pool);
-  // smart：未學過 → 已到期 → 其他（各組內隨機）
   const now = Date.now();
   const fresh = [], dueList = [], rest = [];
   for (const it of pool) {
@@ -115,7 +127,9 @@ function orderPool(pool, scope, pmap) {
     else if (r.due <= now) dueList.push(it);
     else rest.push(it);
   }
-  return [...shuffle(fresh), ...shuffle(dueList), ...shuffle(rest)];
+  const due = shuffle(dueList);
+  const quota = Math.max(1, Math.ceil((limit || pool.length) * DUE_QUOTA));
+  return [...due.slice(0, quota), ...shuffle(fresh), ...due.slice(quota), ...shuffle(rest)];
 }
 
 /**

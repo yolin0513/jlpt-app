@@ -1,4 +1,4 @@
-/* 全面功能檢測回歸套件（84 項）
+/* 全面功能檢測回歸套件（94 項）
  * 用法：先跑 python scripts/serve.py，再 node scripts/audit.mjs [baseUrl]
  * 涵蓋 verify-full 沒測到的：資料層一致性、掌握度分母、路由健壯性、
  * 匯出匯入、孤兒紀錄、搜尋、收藏即時性、重置、SRS 邊界、聽力、特殊題型、模擬考。
@@ -856,6 +856,207 @@ console.log('\n[18] 弱點清單');
   });
   ok(e6.length === 0, '弱點清單頁面無 console 錯誤', e6.join(' | '));
   await p6.close();
+}
+
+/* ================= 19. 入口參數傳遞 ================= */
+console.log('\n[19] 入口參數傳遞');
+{
+  const p7 = await b.newPage();
+  await p7.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  const e7 = [];
+  p7.on('pageerror', (e) => e7.push('pageerror: ' + e.message));
+
+  // Layer A：畫面上的按鈕有沒有把級別帶進 URL
+  await p7.goto(BASE + '#/home', { waitUntil: 'networkidle2' });
+  await sleep(1200);
+  const homeQuick = await p7.evaluate(() => {
+    const el = [...document.querySelectorAll('button')].find((x) => x.innerText.includes('快速測驗'));
+    if (!el) return null;
+    el.click();
+    return location.hash;
+  });
+  ok(/[?&]level=N5(&|$)/.test(homeQuick || ''),
+    `首頁快速測驗的 URL 帶了級別 (${homeQuick})`, '按鈕沒把 level 帶進 query');
+
+  // Layer B：buildSession 對每一種 src 都要尊重 o.level
+  // 曾經有 `o.src === 'mix'` 無條件改載入全部五級，害首頁「N5 快速測驗」出 N1~N5
+  await p7.goto('about:blank');
+  await p7.goto(BASE + '#/home', { waitUntil: 'networkidle2' });
+  await sleep(1000);
+  const bySrc = await p7.evaluate(async () => {
+    const { buildSession } = await import('./js/session.js');
+    const out = {};
+    for (const src of ['set', 'mix', undefined, 'anything']) {
+      for (const level of ['N5', 'N1']) {
+        const { items } = await buildSession({ type: 'vocab', level, scope: 'smart', src });
+        out[`${src}/${level}`] = [...new Set(items.map((i) => i.level))].sort();
+      }
+    }
+    const all = await buildSession({ type: 'vocab', level: 'ALL', scope: 'random', src: 'set' });
+    out['set/ALL'] = [...new Set(all.items.map((i) => i.level))].sort();
+    return out;
+  });
+  const leaks = Object.entries(bySrc).filter(([k, v]) => {
+    const want = k.split('/')[1];
+    return want === 'ALL' ? v.length < 2 : !(v.length === 1 && v[0] === want);
+  });
+  ok(leaks.length === 0,
+    `buildSession 對任何 src 都只出指定級別（level='ALL' 才跨級）`,
+    leaks.map(([k, v]) => `${k} → ${v.join(',')}`).join('; '));
+
+  // 每個帶級別的實際入口 URL，出題級別都要相符
+  const entries = [
+    ['首頁快速測驗', '#/study?type=vocab&level=N5&mode=quiz', 'N5'],
+    // 使用者實際點到的那個 URL：舊版帶 src=mix，會被無條件改成全五級
+    ['舊版首頁 URL (src=mix)', '#/study?type=vocab&level=N5&mode=quiz&src=mix', 'N5'],
+    ['學習頁 單字測驗', '#/study?type=vocab&level=N2&mode=quiz&scope=smart', 'N2'],
+    ['學習頁 文法測驗', '#/study?type=grammar&level=N4&mode=quiz&scope=smart', 'N4'],
+    ['學習頁 漢字讀音', '#/study?type=vocab&level=N3&mode=quiz&scope=smart&qtype=reading', 'N3'],
+    ['學習頁 例句填空', '#/study?type=grammar&level=N3&mode=quiz&scope=smart&qtype=cloze', 'N3']
+  ];
+  const wrongLevel = [];
+  for (const [name, hash, want] of entries) {
+    await p7.goto('about:blank');
+    await p7.goto(BASE + hash, { waitUntil: 'networkidle2' });
+    await sleep(1100);
+    const seen = new Set();
+    for (let i = 0; i < 6; i++) {
+      const lv = await p7.evaluate(() => document.querySelector('.quiz-q .pill')?.textContent?.trim());
+      if (lv) seen.add(lv);
+      await p7.evaluate(() => document.querySelector('.opt:not([disabled])')?.click());
+      await sleep(120);
+      await p7.evaluate(() => document.querySelector('.quiz-next')?.click());
+      await sleep(160);
+    }
+    if (seen.size !== 1 || !seen.has(want)) wrongLevel.push(`${name} 期望 ${want} 卻出 ${[...seen].join(',')}`);
+  }
+  ok(wrongLevel.length === 0, `六個帶級別的測驗入口都只出該級別的題（含舊版 src=mix 的 URL）`, wrongLevel.join('; '));
+
+  // 閃卡沒有級別標籤，改從組卷層驗
+  await p7.goto('about:blank');
+  await p7.goto(BASE + '#/home', { waitUntil: 'networkidle2' });
+  await sleep(900);
+  const flash = await p7.evaluate(async () => {
+    const { buildSession } = await import('./js/session.js');
+    const out = {};
+    for (const [type, level] of [['vocab', 'N5'], ['grammar', 'N1']]) {
+      const { items } = await buildSession({ type, level, scope: 'smart', src: 'set' });
+      out[`${type}/${level}`] = [...new Set(items.map((i) => i.level))];
+    }
+    return out;
+  });
+  ok(Object.entries(flash).every(([k, v]) => v.length === 1 && v[0] === k.split('/')[1]),
+    `閃卡組卷也只出指定級別`, JSON.stringify(flash));
+
+  // 聽力的題池同樣要吃級別
+  const listen = await p7.evaluate(async () => {
+    const d = await import('./js/data.js');
+    const { audioOf } = await import('./js/qtypes.js');
+    const out = {};
+    for (const lv of ['N5', 'N2']) {
+      const [v, g] = await Promise.all([d.loadMany('vocab', [lv]), d.loadMany('grammar', [lv])]);
+      out[lv] = [...new Set([...v, ...g].filter(audioOf).map((x) => x.level))];
+    }
+    return out;
+  });
+  ok(Object.entries(listen).every(([lv, v]) => v.length === 1 && v[0] === lv),
+    `聽力題池只出指定級別`, JSON.stringify(listen));
+  ok(e7.length === 0, '入口參數測試無 console 錯誤', e7.join(' | '));
+  await p7.close();
+}
+
+/* ================= 20. 掌握度會前進 ================= */
+console.log('\n[20] 掌握度會前進');
+{
+  const p8 = await b.newPage();
+  await p8.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  const e8 = [];
+  p8.on('pageerror', (e) => e8.push('pageerror: ' + e.message));
+  await p8.goto(BASE + '#/home', { waitUntil: 'networkidle2' });
+  await sleep(1000);
+
+  // smart 排程要把到期的複習題排進來。原本是「未學過優先」，
+  // 題庫有三千多條，未學過的永遠填滿整輪 → 到期題永遠排不到 → 掌握度永遠 0
+  const dueFirst = await p8.evaluate(async () => {
+    const { buildSession } = await import('./js/session.js');
+    const { idb } = await import('./js/db.js');
+    const d = await import('./js/data.js');
+    for (const r of await idb.getAll('progress')) await idb.del('progress', r.itemId);
+    const pool = await d.loadSet('vocab', 'N5');
+    const overdue = pool.slice(0, 30).map((x) => x.id);
+    for (const id of overdue) {
+      await idb.put('progress', { itemId: id, level: 'N5', type: 'vocab', box: 1, due: Date.now() - 3600000, reps: 1, correct: 1, wrong: 0, updated: Date.now() });
+    }
+    const { items } = await buildSession({ type: 'vocab', level: 'N5', scope: 'smart', src: 'set' });
+    const set = new Set(overdue);
+    return { total: items.length, due: items.filter((i) => set.has(i.id)).length };
+  });
+  ok(dueFirst.due >= 14,
+    `smart 排程優先送出到期複習題 (${dueFirst.total} 題中有 ${dueFirst.due} 題是到期的)`,
+    '到期題排不進來的話，沒有任何項目升得到 box 3，掌握度會永遠是 0');
+
+  // 跑完整條路徑：連續 4 天各練一輪全對，已掌握必須 > 0
+  const journey = await p8.evaluate(async () => {
+    const { buildSession } = await import('./js/session.js');
+    const { recordAnswer, allProgress } = await import('./js/store.js');
+    const { stageOf } = await import('./js/srs.js');
+    const { idb } = await import('./js/db.js');
+    for (const r of await idb.getAll('progress')) await idb.del('progress', r.itemId);
+    const days = [];
+    for (let day = 1; day <= 4; day++) {
+      const { items } = await buildSession({ type: 'vocab', level: 'N5', scope: 'smart', src: 'set' });
+      for (const it of items) await recordAnswer({ item: it, level: it.level, type: it.type, grade: 'good' });
+      const prog = await allProgress();
+      days.push({
+        day,
+        learned: prog.filter((r) => stageOf(r) === 'learned').length,
+        learning: prog.filter((r) => stageOf(r) === 'learning').length
+      });
+      for (const r of prog) { r.due -= 86400000; await idb.put('progress', r); }  // 時間快轉一天
+    }
+    return days;
+  });
+  ok(journey[0].learning === 20,
+    `第 1 天練 20 題就看得到「學習中 20」（不是 0）`, JSON.stringify(journey[0]));
+  ok(journey.at(-1).learned > 0,
+    `連續 4 天各一輪全對後已掌握 ${journey.at(-1).learned} 項（>0）`,
+    `修正前無論練幾輪都是 0：${JSON.stringify(journey)}`);
+
+  // 畫面要講得出規則，不能只丟一個 0 給使用者
+  await p8.goto('about:blank');
+  await p8.goto(BASE + '#/stats', { waitUntil: 'networkidle2' });
+  await sleep(900);
+  const statsTxt = await p8.evaluate(() => document.getElementById('view').innerText);
+  ok(/學習中/.test(statsTxt) && /答對\s*3\s*次/.test(statsTxt),
+    `統計頁同時顯示「學習中」並說明已掌握的條件`, statsTxt.slice(0, 120));
+
+  await p8.goto('about:blank');
+  await p8.goto(BASE + '#/learn?type=vocab&level=N5', { waitUntil: 'networkidle2' });
+  await sleep(900);
+  const learnTxt = await p8.evaluate(() => document.getElementById('view').innerText);
+  ok(/學習中\s*\d+/.test(learnTxt) && /最快要跨\s*3\s*天/.test(learnTxt),
+    `學習頁顯示「學習中」數量並說明要跨 3 天`, learnTxt.slice(0, 160));
+
+  // 第一天練完 due 全在明天，首頁不能只說「沒有待複習」讓人以為白練
+  await p8.evaluate(async () => {
+    const { idb } = await import('./js/db.js');
+    for (const r of await idb.getAll('progress')) {
+      r.due = Date.now() + 86400000; await idb.put('progress', r);
+    }
+  });
+  await p8.goto('about:blank');
+  await p8.goto(BASE + '#/home', { waitUntil: 'networkidle2' });
+  await sleep(900);
+  const homeTxt = await p8.evaluate(() => document.getElementById('view').innerText);
+  ok(/明天有\s*\d+\s*項到期/.test(homeTxt),
+    `沒有到期項目時，首頁會說下一批什麼時候到`, homeTxt.split('\n').slice(0, 12).join(' | '));
+
+  await p8.evaluate(async () => {
+    const { idb } = await import('./js/db.js');
+    for (const r of await idb.getAll('progress')) await idb.del('progress', r.itemId);
+  });
+  ok(e8.length === 0, '掌握度流程測試無 console 錯誤', e8.join(' | '));
+  await p8.close();
 }
 
 /* ================= 14. console ================= */

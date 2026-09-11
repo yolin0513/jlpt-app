@@ -66,16 +66,22 @@ export function sample(arr, n) {
   return shuffle(arr).slice(0, n);
 }
 
-export function progressBar(value, total, good = false, label) {
+/**
+ * @param {number} [soft]  「學習中」的數量，畫成主進度後面的淺色段。
+ *   只顯示已掌握的話，使用者做了一整天看到 0% 會以為程式壞了。
+ */
+export function progressBar(value, total, good = false, label, soft = 0) {
   const p = pct(value, total);
+  const ps = soft > 0 ? pct(value + soft, total) : 0;
   return h('div', {
     class: `bar${good ? ' good' : ''}`,
     role: 'progressbar',
     'aria-valuenow': String(value),
     'aria-valuemin': '0',
     'aria-valuemax': String(total || 0),
-    'aria-label': label || `進度 ${value} / ${total}（${p}%）`
+    'aria-label': label || `進度 ${value} / ${total}（${p}%）` + (soft > 0 ? `，另有 ${soft} 項學習中` : '')
   }, [
+    ps > 0 ? h('i', { class: 'soft', style: `width:${ps}%` }) : null,
     h('i', { style: `width:${p}%` })
   ]);
 }

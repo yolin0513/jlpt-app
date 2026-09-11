@@ -2,7 +2,7 @@ import { h, spinner, pct, progressBar, toast } from '../ui.js';
 import { getManifest, getTravelManifest, TRAVEL_CATS, LEVELS } from '../data.js';
 import { allProgress, allDaily, streak, todayKey, exportAll, importAll, inspectBackup,
   resetAll, setSetting, getDailyGoal, setDailyGoal, allFavorites } from '../store.js';
-import { LEARNED_BOX } from '../srs.js';
+import { LEARNED_BOX, stageOf, tallyStages } from '../srs.js';
 import { navigate } from '../router.js';
 import { isSupported as ttsSupported, getAutoSpeak, setAutoSpeak, hasJapaneseVoice,
   getRatePref, setSpeechRate, speak } from '../speech.js';
@@ -22,7 +22,8 @@ export default async function statsView() {
   const prog = progAll.filter((r) => !dupSet.has(r.itemId));
 
   // ---- 總覽（JLPT + 生活旅行 合計）----
-  const learned = prog.filter((r) => r.box >= LEARNED_BOX).length;
+  const stages = tallyStages(prog);
+  const learned = stages.learned;
   const seen = prog.length;
   const totalCorrect = progAll.reduce((s, r) => s + (r.correct || 0), 0);
   const totalWrong = progAll.reduce((s, r) => s + (r.wrong || 0), 0);
@@ -31,10 +32,21 @@ export default async function statsView() {
   const totalItems = man.sets.reduce((s, x) => s + setCount(x), 0) + (tm.total || 0);
 
   wrap.append(h('div', { class: 'stat-grid' }, [
-    statCard('已掌握', learned, `題庫共 ${totalItems}`),
-    statCard('學習過', seen, `涵蓋 ${pct(seen, totalItems)}%`),
+    statCard('已掌握', learned, `答對 3 次以上`),
+    statCard('學習中', stages.learning + stages.relearn, '正在往已掌握前進'),
     statCard('總正確率', acc + '%', `${totalCorrect} 對 / ${totalWrong} 錯`),
     statCard('連續天數', '🔥 ' + st, '每天學習就會累積')
+  ]));
+  // 「已掌握 0」最常見的原因不是沒學，是還沒隔天回來複習 → 直接把規則寫在這裡
+  wrap.append(h('div', { class: 'card', style: 'padding:12px 14px' }, [
+    h('div', { class: 'small muted', style: 'line-height:1.7' }, [
+      h('b', { text: '「已掌握」怎麼算：' }),
+      '同一個項目要答對 3 次。答對一次進「學習中」，' +
+      '隔 1 天後再答對一次，再隔 2 天答對第三次才算已掌握——最快要跨 3 天。',
+      h('br'),
+      `目前學習過 ${seen} 項，涵蓋題庫 ${pct(seen, totalItems)}%（共 ${totalItems} 項）。` +
+      (stages.relearn ? `其中 ${stages.relearn} 項答錯過、已重新排入複習。` : '')
+    ])
   ]));
 
   // ---- 學習熱力圖 ----

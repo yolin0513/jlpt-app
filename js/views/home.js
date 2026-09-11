@@ -2,7 +2,7 @@ import { h, progressBar, pct, spinner } from '../ui.js';
 import { getManifest, getTravelManifest, LEVELS } from '../data.js';
 import { progressMap, dailyFor, streak, getDailyGoal, allFavorites, getSetting, setSetting } from '../store.js';
 import { idb } from '../db.js';
-import { LEARNED_BOX } from '../srs.js';
+import { LEARNED_BOX, stageOf, forecast } from '../srs.js';
 import { navigate } from '../router.js';
 
 export default async function homeView() {
@@ -59,11 +59,20 @@ export default async function homeView() {
   ]));
 
   // ---- 待複習 ----
+  // 第一天練完，所有項目的 due 都在 1 天後 → 這裡一定是 0。
+  // 只說「目前沒有待複習項目」會讓人以為練了等於沒練，所以要講下一批何時到。
+  const fc = forecast([...pmap.values()], 7);
+  const nextDay = fc.buckets.findIndex((b, i) => i > 0 && b.n > 0);
+  const soonText = fc.buckets[0].n > 0
+    ? `今天稍晚還有 ${fc.buckets[0].n} 項會到期`
+    : nextDay > 0
+      ? `${nextDay === 1 ? '明天' : `${nextDay} 天後`}有 ${fc.buckets[nextDay].n} 項到期，到時回來複習`
+      : '學習後系統會自動安排複習';
   wrap.append(h('button', { class: 'tile', onclick: () => navigate('/review') }, [
     h('span', { style: 'font-size:26px' }, due.length ? '🔔' : '✅'),
     h('div', { class: 'tile-main' }, [
       h('div', { class: 'tile-title', text: due.length ? `有 ${due.length} 項待複習` : '目前沒有待複習項目' }),
-      h('div', { class: 'tile-sub', text: due.length ? '點擊開始間隔重複複習' : '學習後系統會自動安排複習' })
+      h('div', { class: 'tile-sub', text: due.length ? '點擊開始間隔重複複習' : soonText })
     ]),
     h('span', { class: 'chev', text: '›' })
   ]));
@@ -103,7 +112,7 @@ export default async function homeView() {
   wrap.append(h('div', { class: 'section-title', text: '快速開始' }));
   wrap.append(h('div', { class: 'btn-grid' }, [
     h('button', { class: 'btn', onclick: () => navigate('/learn') }, '📚 JLPT 練習'),
-    h('button', { class: 'btn secondary', onclick: () => navigate('/study', { type: 'vocab', level: 'N5', mode: 'quiz', src: 'mix' }) }, '⚡ N5 快速測驗')
+    h('button', { class: 'btn secondary', onclick: () => navigate('/study', { type: 'vocab', level: 'N5', mode: 'quiz' }) }, '⚡ N5 快速測驗')
   ]));
 
   // ---- 生活旅行 ----
@@ -124,25 +133,27 @@ export default async function homeView() {
   wrap.append(h('div', { class: 'section-title', text: '各級別掌握度' }));
   const totals = {};
   for (const s of man.sets) {
-    totals[s.level] = totals[s.level] || { total: 0, learned: 0 };
+    totals[s.level] = totals[s.level] || { total: 0, learned: 0, learning: 0 };
     totals[s.level].total += (s.activeCount ?? s.count); // 扣掉跨級別重複隱藏的條目
   }
   const dupSet = new Set(man.dupIds || []);
   for (const r of pmap.values()) {
     if (dupSet.has(r.itemId)) continue; // 舊版本練過、現已隱藏的重複詞不計入
-    if (r.box >= LEARNED_BOX && totals[r.level]) totals[r.level].learned += 1;
+    if (!totals[r.level]) continue;
+    if (stageOf(r) === 'learned') totals[r.level].learned += 1;
+    else totals[r.level].learning += 1;
   }
   for (const lv of LEVELS) {
-    const t = totals[lv] || { total: 0, learned: 0 };
+    const t = totals[lv] || { total: 0, learned: 0, learning: 0 };
     wrap.append(h('div', { class: 'card', style: 'padding:12px 14px' }, [
       h('div', { class: 'row spread', style: 'margin-bottom:6px' }, [
         h('div', { class: 'row', style: 'gap:8px' }, [
           h('span', { class: `pill ${lv.toLowerCase()}`, text: lv }),
-          h('span', { class: 'small muted', text: `${t.learned} / ${t.total} 已掌握` })
+          h('span', { class: 'small muted', text: `${t.learned} / ${t.total} 已掌握` + (t.learning ? `・${t.learning} 學習中` : '') })
         ]),
         h('span', { class: 'small muted', text: `${pct(t.learned, t.total)}%` })
       ]),
-      progressBar(t.learned, t.total, t.learned === t.total && t.total > 0)
+      progressBar(t.learned, t.total, t.learned === t.total && t.total > 0, undefined, t.learning)
     ]));
   }
 

@@ -1,7 +1,7 @@
 import { h, spinner } from '../ui.js';
 import { idb } from '../db.js';
 import { navigate } from '../router.js';
-import { BOX_INTERVALS_MIN } from '../srs.js';
+import { BOX_INTERVALS_MIN, forecast } from '../srs.js';
 
 export default async function reviewView() {
   const wrap = h('div');
@@ -83,22 +83,6 @@ export default async function reviewView() {
  * 把未來 14 天的到期量畫出來，才看得到哪天會爆量、可以提前分攤。 */
 const DAYS = 14;
 const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
-
-export function forecast(all, days = DAYS, now = Date.now()) {
-  const startOfDay = (t) => { const x = new Date(t); x.setHours(0, 0, 0, 0); return x.getTime(); };
-  const today = startOfDay(now);
-  const end = today + days * 86400000;
-  const buckets = Array.from({ length: days }, (_, i) => ({ ts: today + i * 86400000, n: 0 }));
-  let overdue = 0, later = 0;
-  for (const r of all) {
-    if (!Number.isFinite(r.due)) continue;
-    if (r.due <= now) { overdue += 1; continue; }
-    if (r.due >= end) { later += 1; continue; }
-    const i = Math.round((startOfDay(r.due) - today) / 86400000);
-    if (i >= 0 && i < days) buckets[i].n += 1;
-  }
-  return { buckets, overdue, later };
-}
 
 function forecastBlock(all) {
   const { buckets, overdue, later } = forecast(all);

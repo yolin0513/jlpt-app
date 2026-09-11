@@ -66,3 +66,44 @@ export function schedule(rec, grade, meta = {}) {
 export function isLearned(rec) {
   return !!rec && rec.box >= LEARNED_BOX;
 }
+
+/* 一個項目要答對 3 次才算「已掌握」，而 box1→1 天、box2→2 天，
+ * 所以最快也要跨 3 個日曆天。使用者做了一整天卻看到「已掌握 0」會以為壞掉，
+ * 因此把中間狀態也命名出來，讓畫面顯示得出「正在前進」。 */
+export const STAGES = { learned: '已掌握', learning: '學習中', relearn: '需加強' };
+
+/** @returns {'learned'|'learning'|'relearn'|null} */
+export function stageOf(rec) {
+  if (!rec || !Number.isFinite(rec.box)) return null;
+  if (rec.box >= LEARNED_BOX) return 'learned';
+  return rec.box >= 1 ? 'learning' : 'relearn';
+}
+
+/** 從 0 分類統計一批 progress 紀錄 */
+export function tallyStages(records, filter = null) {
+  const out = { learned: 0, learning: 0, relearn: 0 };
+  for (const r of records) {
+    if (filter && !filter(r)) continue;
+    const s = stageOf(r);
+    if (s) out[s] += 1;
+  }
+  return out;
+}
+
+/** 未來 N 天的到期量預測（複習頁與首頁共用） */
+export function forecast(all, days = 14, now = Date.now()) {
+  const DAY = 86400000;
+  const startOfDay = (t) => { const x = new Date(t); x.setHours(0, 0, 0, 0); return x.getTime(); };
+  const today = startOfDay(now);
+  const end = today + days * DAY;
+  const buckets = Array.from({ length: days }, (_, i) => ({ ts: today + i * DAY, n: 0 }));
+  let overdue = 0, later = 0;
+  for (const r of all) {
+    if (!Number.isFinite(r.due)) continue;
+    if (r.due <= now) { overdue += 1; continue; }
+    if (r.due >= end) { later += 1; continue; }
+    const i = Math.round((startOfDay(r.due) - today) / DAY);
+    if (i >= 0 && i < days) buckets[i].n += 1;
+  }
+  return { buckets, overdue, later };
+}
