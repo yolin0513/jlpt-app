@@ -1,4 +1,4 @@
-/* 全面功能檢測回歸套件（74 項）
+/* 全面功能檢測回歸套件（84 項）
  * 用法：先跑 python scripts/serve.py，再 node scripts/audit.mjs [baseUrl]
  * 涵蓋 verify-full 沒測到的：資料層一致性、掌握度分母、路由健壯性、
  * 匯出匯入、孤兒紀錄、搜尋、收藏即時性、重置、SRS 邊界、聽力、特殊題型、模擬考。
@@ -750,6 +750,112 @@ console.log('\n[16] 複習預測日曆');
   });
   ok(e4.length === 0, '預測日曆頁面無 console 錯誤', e4.join(' | '));
   await p4.close();
+}
+
+/* ================= 17. 學習熱力圖 ================= */
+console.log('\n[17] 學習熱力圖');
+{
+  const p5 = await b.newPage();
+  await p5.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  const e5 = [];
+  p5.on('pageerror', (e) => e5.push('pageerror: ' + e.message));
+  await p5.goto(BASE + '#/home', { waitUntil: 'networkidle2' });
+  await p5.evaluate(async () => {
+    const { idb } = await import('./js/db.js');
+    // 明確設定每日目標：色階是拿它當基準，前面的測試動過滑桿會讓這裡的期望值漂掉
+    await (await import('./js/store.js')).setDailyGoal(20);
+    for (const r of await idb.getAll('daily')) await idb.del('daily', r.date);
+    const z = (n) => String(n).padStart(2, '0');
+    const key = (d) => `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`;
+    for (let i = 0; i < 120; i++) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      if (i % 7 === 3) continue;                      // 每週留一天空白
+      await idb.put('daily', { date: key(d), studied: [3, 12, 25, 60][i % 4], correct: 1, wrong: 0, cards: 2 });
+    }
+  });
+  await p5.goto('about:blank');
+  await p5.goto(BASE + '#/stats', { waitUntil: 'networkidle2' });
+  await sleep(900);
+  const hm = await p5.evaluate(() => {
+    const cells = [...document.querySelectorAll('.hm-grid .hm-c')];
+    const titled = cells.filter((c) => c.title);
+    const z = (n) => String(n).padStart(2, '0');
+    const d = new Date();
+    const today = `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`;
+    return {
+      cols: document.querySelectorAll('.hm-col').length,
+      cells: cells.length,
+      hasToday: titled.some((c) => c.title.startsWith(today)),
+      levels: [1, 2, 3, 4].map((l) => document.querySelectorAll(`.hm-grid .hm-c.l${l}`).length),
+      aria: document.querySelector('.hm-grid')?.getAttribute('aria-label') || '',
+      overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth
+    };
+  });
+  // 對齊方式若寫錯（先退 N 週再對齊週日），格子會涵蓋不到今天——今天學了卻看不到
+  ok(hm.hasToday, `熱力圖最後一欄含今天`, `今天的格子不在圖上（週對齊算錯）`);
+  ok(hm.cells === hm.cols * 7 && !hm.overflow,
+    `熱力圖 ${hm.cols} 欄 × 7 列、390px 無橫向溢出`, JSON.stringify(hm));
+  // 深淺要對照每日目標而不是當期最大值：四種強度都要出現
+  ok(hm.levels.every((n) => n > 0),
+    `色階對照每日目標，四個強度都有出現 (${hm.levels.join('/')})`,
+    '若用當期最大值上色，低強度的日子會被染深、圖失去意義');
+  ok(/最長連續\s*\d+\s*天/.test(hm.aria), `熱力圖有 aria 替代文字`, hm.aria);
+  ok(e5.length === 0, '熱力圖頁面無 console 錯誤', e5.join(' | '));
+  await p5.close();
+}
+
+/* ================= 18. 弱點清單 ================= */
+console.log('\n[18] 弱點清單');
+{
+  const p6 = await b.newPage();
+  await p6.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  const e6 = [];
+  p6.on('pageerror', (e) => e6.push('pageerror: ' + e.message));
+  await p6.goto(BASE + '#/home', { waitUntil: 'networkidle2' });
+  await p6.evaluate(async () => {
+    const { idb } = await import('./js/db.js');
+    for (const r of await idb.getAll('progress')) await idb.del('progress', r.itemId);
+    const now = Date.now();
+    // [id, box, reps, correct, wrong]
+    const spec = [
+      ['n5-v-0001', 1, 5, 4, 1],    // 錯得少
+      ['n5-v-0002', 5, 12, 4, 8],   // 錯很多但已掌握
+      ['n5-v-0003', 0, 2, 0, 2],    // 作答次數不足
+      ['n5-v-0004', 1, 6, 3, 3],
+      ['n5-v-0005', 0, 9, 2, 7],    // 最弱
+      ['n5-v-0006', 6, 8, 8, 0]     // 全對
+    ];
+    for (const [itemId, box, reps, correct, wrong] of spec) {
+      await idb.put('progress', { itemId, level: 'N5', type: 'vocab', box, due: now + 9e8, reps, correct, wrong, updated: now });
+    }
+  });
+  await p6.goto('about:blank');
+  await p6.goto(BASE + '#/weak', { waitUntil: 'networkidle2' });
+  await sleep(1200);
+  const wk = await p6.evaluate(() => [...document.querySelectorAll('.list-item')].map((e) => e.innerText.replace(/\n/g, ' ')));
+  ok(wk.length === 4, `作答未滿 3 次與全對的項目不列入 (列出 ${wk.length} 項，種了 6 筆)`, wk.join(' || '));
+  const order = wk.map((s) => (s.match(/錯 (\d+) \/ 共 (\d+)/) || []).slice(1).join('/'));
+  ok(order[0] === '7/9' && order[1] === '3/6' && order[2] === '8/12' && order[3] === '1/5',
+    `排序依困難度而非錯誤次數 (${order.join(' > ')})`,
+    '錯 8 次但已掌握的應排在錯 3 次卻還沒掌握的後面');
+  ok(/已掌握但錯過很多次/.test(wk[2]),
+    `已掌握但錯很多次的項目仍會列出（錯題本會把它標成已解決而消失）`, wk[2]);
+  // 「針對這些練一輪」要真的只出這些題
+  await p6.goto('about:blank');
+  await p6.goto(BASE + '#/study?mode=quiz&src=weak&level=ALL', { waitUntil: 'networkidle2' });
+  await sleep(1200);
+  const wq = await p6.evaluate(() => ({
+    count: document.querySelector('.study-count')?.textContent?.trim(),
+    back: (() => { document.querySelector('.study-head .icon-btn')?.click(); return location.hash; })()
+  }));
+  ok(wq.count === '1 / 4' && wq.back === '#/weak',
+    `弱點測驗只出弱點題並可返回弱點清單 (${wq.count}, ${wq.back})`, JSON.stringify(wq));
+  await p6.evaluate(async () => {
+    const { idb } = await import('./js/db.js');
+    for (const r of await idb.getAll('progress')) await idb.del('progress', r.itemId);
+  });
+  ok(e6.length === 0, '弱點清單頁面無 console 錯誤', e6.join(' | '));
+  await p6.close();
 }
 
 /* ================= 14. console ================= */

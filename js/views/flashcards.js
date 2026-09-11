@@ -12,7 +12,7 @@ export default async function flashcardsView(ctx) {
   wrap.append(spinner());
 
   const src = ctx.query.src || 'set';
-  const backTo = { travel: '/travel', review: '/review', mistakes: '/mistakes', favorites: '/favorites' }[src] || '/learn';
+  const backTo = { travel: '/travel', review: '/review', mistakes: '/mistakes', favorites: '/favorites', weak: '/weak' }[src] || '/learn';
   const [{ items }, favSet, autoSpeak] = await Promise.all([
     buildSession({
       type: ctx.query.type || 'vocab',

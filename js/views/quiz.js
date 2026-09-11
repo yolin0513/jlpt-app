@@ -18,7 +18,7 @@ export default async function quizView(ctx) {
   const src = ctx.query.src || 'set';
   const level = ctx.query.level || 'N5';
   const qtype = ctx.query.qtype || '';   // '' = 一般四選一；'reading' = 漢字讀音；'cloze' = 例句填空
-  const backTo = { travel: '/travel', review: '/review', mistakes: '/mistakes', favorites: '/favorites' }[src] || '/learn';
+  const backTo = { travel: '/travel', review: '/review', mistakes: '/mistakes', favorites: '/favorites', weak: '/weak' }[src] || '/learn';
   const back = () => navigate(backTo);
   // 特殊題型只有部分題目適用，先在組卷階段篩掉
   const filter = qtype === 'reading' ? canAskReading

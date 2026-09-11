@@ -19,6 +19,7 @@ route('/favorites', lazy(() => import('./views/favorites.js')));
 route('/travel', lazy(() => import('./views/travel.js')));
 route('/listening', lazy(() => import('./views/listening.js')));
 route('/exam', lazy(() => import('./views/exam.js')));
+route('/weak', lazy(() => import('./views/weak.js')));
 setNotFound(() => h('div', { class: 'empty', html: '<div class="big">🔍</div><p>找不到頁面</p>' }));
 
 /* ---- 標題 / 返回鍵 / 分頁高亮 ---- */

@@ -37,25 +37,11 @@ export default async function statsView() {
     statCard('連續天數', '🔥 ' + st, '每天學習就會累積')
   ]));
 
-  // ---- 每日學習量（近 14 天）— 以「作答題數」為準，閃卡翻卡另計不重複算 ----
-  wrap.append(h('div', { class: 'section-title', text: '每日作答量（近 14 天）' }));
-  const days = last14();
-  const map = new Map(daily.map((d) => [d.date, d]));
-  const valOf = (k) => (map.get(k)?.studied || 0);
-  const maxV = Math.max(1, ...days.map(valOf));
-  const td = map.get(todayKey()) || {};
-  wrap.append(h('div', { class: 'card' }, [
-    h('div', { class: 'chart-bars' }, days.map((k) => {
-      const v = valOf(k);
-      return h('div', {}, [
-        h('div', { class: 'cbwrap' }, [
-          h('div', { class: 'cb', style: `height:${v ? Math.max(4, Math.round((v / maxV) * 100)) : 0}%`, title: `${k}：${v} 題` })
-        ]),
-        h('div', { class: 'cl', text: k.slice(8) })
-      ]);
-    })),
-    h('div', { class: 'small muted', style: 'margin-top:8px', text: `今日作答 ${td.studied || 0} 題・閃卡翻看 ${td.cards || 0} 次` })
-  ]));
+  // ---- 學習熱力圖 ----
+  // 取代原本的 14 天長條圖：長條圖只看得到最近兩週，看不出「有沒有養成習慣」，
+  // 而習慣才是語言學習的關鍵變數。顏色深淺對照使用者自己設的每日目標。
+  wrap.append(h('div', { class: 'section-title', text: '學習熱力圖' }));
+  wrap.append(heatmapCard(daily, goal));
 
   // ---- 各級別完成度 ----
   wrap.append(h('div', { class: 'section-title', text: '各級別掌握度' }));
@@ -174,6 +160,11 @@ export default async function statsView() {
   ]));
 
   settings.append(h('div', { class: 'toggle-line', style: 'margin-top:6px' }, [
+    h('span', {}, '弱點清單'),
+    h('button', { class: 'btn sm secondary', onclick: () => navigate('/weak') }, '看最學不起來的 →')
+  ]));
+
+  settings.append(h('div', { class: 'toggle-line', style: 'margin-top:6px' }, [
     h('span', {}, '重點複習項目'),
     h('button', { class: 'btn sm secondary', onclick: () => navigate('/favorites'), text: `${favs.length} 項 →` })
   ]));
@@ -242,13 +233,99 @@ function statCard(label, value, sub) {
   ]);
 }
 
-function last14() {
-  const out = [];
-  const d = new Date();
-  for (let i = 13; i >= 0; i--) {
-    const x = new Date(d);
-    x.setDate(d.getDate() - i);
-    out.push(todayKey(x));
+/* ---------- 學習熱力圖 ----------
+ * 深淺對照使用者自己設的每日目標，而不是「當期最大值」——
+ * 用相對最大值上色的話，今天只答 3 題但那是本週最多，就會變成最深色，
+ * 看起來像很認真，其實沒達標，圖就失去意義了。
+ */
+const HM_LEVELS = 4;
+
+export function heatmapData(daily, goal, now = Date.now()) {
+  const DAY = 86400000;
+  const byDate = new Map(daily.map((d) => [d.date, d]));
+  const today = new Date(now); today.setHours(0, 0, 0, 0);
+  // 新使用者不必看一整年的空格：有資料的最早一天決定要畫多久（12～53 週）
+  const firstKey = daily.length ? daily[0].date : todayKey(today);
+  const first = new Date(`${firstKey}T00:00:00`);
+  const spanDays = Math.max(1, Math.round((today - first) / DAY) + 1);
+  const weeks = Math.min(53, Math.max(12, Math.ceil(spanDays / 7) + 1));
+
+  // 先把最後一欄對到「本週」，再往前數 weeks 週。
+  // 反過來做（先退 weeks 週再對齊週日）會讓起點又往前移最多 6 天，
+  // 結果格子涵蓋不到今天——今天學了卻看不到，圖就是壞的。
+  const end = new Date(today);
+  end.setDate(end.getDate() + (6 - end.getDay()));   // 本週週六
+  const start = new Date(end);
+  start.setDate(start.getDate() - (weeks * 7 - 1));  // 必落在週日
+
+  const cols = [];
+  let totalQ = 0, activeDays = 0, best = 0, run = 0;
+  for (let w = 0; w < weeks; w++) {
+    const col = [];
+    for (let dow = 0; dow < 7; dow++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + w * 7 + dow);
+      if (d > today) { col.push(null); continue; }   // 未來的格子留白
+      const key = todayKey(d);
+      const rec = byDate.get(key);
+      const q = rec?.studied || 0;
+      const cards = rec?.cards || 0;
+      // streak() 把「只翻閃卡」也算學習，熱力圖跟著算，兩處才不會對不上
+      const level = q <= 0 ? (cards > 0 ? 1 : 0)
+        : q < goal * 0.5 ? 1 : q < goal ? 2 : q < goal * 2 ? 3 : HM_LEVELS;
+      col.push({ key, q, cards, level });
+      totalQ += q;
+      if (level > 0) { activeDays += 1; run += 1; if (run > best) best = run; } else run = 0;
+    }
+    cols.push(col);
   }
-  return out;
+  return { cols, weeks, totalQ, activeDays, bestStreak: best };
+}
+
+function heatmapCard(daily, goal) {
+  const hm = heatmapData(daily, goal);
+  const td = daily.find((d) => d.date === todayKey()) || {};
+
+  // 月份標籤：只在該欄是某個月的第一週時標出來
+  const months = h('div', { class: 'hm-months' });
+  let lastM = -1;
+  hm.cols.forEach((col) => {
+    const firstReal = col.find(Boolean);
+    let label = '';
+    if (firstReal) {
+      const m = new Date(`${firstReal.key}T00:00:00`).getMonth();
+      if (m !== lastM) { label = `${m + 1}月`; lastM = m; }
+    }
+    months.append(h('div', { class: 'hm-mcol', text: label }));
+  });
+
+  const grid = h('div', {
+    class: 'hm-grid', role: 'img',
+    'aria-label': `學習熱力圖：近 ${hm.weeks} 週有 ${hm.activeDays} 天學習，` +
+      `共作答 ${hm.totalQ} 題，最長連續 ${hm.bestStreak} 天`
+  });
+  hm.cols.forEach((col) => {
+    const c = h('div', { class: 'hm-col' });
+    col.forEach((cell) => {
+      c.append(h('i', {
+        class: 'hm-c l' + (cell ? cell.level : 0) + (cell ? '' : ' none'),
+        title: cell ? `${cell.key}：作答 ${cell.q} 題${cell.cards ? `・閃卡 ${cell.cards} 次` : ''}` : ''
+      }));
+    });
+    grid.append(c);
+  });
+
+  const legend = h('div', { class: 'hm-legend small muted' }, [
+    h('span', { text: '少' }),
+    ...[0, 1, 2, 3, 4].map((l) => h('i', { class: 'hm-c l' + l })),
+    h('span', { text: '多' }),
+    h('span', { style: 'margin-left:auto', text: `每格深淺對照每日目標 ${goal} 題` })
+  ]);
+
+  return h('div', { class: 'card' }, [
+    months, grid, legend,
+    h('div', { class: 'small muted', style: 'margin-top:8px' },
+      `今日作答 ${td.studied || 0} 題・閃卡翻看 ${td.cards || 0} 次　|　` +
+      `近 ${hm.weeks} 週學習 ${hm.activeDays} 天・最長連續 ${hm.bestStreak} 天・累計 ${hm.totalQ} 題`)
+  ]);
 }

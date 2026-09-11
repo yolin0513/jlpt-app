@@ -341,11 +341,21 @@ button, input, select { font-family: inherit; font-size: inherit; color: inherit
 .heat i.l2 { background: #40c463; }
 .heat i.l3 { background: #30a14e; }
 .heat i.l4 { background: #216e39; }
-.chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 130px; }
-.chart-bars > div { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; }
-.chart-bars .cbwrap { flex: 1; width: 70%; display: flex; align-items: flex-end; }
-.chart-bars .cb { width: 100%; background: var(--primary); border-radius: 4px 4px 0 0; min-height: 2px; }
-.chart-bars .cl { font-size: 10px; color: var(--text-dim); }
+/* ---------- 學習熱力圖 ---------- */
+.hm-months, .hm-grid { display: flex; gap: 2px; }
+.hm-mcol { flex: 1; min-width: 0; font-size: 8.5px; color: var(--text-dim); white-space: nowrap; }
+.hm-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.hm-c {
+  display: block; width: 100%; aspect-ratio: 1 / 1;
+  border-radius: 2px; background: var(--surface-2);
+}
+.hm-c.none { background: transparent; }
+.hm-c.l1 { background: color-mix(in srgb, var(--primary) 28%, var(--surface-2)); }
+.hm-c.l2 { background: color-mix(in srgb, var(--primary) 52%, var(--surface-2)); }
+.hm-c.l3 { background: color-mix(in srgb, var(--primary) 76%, var(--surface-2)); }
+.hm-c.l4 { background: var(--primary); }
+.hm-legend { display: flex; align-items: center; gap: 3px; margin-top: 8px; }
+.hm-legend .hm-c { width: 10px; aspect-ratio: 1 / 1; flex: 0 0 10px; }
 
 .empty {
   text-align: center;

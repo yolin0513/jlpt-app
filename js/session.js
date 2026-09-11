@@ -3,7 +3,8 @@ import { loadSet, loadMany, findItem, LEVELS, loadTravel, loadTravelAll } from '
 import { progressMap } from './store.js';
 import { idb } from './db.js';
 import { shuffle } from './ui.js';
-import { openMistakes, allFavorites } from './store.js';
+import { openMistakes, allFavorites, allProgress } from './store.js';
+import { rankWeak } from './weak.js';
 
 const DEFAULT_LIMIT = 20;
 
@@ -42,6 +43,17 @@ export async function buildSession(o) {
       if (found) items.push({ ...found.item });
     }
     return { items, type: 'mixed', meta: { src: 'mistakes' } };
+  }
+
+  if (o.src === 'weak') {
+    const ranked = rankWeak(await allProgress(), { level: o.level || 'ALL', limit });
+    const items = [];
+    for (const r of ranked) {
+      const found = await findItem(r.itemId);
+      if (found) items.push({ ...found.item });
+    }
+    const types = new Set(items.map((i) => i.type));
+    return { items, type: types.size === 1 ? [...types][0] : 'mixed', meta: { src: 'weak' } };
   }
 
   if (o.src === 'favorites') {

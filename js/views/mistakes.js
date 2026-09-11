@@ -97,6 +97,12 @@ export default async function mistakesView() {
         toast('已清除訂正完成的項目');
       }
     }, '清除已訂正項目'));
+
+    // 錯題本只看「有沒有錯過、修好了沒」；想知道「哪些一直學不起來」要看弱點清單
+    wrap.append(h('button', {
+      class: 'btn ghost', style: 'margin-top:10px',
+      onclick: () => navigate('/weak')
+    }, '🩹 弱點清單（依困難度排序）→'));
   }
 
   render();
