@@ -1,10 +1,15 @@
 import { h, spinner, shuffle, progressBar, pct } from '../ui.js';
 import { buildSession, buildDistractors } from '../session.js';
+import { loadMany, LEVELS } from '../data.js';
 import { recordAnswer, favoriteIdSet } from '../store.js';
 import { navigate } from '../router.js';
 import { actionRow, speakText } from '../itemview.js';
 import { speak } from '../speech.js';
 import { bindKeys } from '../keys.js';
+import {
+  canAskReading, canAskCloze, readingIndex,
+  makeReadingQuestion, makeClozeQuestion
+} from '../qtypes.js';
 
 export default async function quizView(ctx) {
   const wrap = h('div');
@@ -12,19 +17,33 @@ export default async function quizView(ctx) {
 
   const src = ctx.query.src || 'set';
   const level = ctx.query.level || 'N5';
+  const qtype = ctx.query.qtype || '';   // '' = 一般四選一；'reading' = 漢字讀音；'cloze' = 例句填空
   const backTo = { travel: '/travel', review: '/review', mistakes: '/mistakes', favorites: '/favorites' }[src] || '/learn';
   const back = () => navigate(backTo);
+  // 特殊題型只有部分題目適用，先在組卷階段篩掉
+  const filter = qtype === 'reading' ? canAskReading
+    : qtype === 'cloze' ? canAskCloze
+      : null;
   const [{ items }, favSet] = await Promise.all([
     buildSession({
-      type: ctx.query.type || 'vocab',
+      type: qtype === 'reading' ? 'vocab' : (ctx.query.type || 'vocab'),
       level,
       scope: ctx.query.scope || 'smart',
       src,
       cat: ctx.query.cat,
-      scene: ctx.query.scene
+      scene: ctx.query.scene,
+      filter
     }),
     favoriteIdSet()
   ]);
+  // 特殊題型需要一份完整候選池來挑干擾選項
+  const rIdx = qtype === 'reading' ? await readingIndex() : null;
+  let clozePool = null;
+  if (qtype === 'cloze') {
+    const lv = level === 'ALL' ? LEVELS : [level];
+    const [v, g] = await Promise.all([loadMany('vocab', lv), loadMany('grammar', lv)]);
+    clozePool = [...v, ...g].filter(canAskCloze);
+  }
 
   wrap.replaceChildren();
   if (!items.length) {
@@ -67,6 +86,17 @@ export default async function quizView(ctx) {
   });
 
   async function makeQuestion(item) {
+    // 漢字讀音 / 例句填空：題目與干擾選項的邏輯在 qtypes.js
+    if (qtype === 'reading') {
+      const dir = Math.random() < 0.7 ? 'kanji2kana' : 'kana2kanji';
+      const q = makeReadingQuestion(item, rIdx, dir);
+      if (q && q.opts.length >= 2) return q;
+    }
+    if (qtype === 'cloze') {
+      const q = makeClozeQuestion(item, clozePool);
+      if (q && q.opts.length >= 2) return q;
+    }
+
     let prompt, promptSub = '', correct, optionOf, qLabel, distractorField;
 
     let promptIsJp = false, optionsAreJp = false;

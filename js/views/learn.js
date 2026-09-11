@@ -77,18 +77,28 @@ export default async function learnView(ctx) {
       onclick: () => start('quiz')
     }, '📝 四選一測驗'));
     wrap.append(h('button', {
-      class: 'btn secondary', disabled,
+      class: 'btn secondary', style: 'margin-bottom:10px', disabled,
       onclick: () => navigate('/listening', { level: state.level, scope: state.scope })
     }, '🎧 聽力練習'));
+    wrap.append(h('div', { class: 'btn-grid' }, [
+      h('button', {
+        class: 'btn secondary', disabled,
+        onclick: () => start('quiz', { qtype: 'reading' })
+      }, '🈯 漢字讀音'),
+      h('button', {
+        class: 'btn secondary', disabled,
+        onclick: () => start('quiz', { qtype: 'cloze' })
+      }, '✏️ 例句填空')
+    ]));
   }
 
-  async function start(mode) {
+  async function start(mode, extra) {
     await Promise.all([
       setSetting('lastType', state.type),
       setSetting('lastLevel', state.level),
       setSetting('lastScope', state.scope)
     ]);
-    navigate('/study', { type: state.type, level: state.level, mode, scope: state.scope });
+    navigate('/study', { type: state.type, level: state.level, mode, scope: state.scope, ...extra });
   }
 
   render();

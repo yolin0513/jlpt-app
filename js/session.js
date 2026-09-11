@@ -78,6 +78,8 @@ export async function buildSession(o) {
     pool = await loadSet(o.type, o.level);
   }
   pool = pool.slice();
+  // 特殊題型（漢字讀音、例句填空）只有部分題目適用 → 先篩掉不適用的
+  if (typeof o.filter === 'function') pool = pool.filter(o.filter);
 
   const ordered = orderPool(pool, o.scope, pmap);
 

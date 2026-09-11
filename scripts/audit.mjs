@@ -527,6 +527,64 @@ ok(!noVoice.play && noVoice.retry && noVoice.howto,
   '無日文語音時：不顯示播放鈕，改給安裝說明與「重新偵測」',
   JSON.stringify(noVoice));
 
+/* ================= 13d. 漢字讀音 / 例句填空 ================= */
+console.log('\n[13d] 漢字讀音與例句填空');
+const qt = await p.evaluate(async () => {
+  const q = await import('./js/qtypes.js');
+  const d = await import('./js/data.js');
+  const idx = await q.readingIndex();
+  const bad = [];
+
+  // 漢字讀音：500 題隨機，驗兩條關鍵不變量
+  for (let i = 0; i < 500; i++) {
+    const item = idx.all[Math.floor(Math.random() * idx.all.length)];
+    const dir = i % 10 < 7 ? 'kanji2kana' : 'kana2kanji';
+    const Q = q.makeReadingQuestion(item, idx, dir);
+    if (!Q) { bad.push('reading:null'); continue; }
+    if (Q.opts.filter((o) => o.correct).length !== 1) bad.push('reading:正解數≠1');
+    if (new Set(Q.opts.map((o) => o.text)).size !== Q.opts.length) bad.push('reading:選項重複');
+    if (dir === 'kanji2kana') {
+      const valid = idx.byKanji.get(item.kanji) || new Set();
+      for (const o of Q.opts) if (!o.correct && valid.has(o.text)) bad.push(`reading:同形異讀當干擾 ${item.kanji}`);
+    } else {
+      const same = idx.byKana.get(item.kana) || new Set();
+      for (const o of Q.opts) if (!o.correct && same.has(o.text)) bad.push(`reading:同音異字當干擾 ${item.kana}`);
+    }
+  }
+
+  // 例句填空：400 題隨機，驗挖空位置正確、四選項互異
+  const [v, g] = await Promise.all([d.loadMany('vocab', d.LEVELS), d.loadMany('grammar', d.LEVELS)]);
+  const pool = [...v, ...g].filter(q.canAskCloze);
+  let hintLeak = 0;
+  for (let i = 0; i < 400; i++) {
+    const item = pool[Math.floor(Math.random() * pool.length)];
+    const Q = q.makeClozeQuestion(item, pool);
+    if (!Q) continue;
+    if (Q.opts.filter((o) => o.correct).length !== 1) bad.push('cloze:正解數≠1');
+    if (new Set(Q.opts.map((o) => o.text)).size !== 4) bad.push('cloze:選項重複');
+    if (Q.prompt.replace('＿＿＿', Q.correctText) !== item.example) bad.push(`cloze:還原不符 ${item.example}`);
+    if (Q.correctText.length < 2) bad.push(`cloze:空格過短 ${Q.correctText}`);
+    if (Q.promptSub && Q.promptSub === item.exampleMeaning) hintLeak++;
+  }
+  return { bad: [...new Set(bad)].slice(0, 6), badCount: bad.length, poolSize: pool.length, readingPool: idx.all.length, hintLeak };
+});
+ok(qt.badCount === 0, `漢字讀音 500 題 + 填空 400 題，0 個正確性違規（候選 ${qt.readingPool} / ${qt.poolSize}）`, qt.bad.join('; '));
+ok(qt.hintLeak === 0, '填空題目不外洩中譯（作答後才顯示）', `${qt.hintLeak} 題有洩題`);
+
+for (const [label, hash, marker] of [
+  ['漢字讀音', '#/study?level=N3&mode=quiz&scope=random&qtype=reading', '這個詞怎麼唸'],
+  ['例句填空', '#/study?level=N3&mode=quiz&scope=random&qtype=cloze', '填入空格']
+]) {
+  await go(hash);
+  await p.waitForSelector('.opt', { timeout: 15000 }).catch(() => {});
+  const r = await p.evaluate(() => ({
+    q: document.querySelector('.quiz-q')?.innerText || '',
+    n: document.querySelectorAll('.opt').length,
+    uniq: new Set([...document.querySelectorAll('.opt')].map((o) => o.innerText)).size
+  }));
+  ok(r.n === 4 && r.uniq === 4 && r.q.includes(marker), `${label} 出題正常（${r.n} 個相異選項）`, r.q);
+}
+
 /* ================= 14. console ================= */
 console.log('\n[14] Console');
 ok(errs.length === 0, `全程 console 無錯誤`, errs.slice(0, 5).join(' | '));
