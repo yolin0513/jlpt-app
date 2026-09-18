@@ -488,6 +488,9 @@ node scripts/regress.mjs http://127.0.0.1:5173/index.html
 - **`check_data.py` 不驗文法的讀音欄，也不驗例句假名是不是純假名**：這些欄位打錯字抓不到（§12）。
 - **Windows 產檔會有 CRLF 警告**：`.gitattributes` 已處理，只是雜訊。rebuild 後 `git status` 可能顯示 JSON 已修改但 `git diff` 是空的，`git checkout data/` 還原即可，不要誤 commit。
 - **`git add` 的萬用字元碰到被 gitignore 的檔會整批失敗**：改列確切檔名或用 `git add -A`。
+- **殘留的 `.git/index.lock`**：2026-09-18 交接時 `git add` 失敗，因為 repo 裡有一個 20:25 建立的空鎖檔（早於交接開始，
+  推測是另一個 Session 或程序執行 git 時中斷留下的）。處理方式：先確認**沒有任何 git 程序在跑**，再把鎖檔**更名保留**
+  （這次更名為 `.git/index.lock.stale-20260918-2025`，不在版控內），不要直接刪。那個更名後的空檔可以在 Yolin 同意後刪掉。
 
 ### 程式的坑
 - **新增 JS 檔一定要加進 `sw.js` 的 `SHELL_ASSETS`**：延遲載入的畫面若線上時沒點過就不會被快取，離線時該頁會壞。
