@@ -17,7 +17,15 @@ const errs = [];
 p.on('pageerror', (e) => errs.push('pageerror: ' + e.message));
 p.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
 
-async function go(hash) { await p.goto('about:blank'); await p.goto(BASE + hash, { waitUntil: 'networkidle2' }); await sleep(500); }
+// 等到路由真的把畫面放進 #view 才回傳。線上冷快取時，網路閒置後畫面還要 1–2 秒才渲染完（2026-09-18 實測），
+// 只 sleep 固定時間的話，後面直接操作 DOM 的檢查會偶發失敗，甚至對 null 呼叫 click() 讓整支腳本中斷。
+// 路由只在畫面資料全部備妥後才一次放進 #view（中間沒有佔位元素），所以「#view 有子元素」就等於渲染完成。
+async function go(hash) {
+  await p.goto('about:blank');
+  await p.goto(BASE + hash, { waitUntil: 'networkidle2' });
+  await p.waitForFunction(() => document.querySelector('#view')?.children.length > 0, { timeout: 15000 }).catch(() => {});
+  await sleep(500);
+}
 
 // ---------- 1. 全路由載入 ----------
 console.log('\n[1] 全路由 0 錯誤載入');
@@ -147,11 +155,14 @@ const toggle = await p.evaluate(async () => {
   const s = ms => new Promise(r => setTimeout(r, ms));
   const t = [...document.querySelectorAll('.linklike')].find(b => b.textContent.includes('依情境挑選'));
   const list = () => t.parentElement.querySelector('.chips');
+  // 判斷「有沒有展開」要看 CSS，不能看高度：點開後場景清單要等資料載入才有內容，網路慢時清單已顯示但還是空的（高度 0）。
+  // 這項要抓的是 v1.2.1 的 bug：.chips 的 display:flex 蓋掉 [hidden]，收合不起來。
+  const shown = () => getComputedStyle(list()).display !== 'none';
   const states = [];
-  states.push(list().offsetHeight > 0);
-  t.click(); await s(350); states.push(list().offsetHeight > 0);
-  t.click(); await s(300); states.push(list().offsetHeight > 0);
-  t.click(); await s(300); states.push(list().offsetHeight > 0);
+  states.push(shown());
+  t.click(); await s(350); states.push(shown());
+  t.click(); await s(300); states.push(shown());
+  t.click(); await s(300); states.push(shown());
   return states; // [false, true, false, true]
 });
 ok(JSON.stringify(toggle) === JSON.stringify([false, true, false, true]), `toggle 展開/收合序列 ${JSON.stringify(toggle)}`);

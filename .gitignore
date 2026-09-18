@@ -1,8 +1,10 @@
-# 依賴（只有截圖腳本 scripts/screenshots.mjs 需要；執行 App 本身不需要任何依賴）
+# 依賴（puppeteer：測試腳本 audit/verify-full/regress 與截圖腳本需要；執行 App 本身不需要任何依賴）
 node_modules/
 package-lock.json
 
 # 暫存 / 系統
+__pycache__/
+*.pyc
 *.tmp
 *.log
 Thumbs.db

@@ -21,7 +21,15 @@ async function newPage(vp) {
   p._errs = errs;
   return p;
 }
-async function go(p, hash) { await p.goto('about:blank'); await p.goto(BASE + hash, { waitUntil: 'networkidle2' }); await sleep(600); }
+// 等到路由真的把畫面放進 #view 才回傳。線上冷快取時，網路閒置後畫面還要 1–2 秒才渲染完（2026-09-18 實測），
+// 只 sleep 固定時間的話，後面直接操作 DOM 的檢查會偶發失敗，甚至對 null 呼叫 click() 讓整支腳本中斷。
+// 路由只在畫面資料全部備妥後才一次放進 #view（中間沒有佔位元素），所以「#view 有子元素」就等於渲染完成。
+async function go(p, hash) {
+  await p.goto('about:blank');
+  await p.goto(BASE + hash, { waitUntil: 'networkidle2' });
+  await p.waitForFunction(() => document.querySelector('#view')?.children.length > 0, { timeout: 15000 }).catch(() => {});
+  await sleep(600);
+}
 
 // ============ A. 手機 375px 全流程 ============
 console.log('\n[A] 手機 375px 全流程');
@@ -117,8 +125,11 @@ const tg = await p.evaluate(async () => {
   const s = ms => new Promise(r => setTimeout(r, ms));
   const t = [...document.querySelectorAll('.linklike')].find(x => x.textContent.includes('依情境'));
   const list = () => t.parentElement.querySelector('.chips');
-  const seq = [list().offsetHeight > 0];
-  for (let i = 0; i < 3; i++) { t.click(); await s(320); seq.push(list().offsetHeight > 0); }
+  // 判斷「有沒有展開」要看 CSS，不能看高度：點開後場景清單要等資料載入才有內容，網路慢時清單已顯示但還是空的（高度 0）。
+  // 這項要抓的是 v1.2.1 的 bug：.chips 的 display:flex 蓋掉 [hidden]，收合不起來。
+  const shown = () => getComputedStyle(list()).display !== 'none';
+  const seq = [shown()];
+  for (let i = 0; i < 3; i++) { t.click(); await s(320); seq.push(shown()); }
   return seq;
 });
 ok(JSON.stringify(tg) === JSON.stringify([false, true, false, true]), `收合 toggle ${JSON.stringify(tg)}`);

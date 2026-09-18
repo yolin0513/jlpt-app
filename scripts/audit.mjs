@@ -1,4 +1,4 @@
-/* 全面功能檢測回歸套件（94 項）
+/* 全面功能檢測回歸套件（97 項）
  * 用法：先跑 python scripts/serve.py，再 node scripts/audit.mjs [baseUrl]
  * 涵蓋 verify-full 沒測到的：資料層一致性、掌握度分母、路由健壯性、
  * 匯出匯入、孤兒紀錄、搜尋、收藏即時性、重置、SRS 邊界、聽力、特殊題型、模擬考。
@@ -23,7 +23,14 @@ await p.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: t
 const errs = [];
 p.on('pageerror', (e) => errs.push('pageerror: ' + e.message));
 p.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
-const go = async (h) => { await p.goto('about:blank'); await p.goto(BASE + h, { waitUntil: 'networkidle2' }); await sleep(500); };
+// 等到路由真的把畫面放進 #view 才回傳（線上冷快取時，網路閒置後畫面還要 1–2 秒才渲染完，2026-09-18 實測）。
+// 路由只在畫面資料全部備妥後才一次放進 #view，所以「#view 有子元素」就等於渲染完成。
+const go = async (h) => {
+  await p.goto('about:blank');
+  await p.goto(BASE + h, { waitUntil: 'networkidle2' });
+  await p.waitForFunction(() => document.querySelector('#view')?.children.length > 0, { timeout: 15000 }).catch(() => {});
+  await sleep(500);
+};
 
 await go('#/home');
 
