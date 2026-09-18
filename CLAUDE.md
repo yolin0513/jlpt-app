@@ -54,3 +54,11 @@ GIT_TERMINAL_PROMPT=0 GH_CONFIG_DIR="$HOME/.config/gh" timeout 90 git -c credent
 ```
 
 線上版：https://yolin0513.github.io/jlpt-app/ （repo：github.com/yolin0513/jlpt-app，main 分支根目錄部署）
+
+## 共用慣例
+
+四個 App 共用的工作慣例在 `docs/CONVENTIONS.md`。那是副本，主檔在統籌工作區，**不要在這裡改它**。
+開工前把它跟 `docs/STATUS.md` 一起讀完，並在第一則回覆的**第一行**寫回執：`已讀共用慣例 vN（日期）`（N 與日期抄副本第一行）。
+本檔與 `docs/STATUS.md` 的規則優先於共用慣例；兩邊衝突時照較嚴的做，並在回報裡指出來。
+
+@docs/CONVENTIONS.md
