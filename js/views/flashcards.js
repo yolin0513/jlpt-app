@@ -1,6 +1,7 @@
 import { h, spinner, progressBar } from '../ui.js';
 import { faceOf } from '../data.js';
 import { buildSession } from '../session.js';
+import { posFilter } from '../pos.js';
 import { recordAnswer, bumpCardViewed, favoriteIdSet } from '../store.js';
 import { navigate } from '../router.js';
 import { actionRow, speakText } from '../itemview.js';
@@ -20,7 +21,9 @@ export default async function flashcardsView(ctx) {
       scope: ctx.query.scope || 'smart',
       src,
       cat: ctx.query.cat,
-      scene: ctx.query.scene
+      scene: ctx.query.scene,
+      // 詞性篩選只作用在一般題庫（其他入口不帶 pos，帶了也不理）
+      filter: src === 'set' ? posFilter(ctx.query.pos) : null
     }),
     favoriteIdSet(),
     getAutoSpeak()

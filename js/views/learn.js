@@ -1,5 +1,6 @@
 import { h, spinner, pct, progressBar } from '../ui.js';
-import { getManifest, LEVELS, TYPES } from '../data.js';
+import { getManifest, loadSet, LEVELS, TYPES } from '../data.js';
+import { POS_OPTIONS, DEFAULT_POS, isPosKey, countByPos, resolvePos } from '../pos.js';
 import { progressMap } from '../store.js';
 import { LEARNED_BOX, stageOf } from '../srs.js';
 import { navigate } from '../router.js';
@@ -12,11 +13,24 @@ export default async function learnView(ctx) {
   const dupSet = new Set(man.dupIds || []);
   wrap.replaceChildren();
 
+  const savedPos = ctx.query.pos || (await getSetting('lastPos', DEFAULT_POS));
   const state = {
     type: ctx.query.type || (await getSetting('lastType', 'vocab')),
     level: ctx.query.level || (await getSetting('lastLevel', 'N5')),
-    scope: ctx.query.scope || (await getSetting('lastScope', 'smart'))
+    scope: ctx.query.scope || (await getSetting('lastScope', 'smart')),
+    pos: isPosKey(savedPos) ? savedPos : DEFAULT_POS
   };
+
+  // 詞性那一排的數字要從題庫實際算 → 這一級的單字表（loadSet 內部有快取）
+  let posCounts = {};
+  async function refreshPosCounts() {
+    if (state.type !== 'vocab') { posCounts = {}; return; }
+    try {
+      posCounts = countByPos(await loadSet('vocab', state.level));
+    } catch { posCounts = {}; }
+    // 換級別後這個詞性在新級別是 0 個 → 退回「全部」，不要讓使用者卡在空池
+    state.pos = resolvePos(state.pos, posCounts);
+  }
 
   function seg(options, cur, onPick) {
     return h('div', { class: 'btn-grid', style: `grid-template-columns:repeat(${options.length},1fr);gap:8px` },
@@ -31,10 +45,24 @@ export default async function learnView(ctx) {
     wrap.replaceChildren();
 
     wrap.append(h('div', { class: 'section-title', text: '練習內容' }));
-    wrap.append(seg(TYPES.map((t) => ({ value: t.key, label: t.label })), state.type, (v) => { state.type = v; render(); }));
+    wrap.append(seg(TYPES.map((t) => ({ value: t.key, label: t.label })), state.type, (v) => { state.type = v; rerender(); }));
 
     wrap.append(h('div', { class: 'section-title', text: '級別' }));
-    wrap.append(seg(LEVELS.map((l) => ({ value: l, label: l })), state.level, (v) => { state.level = v; render(); }));
+    wrap.append(seg(LEVELS.map((l) => ({ value: l, label: l })), state.level, (v) => { state.level = v; rerender(); }));
+
+    // 詞性只對單字有意義（文法沒有 pos）
+    if (state.type === 'vocab') {
+      const opts = POS_OPTIONS
+        .filter((o) => o.key === 'all' || posCounts[o.key] > 0)   // 0 個的選項不顯示
+        .map((o) => ({ value: o.key, label: o.key === 'all' ? o.label : `${o.label} ${posCounts[o.key]}` }));
+      wrap.append(h('div', { class: 'section-title', text: '詞性' }));
+      wrap.append(h('div', { class: 'btn-grid', style: 'grid-template-columns:repeat(3,1fr);gap:8px' },
+        opts.map((o) => h('button', {
+          class: 'btn ' + (o.value === state.pos ? '' : 'secondary'),
+          style: 'font-size:14px;min-height:42px',
+          onclick: () => { state.pos = o.value; render(); }
+        }, o.label))));
+    }
 
     // 該組進度摘要
     const set = man.sets.find((s) => s.type === state.type && s.level === state.level);
@@ -110,14 +138,27 @@ export default async function learnView(ctx) {
   }
 
   async function start(mode, extra) {
+    const usePos = state.type === 'vocab' && state.pos !== DEFAULT_POS;
     await Promise.all([
       setSetting('lastType', state.type),
       setSetting('lastLevel', state.level),
-      setSetting('lastScope', state.scope)
+      setSetting('lastScope', state.scope),
+      setSetting('lastPos', state.pos)
     ]);
-    navigate('/study', { type: state.type, level: state.level, mode, scope: state.scope, ...extra });
+    navigate('/study', {
+      type: state.type, level: state.level, mode, scope: state.scope,
+      ...(usePos ? { pos: state.pos } : {}),
+      ...extra
+    });
   }
 
+  // 換級別或換練習內容時，詞性的數字要跟著重算（非同步 → 先畫一次再補上）
+  async function rerender() {
+    await refreshPosCounts();
+    render();
+  }
+
+  await refreshPosCounts();
   render();
   return wrap;
 }

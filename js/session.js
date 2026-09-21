@@ -156,7 +156,11 @@ export async function buildDistractors(item, type, level, n = 3, field) {
   const key = field || 'meaning';
   const seen = new Set([item[key]]);
   const out = [];
-  for (const cand of shuffle(pool)) {
+  // 干擾選項優先挑同詞性的：選了「動詞」還混進名詞的話，看詞性就能刪掉選項，題目會失去鑑別度。
+  // 同詞性不夠 n 個才往外補（第二輪）。沒有 pos 的項目（文法、旅行）兩輪都在後面那一批。
+  const samePos = item.pos ? shuffle(pool.filter((c) => c.pos === item.pos)) : [];
+  const rest = shuffle(item.pos ? pool.filter((c) => c.pos !== item.pos) : pool);
+  for (const cand of [...samePos, ...rest]) {
     if (cand.id === item.id) continue;
     const val = cand[key];
     if (!val || seen.has(val)) continue;

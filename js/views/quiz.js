@@ -1,5 +1,6 @@
 import { h, spinner, shuffle, progressBar, pct } from '../ui.js';
 import { buildSession, buildDistractors } from '../session.js';
+import { posFilter } from '../pos.js';
 import { loadMany, LEVELS } from '../data.js';
 import { recordAnswer, favoriteIdSet } from '../store.js';
 import { navigate } from '../router.js';
@@ -21,9 +22,13 @@ export default async function quizView(ctx) {
   const backTo = { travel: '/travel', review: '/review', mistakes: '/mistakes', favorites: '/favorites', weak: '/weak' }[src] || '/learn';
   const back = () => navigate(backTo);
   // 特殊題型只有部分題目適用，先在組卷階段篩掉
-  const filter = qtype === 'reading' ? canAskReading
+  const qFilter = qtype === 'reading' ? canAskReading
     : qtype === 'cloze' ? canAskCloze
       : null;
+  // 詞性篩選只作用在一般題庫；複習／錯題本／收藏／弱點／旅行不受影響，
+  // 網址被手動加上 pos 也一樣不理。兩個條件要同時成立，不是後者蓋掉前者。
+  const pFilter = src === 'set' ? posFilter(ctx.query.pos) : null;
+  const filter = qFilter && pFilter ? (it) => qFilter(it) && pFilter(it) : (qFilter || pFilter);
   const [{ items }, favSet] = await Promise.all([
     buildSession({
       type: qtype === 'reading' ? 'vocab' : (ctx.query.type || 'vocab'),

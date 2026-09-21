@@ -1,7 +1,7 @@
-/* 全面功能檢測回歸套件（113 項）
+/* 全面功能檢測回歸套件（135 項）
  * 用法：先跑 python scripts/serve.py，再 node scripts/audit.mjs [baseUrl]
  * 涵蓋 verify-full 沒測到的：資料層一致性、掌握度分母、路由健壯性、
- * 匯出匯入、孤兒紀錄、搜尋、收藏即時性、重置、SRS 邊界、聽力、特殊題型、模擬考、備份提醒。
+ * 匯出匯入、孤兒紀錄、搜尋、收藏即時性、重置、SRS 邊界、聽力、特殊題型、模擬考、備份提醒、詞性篩選。
  */
 import puppeteer from 'puppeteer';
 import { tmpdir } from 'node:os';
@@ -1299,6 +1299,288 @@ console.log('\n[21] 備份提醒與持久儲存');
   });
   ok(e9.length === 0, '備份提醒流程無 console 錯誤', e9.slice(0, 3).join(' | '));
   await p9.close();
+}
+
+/* ================= 22. 詞性篩選 ================= */
+console.log('\n[22] 詞性篩選');
+{
+  const p11 = await b.newPage();
+  await p11.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  const e11 = [];
+  p11.on('pageerror', (e) => e11.push('pageerror: ' + e.message));
+  p11.on('console', (m) => { if (m.type() === 'error') e11.push('console: ' + m.text()); });
+  const goQ = async (hash) => {
+    await p11.goto('about:blank');
+    await p11.goto(BASE + hash, { waitUntil: 'networkidle2' });
+    await p11.waitForFunction(() => document.querySelector('#view')?.children.length > 0, { timeout: 15000 }).catch(() => {});
+    await sleep(400);
+  };
+  await goQ('#/home');
+
+  // S1 資料層：每一級每個選項的數字＝題庫實際數出來的筆數
+  const s1 = await p11.evaluate(async () => {
+    const d = await import('./js/data.js');
+    const { countByPos, POS_OPTIONS } = await import('./js/pos.js');
+    const out = { levels: {}, badMap: [] };
+    for (const lv of d.LEVELS) {
+      const list = await d.loadSet('vocab', lv);
+      const counts = countByPos(list);
+      // 各選項獨立數一次（不透過 countByPos），當對照
+      const manual = {};
+      for (const o of POS_OPTIONS) manual[o.key] = list.filter((x) => o.match(x.pos)).length;
+      const dual = list.filter((x) => x.pos === '名詞・副詞').length;   // 名詞與副詞都會算到這一筆
+      const sumMain = ['verb', 'i-adj', 'na-adj', 'noun', 'adv', 'other'].reduce((s, k) => s + counts[k], 0);
+      out.levels[lv] = { total: list.length, counts, manual, dual, sumMain };
+      // い形容詞不可以對到「形容動詞（な形）」，反之亦然
+      if (list.some((x) => /形容動詞/.test(x.pos || '') && POS_OPTIONS.find((o) => o.key === 'i-adj').match(x.pos))) out.badMap.push(lv);
+    }
+    return out;
+  });
+  const lvKeys = Object.keys(s1.levels);
+  ok(lvKeys.length === 5 && lvKeys.every((lv) => s1.levels[lv].total > 0),
+    '[S1 前置] 五級單字都載得到（母體非空）', JSON.stringify(lvKeys.map((lv) => s1.levels[lv].total)));
+  ok(lvKeys.every((lv) => {
+    const v = s1.levels[lv];
+    return JSON.stringify(v.counts) === JSON.stringify(v.manual)   // 與逐項獨立數的結果一致
+      && v.counts.all === v.total
+      && v.sumMain === v.total + v.dual;                           // 「名詞・副詞」被名詞與副詞各算一次
+  }) && s1.badMap.length === 0,
+    '[S1] 各級各詞性的數字與題庫實際筆數相符；六類總和＝該級單字數＋「名詞・副詞」重複計數',
+    JSON.stringify(lvKeys.map((lv) => ({ lv, total: s1.levels[lv].total, verb: s1.levels[lv].counts.verb, dual: s1.levels[lv].dual }))));
+
+  // S2 真實入口：學習頁選「動詞」→ 測驗與閃卡都只出動詞
+  const verbCount = s1.levels.N5.counts.verb;
+  ok(verbCount >= 20, `[S2 前置] N5 動詞 ${verbCount} 個 ≥ 一輪 20 題`);
+  const posOf = async (hash) => p11.evaluate(async (h) => {
+    const { buildSession } = await import('./js/session.js');
+    const { posFilter } = await import('./js/pos.js');
+    const q = Object.fromEntries(new URLSearchParams(h.split('?')[1] || ''));
+    const { items } = await buildSession({
+      type: 'vocab', level: q.level, scope: 'random', src: 'set', filter: posFilter(q.pos)
+    });
+    return { n: items.length, kinds: [...new Set(items.map((i) => i.pos))] };
+  }, hash);
+  await goQ('#/learn?type=vocab&level=N5');
+  const learnHtml = await p11.evaluate(() => document.getElementById('view').innerText);
+  const verbSession = await posOf('?level=N5&pos=verb');
+  const allSession = await posOf('?level=N5&pos=all');
+  ok(verbSession.n === 20 && verbSession.kinds.every((k) => k === '動詞'),
+    '[S2] 選「動詞」後這一輪每一題都是動詞', JSON.stringify(verbSession));
+  ok(allSession.kinds.length >= 2, '[S2 對照] 選「全部」時一輪會出現兩種以上詞性', JSON.stringify(allSession.kinds));
+  // 閃卡：走真實畫面把整輪翻完，逐張讀卡片上的詞性標籤（閃卡以前根本沒傳 filter）
+  await goQ('#/study?type=vocab&level=N5&mode=flash&scope=random&pos=verb');
+  const flashKinds = [];
+  for (let i = 0; i < 20; i++) {
+    await p11.keyboard.press('Space');            // 翻卡（背面才有詞性標籤）
+    await sleep(120);
+    const pos = await p11.evaluate(() => document.querySelector('.flash-pos')?.textContent || null);
+    if (pos === null) break;
+    flashKinds.push(pos);
+    await p11.keyboard.press('3');                // 「認得」→ 下一張
+    await sleep(120);
+  }
+  ok(flashKinds.length >= 15, `[S2 前置] 閃卡這一輪真的翻到 ${flashKinds.length} 張卡（母體非空）`);
+  ok(flashKinds.length >= 15 && flashKinds.every((k) => k === '動詞'),
+    '[S2] 閃卡帶 pos=verb 時，整輪每一張都是動詞',
+    JSON.stringify([...new Set(flashKinds)]));
+
+  // S3 與題型篩選並存——一定要走真實入口（quiz.js 才是組合兩個 filter 的地方）
+  const s3pre = await p11.evaluate(async () => {
+    const { canAskCloze } = await import('./js/qtypes.js');
+    const d = await import('./js/data.js');
+    const pool = await d.loadSet('vocab', 'N5');
+    const verbs = pool.filter((x) => x.pos === '動詞');
+    return {
+      both: verbs.filter(canAskCloze).length,
+      verbOnly: verbs.filter((x) => !canAskCloze(x)).length,   // 只套詞性、漏掉題型時會跑出來的那一批
+      clozeOnly: pool.filter((x) => x.pos !== '動詞' && canAskCloze(x)).length
+    };
+  });
+  ok(s3pre.both >= 4 && s3pre.verbOnly >= 10 && s3pre.clozeOnly >= 10,
+    `[S3 前置] N5 交集 ${s3pre.both} 個非空，而且「只符合其中一個條件」的各有 ${s3pre.verbOnly}／${s3pre.clozeOnly} 個——兩種漏法都看得出來`);
+  await goQ('#/study?type=vocab&level=N5&mode=quiz&scope=random&qtype=cloze&pos=verb');
+  const prompts = [];
+  for (let i = 0; i < 20; i++) {
+    const t = await p11.evaluate(() => {
+      const el = document.querySelector('.q-prompt') || document.querySelector('#view');
+      return el ? el.textContent : '';
+    });
+    if (!t) break;
+    prompts.push(t);
+    const advanced = await p11.evaluate(() => {
+      const opt = document.querySelector('.opt:not([disabled])');
+      if (!opt) return false;
+      opt.click();
+      return true;
+    });
+    if (!advanced) break;
+    await sleep(150);
+    await p11.evaluate(() => document.querySelector('.quiz-next')?.click());
+    await sleep(150);
+  }
+  const s3 = await p11.evaluate(async (texts) => {
+    const { canAskCloze, findBlankSpan } = await import('./js/qtypes.js');
+    const d = await import('./js/data.js');
+    const pool = await d.loadSet('vocab', 'N5');
+    // 題幹是「挖空後的例句」→ 用同一支 findBlankSpan 還原每個候選字的題幹，再比對回它是哪個字
+    const byPrompt = [];
+    for (const x of pool) {
+      const sp = findBlankSpan(x);
+      if (!sp) continue;
+      byPrompt.push({ item: x, blanked: x.example.slice(0, sp.start) + '＿＿＿' + x.example.slice(sp.start + sp.text.length) });
+    }
+    const bad = [];
+    let matched = 0;
+    for (const t of texts) {
+      // 短句可能是長句的後綴（「家を＿＿＿ます。」也出現在「毎朝七時に家を＿＿＿ます。」裡），
+      // 所以取「相符之中最長的那一個」，不能用 find 拿第一個
+      let hit = null;
+      for (const e of byPrompt) {
+        if (t.includes(e.blanked) && (!hit || e.blanked.length > hit.blanked.length)) hit = e;
+      }
+      if (!hit) continue;
+      matched += 1;
+      const x = hit.item;
+      if (x.pos !== '動詞' || !canAskCloze(x)) bad.push({ w: x.kanji, pos: x.pos, cloze: canAskCloze(x) });
+    }
+    return { matched, bad };
+  }, prompts);
+  ok(s3.matched >= 5, `[S3 前置] 從畫面比對回題庫的題目有 ${s3.matched} 題（母體非空）`);
+  ok(s3.matched >= 5 && s3.bad.length === 0,
+    '[S3] 走真實入口「動詞＋例句填空」：每一題既是動詞、又適用填空題（不是後者蓋掉前者）',
+    JSON.stringify(s3.bad.slice(0, 3)));
+
+  // S4 入口參數：學習頁按鈕帶 pos；其他入口不帶
+  const s4 = await p11.evaluate(async () => {
+    const { setSetting } = await import('./js/store.js');
+    await setSetting('lastPos', 'verb');
+    return true;
+  });
+  await goQ('#/learn?type=vocab&level=N5&pos=verb');
+  const s4Href = await p11.evaluate(async () => {
+    const btn = [...document.querySelectorAll('button')].find((x) => /四選一測驗/.test(x.textContent));
+    if (!btn) return { clicked: false };
+    btn.click();
+    await new Promise((r) => setTimeout(r, 400));
+    return { clicked: true, hash: location.hash };
+  });
+  const otherEntries = [];
+  for (const [name, hash] of [['複習', '#/review'], ['錯題本', '#/mistakes'], ['收藏', '#/favorites'], ['弱點', '#/weak'], ['旅行', '#/travel']]) {
+    await goQ(hash);
+    const hrefs = await p11.evaluate(() => [...document.querySelectorAll('button')].map((x) => x.getAttribute('onclick') || '').join(' ') + ' ' + document.getElementById('view').innerHTML);
+    if (/[?&]pos=/.test(hrefs)) otherEntries.push(name);
+  }
+  ok(s4 && s4Href.clicked && /pos=verb/.test(s4Href.hash),
+    '[S4] 學習頁的「四選一測驗」把 pos 帶進網址', JSON.stringify(s4Href));
+  ok(otherEntries.length === 0,
+    '[S4] 複習／錯題本／收藏／弱點／旅行的入口都沒有帶 pos', otherEntries.join('、'));
+  // 網址硬加 pos 給非一般題庫的來源 → 不理它，也不能壞
+  await goQ('#/study?src=mistakes&mode=quiz&level=ALL&pos=verb');
+  const posIgnored = await p11.evaluate(() => !/pageerror/i.test(document.body.innerText) && document.getElementById('view').children.length > 0);
+  ok(posIgnored, '[S4] 非一般題庫的入口就算網址被加上 pos 也照常運作');
+
+  // S5 記住上次選擇；該詞性為 0 時退回全部
+  await goQ('#/learn?type=vocab&level=N5');
+  const remembered = await p11.evaluate(() => {
+    const btns = [...document.querySelectorAll('button')].filter((x) => /^動詞\s*\d+$/.test(x.textContent.trim()));
+    return btns.length === 1 && !btns[0].classList.contains('secondary');   // 沒有 secondary＝目前選中
+  });
+  // 「這個詞性在這一級是 0 個」目前五級都不會發生（六類都 > 0，見 S1 的數字），
+  // 所以退回「全部」這條路徑只能用合成的 counts 驗——這是學習頁實際呼叫的同一支函式。
+  const zeroFallback = await p11.evaluate(async () => {
+    const { resolvePos, countByPos } = await import('./js/pos.js');
+    const d = await import('./js/data.js');
+    let natural = 0;
+    for (const lv of d.LEVELS) {
+      const c = countByPos(await d.loadSet('vocab', lv));
+      natural += ['verb', 'i-adj', 'na-adj', 'noun', 'adv', 'other'].filter((k) => c[k] === 0).length;
+    }
+    return {
+      naturalZeros: natural,
+      zeroGoesAll: resolvePos('other', { other: 0, verb: 5 }),   // 合成樣本：這一級沒有「其他」
+      keepsWhenPresent: resolvePos('other', { other: 3, verb: 5 }),
+      unknownGoesAll: resolvePos('nope', { verb: 5 })
+    };
+  });
+  ok(remembered, '[S5] 記住上次選的詞性（離開再回學習頁仍是動詞）');
+  ok(zeroFallback.zeroGoesAll === 'all' && zeroFallback.keepsWhenPresent === 'other' && zeroFallback.unknownGoesAll === 'all',
+    `[S5] 詞性在該級是 0 個就退回「全部」、還有字就保留（目前五級自然發生的 0 有 ${zeroFallback.naturalZeros} 個，所以用合成 counts 驗）`,
+    JSON.stringify(zeroFallback));
+
+  // S6 池子比一輪小：有幾題出幾題、不重複；0 題走空池畫面
+  const s6 = await p11.evaluate(async () => {
+    const { buildSession } = await import('./js/session.js');
+    const d = await import('./js/data.js');
+    const { countByPos } = await import('./js/pos.js');
+    // 找一個非 0 但小於 20 的詞性，當作「池子比題數小」的情境
+    for (const lv of d.LEVELS) {
+      const list = await d.loadSet('vocab', lv);
+      const c = countByPos(list);
+      const k = ['other', 'adv', 'na-adj', 'i-adj', 'verb'].find((x) => c[x] > 0 && c[x] < 20);
+      if (k) {
+        const { posFilter } = await import('./js/pos.js');
+        const { items } = await buildSession({ type: 'vocab', level: lv, scope: 'random', src: 'set', filter: posFilter(k) });
+        return { lv, k, pool: c[k], n: items.length, uniq: new Set(items.map((i) => i.id)).size };
+      }
+    }
+    return null;
+  });
+  ok(s6 && s6.pool > 0 && s6.pool < 20, `[S6 前置] 找到比一輪 20 題小的池子：${JSON.stringify(s6)}`);
+  ok(s6 && s6.n === s6.pool && s6.uniq === s6.n,
+    '[S6] 池子比題數小 → 有幾題出幾題、沒有重複的 id', JSON.stringify(s6));
+  const emptyPool = await p11.evaluate(async () => {
+    const { buildSession } = await import('./js/session.js');
+    const { items } = await buildSession({
+      type: 'vocab', level: 'N5', scope: 'random', src: 'set', filter: () => false
+    });
+    return items.length;
+  });
+  await goQ('#/study?type=grammar&level=N5&mode=quiz&scope=random&pos=verb');
+  const grammarWithPos = await p11.evaluate(() => document.getElementById('view').innerText.slice(0, 40));
+  ok(emptyPool === 0 && grammarWithPos.length > 0,
+    '[S6] 空池不丟錯；文法帶著 pos 也照常出題（文法沒有 pos，不會被篩成 0）', grammarWithPos);
+
+  // S7 干擾選項優先同詞性
+  const s7 = await p11.evaluate(async () => {
+    const { buildDistractors } = await import('./js/session.js');
+    const d = await import('./js/data.js');
+    const pool = (await d.loadSet('vocab', 'N5')).filter((x) => x.pos === '動詞');
+    let same = 0, total = 0, uniq = true;
+    for (const item of pool.slice(0, 100)) {
+      const ds = await buildDistractors(item, 'vocab', 'N5', 3, 'meaning');
+      const vals = new Set([item.meaning, ...ds.map((x) => x.meaning)]);
+      if (vals.size !== ds.length + 1) uniq = false;
+      for (const x of ds) { total += 1; if (x.pos === item.pos) same += 1; }
+    }
+    return { poolVerbs: pool.length, same, total, ratio: total ? same / total : 0, uniq };
+  });
+  ok(s7.poolVerbs >= 4, `[S7 前置] N5 動詞 ${s7.poolVerbs} 個 ≥ 4`);
+  ok(s7.ratio >= 0.95 && s7.uniq,
+    `[S7] 動詞的干擾選項同詞性比例 ${(s7.ratio * 100).toFixed(1)}%（門檻 95%），且四個選項互異`,
+    JSON.stringify(s7));
+
+  // S8 SRS 不變：篩選只決定「從哪些字裡挑」，記分完全一樣
+  const s8 = await p11.evaluate(async () => {
+    const { recordAnswer, getProgress } = await import('./js/store.js');
+    const { idb } = await import('./js/db.js');
+    const d = await import('./js/data.js');
+    const item = (await d.loadSet('vocab', 'N5')).find((x) => x.pos === '動詞');
+    const run = async () => {
+      for (const s of ['progress', 'mistakes', 'daily']) await idb.clear(s);
+      await recordAnswer({ item, level: 'N5', type: 'vocab', grade: 'good' });
+      const r = await getProgress(item.id);
+      return { box: r.box, reps: r.reps, correct: r.correct, wrong: r.wrong };
+    };
+    const a = await run();   // 不篩選時
+    const b2 = await run();  // 篩選下（同一支 recordAnswer，篩選不介入記分）
+    for (const s of ['progress', 'mistakes', 'daily']) await idb.clear(s);
+    return { a, b2, same: JSON.stringify(a) === JSON.stringify(b2) };
+  });
+  ok(s8.same && s8.a.box === 1 && s8.a.reps === 1,
+    '[S8] 篩選下答對，進度的變化與不篩選時完全相同', JSON.stringify(s8));
+
+  ok(e11.length === 0 && /詞性/.test(learnHtml), '[S2] 學習頁出現「詞性」那一排且全程無 console 錯誤', e11.slice(0, 3).join(' | '));
+  await p11.close();
 }
 
 /* ================= 14. console ================= */
