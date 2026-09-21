@@ -156,6 +156,11 @@ const DAY_MS = 86400000;
 export const BACKUP_REMIND_DAYS = 14;
 /** 從沒匯出過的人，要先學過這麼多天才提醒：剛裝好、還沒東西可丟的人不打擾 */
 export const BACKUP_MIN_STUDY_DAYS = 3;
+/* 這兩個門檻算「幾天」的方式**刻意不一樣**，不要順手統一（會改掉行為）：
+ *  - BACKUP_MIN_STUDY_DAYS 數的是「有學習紀錄的日子」＝ studied > 0 || cards > 0。
+ *    只翻過閃卡也代表這個人已經投入了東西、丟掉會心疼，所以算數。
+ *  - 「上次匯出之後有沒有新東西」數的是「有作答的日子」＝ studied > 0。
+ *    翻閃卡不寫 progress，丟了也沒有進度會消失，不足以構成再提醒一次的理由。 */
 /** 「這週先不要」延後的天數（只有延後，沒有永久關閉：資料丟了救不回來） */
 export const BACKUP_SNOOZE_DAYS = 7;
 
