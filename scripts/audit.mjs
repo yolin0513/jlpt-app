@@ -1,7 +1,7 @@
-/* 全面功能檢測回歸套件（97 項）
+/* 全面功能檢測回歸套件（113 項）
  * 用法：先跑 python scripts/serve.py，再 node scripts/audit.mjs [baseUrl]
  * 涵蓋 verify-full 沒測到的：資料層一致性、掌握度分母、路由健壯性、
- * 匯出匯入、孤兒紀錄、搜尋、收藏即時性、重置、SRS 邊界、聽力、特殊題型、模擬考。
+ * 匯出匯入、孤兒紀錄、搜尋、收藏即時性、重置、SRS 邊界、聽力、特殊題型、模擬考、備份提醒。
  */
 import puppeteer from 'puppeteer';
 import { tmpdir } from 'node:os';
@@ -1064,6 +1064,241 @@ console.log('\n[20] 掌握度會前進');
   });
   ok(e8.length === 0, '掌握度流程測試無 console 錯誤', e8.join(' | '));
   await p8.close();
+}
+
+/* ================= 21. 備份提醒與持久儲存 ================= */
+console.log('\n[21] 備份提醒與持久儲存');
+{
+  const DAY = 86400000;
+  const p9 = await b.newPage();
+  await p9.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  const e9 = [];
+  p9.on('pageerror', (e) => e9.push('pageerror: ' + e.message));
+  p9.on('console', (m) => { if (m.type() === 'error') e9.push('console: ' + m.text()); });
+  // 匯出會觸發真的下載；不設這個，headless 點下去會失敗
+  const dl = await p9.createCDPSession();
+  await dl.send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: tmpdir() });
+  // persist()／persisted() 的呼叫次數與回傳值都要能操控，且必須在頁面載入前就換掉
+  await p9.evaluateOnNewDocument(() => {
+    window.__persistCalls = 0;
+    const real = navigator.storage;
+    if (real) {
+      Object.defineProperty(navigator, 'storage', {
+        configurable: true,
+        get: () => ({
+          persist: async () => { window.__persistCalls += 1; return true; },
+          // 用 localStorage 而不是 window 上的變數：換頁後 window 會重置，旗標要跨頁存活
+          persisted: async () => localStorage.getItem('__persisted') === '1',
+          estimate: real.estimate ? real.estimate.bind(real) : undefined
+        })
+      });
+    }
+  });
+  await p9.goto(BASE + '#/home', { waitUntil: 'networkidle2' });
+  await sleep(800);
+
+  const goP = async (hash) => {
+    await p9.goto('about:blank');
+    await p9.goto(BASE + hash, { waitUntil: 'networkidle2' });
+    await p9.waitForFunction(() => document.querySelector('#view')?.children.length > 0, { timeout: 15000 }).catch(() => {});
+    await sleep(400);
+  };
+  // 造情境：直接預置 IndexedDB（不需要釘時鐘），回傳值當前置斷言用
+  const preset = (cfg) => p9.evaluate(async (c) => {
+    const { idb } = await import('./js/db.js');
+    for (const s of ['meta', 'daily', 'progress', 'mistakes', 'favorites']) await idb.clear(s);
+    const day = 86400000;
+    const z = (n) => String(n).padStart(2, '0');
+    const key = (d) => `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`;
+    await idb.put('meta', { k: 'seenGuide', v: true });   // 引導卡會擋住要驗的文字
+    if (c.exportedDaysAgo != null) {
+      await idb.put('meta', { k: 'lastExportAt', v: new Date(Date.now() - c.exportedDaysAgo * day).toISOString() });
+    }
+    if (c.snoozeDaysFromNow != null) {
+      await idb.put('meta', { k: 'backupSnoozeUntil', v: new Date(Date.now() + c.snoozeDaysFromNow * day).toISOString() });
+    }
+    for (const ago of (c.studiedDaysAgo || [])) {
+      await idb.put('daily', { date: key(new Date(Date.now() - ago * day)), studied: 5, correct: 5, wrong: 0, cards: 0 });
+    }
+    return {
+      lastExportAt: (await idb.get('meta', 'lastExportAt'))?.v || null,
+      dailyRows: (await idb.getAll('daily')).length
+    };
+  }, cfg);
+  const homeText = () => p9.evaluate(() => document.getElementById('view').innerText);
+  const hasCard = async () => /該備份學習進度了/.test(await homeText());
+  // 找不到按鈕就回 false，不要對 null 呼叫 click()——那會讓整節中斷、後面的檢查連跑都沒跑到
+  const clickBtn = (src) => p9.evaluate((re) => {
+    const btn = [...document.querySelectorAll('button')].find((x) => new RegExp(re).test(x.textContent));
+    if (!btn) return false;
+    btn.click();
+    return true;
+  }, src);
+
+  // B1：15 天前匯出、之後有練 → 有卡，天數正確
+  const s1 = await preset({ exportedDaysAgo: 15, studiedDaysAgo: [0, 1, 2] });
+  ok(s1.lastExportAt !== null && s1.dailyRows === 3, '[B1 前置] 預置的 lastExportAt 與 daily 真的寫進 IndexedDB 了', JSON.stringify(s1));
+  await goP('#/home');
+  const t1 = await homeText();
+  ok(/該備份學習進度了/.test(t1) && /上次匯出是 15 天前/.test(t1) && /又練了 3 天/.test(t1),
+    '[B1] 15 天沒匯出、期間有練 → 首頁出現備份提醒卡，天數正確',
+    t1.split('\n').slice(0, 8).join(' | '));
+
+  // B2：13 天前匯出 → 還沒到 14 天，不提醒
+  await preset({ exportedDaysAgo: 13, studiedDaysAgo: [0, 1] });
+  await goP('#/home');
+  ok(!(await hasCard()), '[B2] 13 天前才匯出過 → 不提醒（門檻 14 天）');
+
+  // B3：15 天前匯出，但之後完全沒練 → 沒有新東西會丟，不提醒
+  const s3 = await preset({ exportedDaysAgo: 15, studiedDaysAgo: [20, 18] });
+  ok(s3.dailyRows === 2, '[B3 前置] daily 只有早於上次匯出的日子', JSON.stringify(s3));
+  await goP('#/home');
+  ok(!(await hasCard()), '[B3] 太久沒匯出但期間沒有新進度 → 不提醒');
+
+  // B4：從沒匯出過 → 學 2 天不提醒、3 天才提醒
+  await preset({ exportedDaysAgo: null, studiedDaysAgo: [0, 1] });
+  await goP('#/home');
+  const never2 = await hasCard();
+  await preset({ exportedDaysAgo: null, studiedDaysAgo: [0, 1, 2] });
+  await goP('#/home');
+  const t4 = await homeText();
+  ok(!never2 && /該備份學習進度了/.test(t4) && /還沒有匯出過備份/.test(t4),
+    '[B4] 從沒匯出過：學 2 天不提醒、3 天才提醒且文字是「還沒有匯出過」',
+    `2 天有卡=${never2} / ${t4.split('\n').slice(0, 6).join(' | ')}`);
+
+  // B5：真實入口——按卡上的「現在匯出」
+  const before5 = await preset({ exportedDaysAgo: 15, studiedDaysAgo: [0, 1, 2] });
+  await p9.evaluate(async () => {
+    const { idb } = await import('./js/db.js');
+    await idb.put('progress', { itemId: 'n5-v-0001', level: 'N5', type: 'vocab', box: 2, due: Date.now(), reps: 3, correct: 3, wrong: 0, updated: Date.now() });
+    await idb.put('mistakes', { itemId: 'n5-v-0002', level: 'N5', type: 'vocab', count: 1, resolved: false, lastWrong: Date.now() });
+    await idb.put('favorites', { itemId: 'n5-v-0003', level: 'N5', type: 'vocab', added: Date.now() });
+  });
+  const snap = () => p9.evaluate(async () => {
+    const { idb } = await import('./js/db.js');
+    const out = {};
+    for (const s of ['progress', 'mistakes', 'daily', 'favorites']) {
+      out[s] = JSON.stringify((await idb.getAll(s)).sort((a, x) => String(a.itemId || a.date) < String(x.itemId || x.date) ? -1 : 1));
+    }
+    return out;
+  });
+  await goP('#/home');
+  ok(before5.lastExportAt !== null && (await hasCard()), '[B5 前置] 按之前卡在畫面上');
+  const learnBefore = await snap();
+  const clicked5 = await clickBtn('現在匯出');
+  await sleep(900);
+  const after5 = await p9.evaluate(async () => {
+    const { idb } = await import('./js/db.js');
+    return {
+      lastExportAt: (await idb.get('meta', 'lastExportAt'))?.v || null,
+      snooze: (await idb.get('meta', 'backupSnoozeUntil'))?.v || null,
+      persistCalls: window.__persistCalls,
+      cardGone: !/該備份學習進度了/.test(document.getElementById('view').innerText)
+    };
+  });
+  const learnAfter = await snap();
+  ok(clicked5 && after5.lastExportAt !== before5.lastExportAt && Date.parse(after5.lastExportAt) > Date.now() - 60000
+     && after5.cardGone && after5.snooze === null,
+    '[B5] 按「現在匯出」→ 走同一支匯出、寫入 lastExportAt、卡消失、snooze 被清掉', JSON.stringify(after5));
+  ok(['progress', 'mistakes', 'daily', 'favorites'].every((s) => learnBefore[s] === learnAfter[s]),
+    '[B5] 匯出前後 progress／mistakes／daily／favorites 逐筆相同（匯出不改學習資料）');
+  ok(after5.persistCalls === 1, `[B10] 只有按匯出才呼叫 persist()，載入首頁時是 0、按完是 1（實際 ${after5.persistCalls}）`);
+
+  // B6：「這週先不要」
+  await preset({ exportedDaysAgo: 15, studiedDaysAgo: [0, 1, 2] });
+  await goP('#/home');
+  const clicked6 = await clickBtn('這週先不要');
+  await sleep(400);
+  const goneNow = await p9.evaluate(() => !/該備份學習進度了/.test(document.getElementById('view').innerText));
+  await goP('#/home');
+  const goneAfterReload = !(await hasCard());
+  await p9.evaluate(async () => {
+    const { idb } = await import('./js/db.js');
+    await idb.put('meta', { k: 'backupSnoozeUntil', v: new Date(Date.now() - 86400000).toISOString() });
+  });
+  await goP('#/home');
+  ok(clicked6 && goneNow && goneAfterReload && (await hasCard()),
+    '[B6] 「這週先不要」→ 卡消失、重新整理仍不出現；snooze 過期後卡回來',
+    `按到按鈕=${clicked6} 當下=${goneNow} 重載=${goneAfterReload}`);
+
+  // B7：匯出失敗就不能記 lastExportAt（否則提醒被錯誤地消掉）
+  const before7 = await preset({ exportedDaysAgo: 15, studiedDaysAgo: [0, 1, 2] });
+  await goP('#/home');
+  const fail7 = await p9.evaluate(async () => {
+    const real = URL.createObjectURL;
+    URL.createObjectURL = () => { throw new Error('測試注入：下載失敗'); };
+    const btn = [...document.querySelectorAll('button')].find((x) => /現在匯出/.test(x.textContent));
+    if (btn) btn.click();
+    await new Promise((r) => setTimeout(r, 600));
+    URL.createObjectURL = real;
+    const { idb } = await import('./js/db.js');
+    return {
+      clicked: !!btn,
+      lastExportAt: (await idb.get('meta', 'lastExportAt'))?.v || null,
+      stillThere: /該備份學習進度了/.test(document.getElementById('view').innerText),
+      toast: document.body.innerText.includes('匯出失敗')
+    };
+  });
+  ok(fail7.clicked && fail7.lastExportAt === before7.lastExportAt && fail7.stillThere && fail7.toast,
+    '[B7] 匯出失敗 → lastExportAt 不變、提醒卡還在、畫面說匯出失敗', JSON.stringify(fail7));
+
+  // B8：匯入備份 → lastExportAt 變成那份備份的時間；resetAll 之後不提醒
+  const imported = await p9.evaluate(async () => {
+    const { importAll, resetAll } = await import('./js/store.js');
+    const { idb } = await import('./js/db.js');
+    const day = 86400000;
+    const z = (n) => String(n).padStart(2, '0');
+    const key = (d) => `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`;
+    const exportedAt = new Date(Date.now() - 20 * day).toISOString();
+    await importAll({
+      version: 3, exportedAt, idScheme: 'positional-v1',
+      progress: [], mistakes: [], favorites: [], meta: [],
+      daily: [0, 1].map((ago) => ({ date: key(new Date(Date.now() - ago * day)), studied: 4, correct: 4, wrong: 0, cards: 0 }))
+    }, 'replace');
+    const afterImport = (await idb.get('meta', 'lastExportAt'))?.v || null;
+    return { exportedAt, afterImport };
+  });
+  await goP('#/home');
+  const cardAfterImport = await hasCard();
+  await p9.evaluate(async () => {
+    const { resetAll } = await import('./js/store.js');
+    await resetAll();
+  });
+  await goP('#/home');
+  ok(imported.afterImport === imported.exportedAt && cardAfterImport && !(await hasCard()),
+    '[B8] 匯入後 lastExportAt＝備份的 exportedAt；resetAll 清掉學習紀錄後不再提醒',
+    JSON.stringify(imported));
+
+  // B9：統計頁那一行照實寫 persisted() 的結果；navigator.storage 不存在也不能壞
+  await p9.evaluate(() => localStorage.setItem('__persisted', '1'));
+  await goP('#/stats');
+  const yes9 = await p9.evaluate(() => document.getElementById('view').innerText);
+  await p9.evaluate(() => localStorage.setItem('__persisted', '0'));
+  await goP('#/stats');
+  const no9 = await p9.evaluate(() => document.getElementById('view').innerText);
+  ok(/已答應不會自動清掉/.test(yes9) && !/已答應不會自動清掉/.test(no9) && /可能在空間不足時清掉/.test(no9),
+    '[B9] 持久儲存那一行：答應了與沒答應顯示不同且照實的句子');
+  const p10 = await b.newPage();
+  const e10 = [];
+  p10.on('pageerror', (e) => e10.push('pageerror: ' + e.message));
+  await p10.evaluateOnNewDocument(() => {
+    Object.defineProperty(navigator, 'storage', { configurable: true, get: () => undefined });
+  });
+  await p10.goto(BASE + '#/stats', { waitUntil: 'networkidle2' });
+  await p10.waitForFunction(() => document.querySelector('#view')?.children.length > 0, { timeout: 15000 }).catch(() => {});
+  await sleep(500);
+  const noApi = await p10.evaluate(() => document.getElementById('view').innerText);
+  ok(/資料管理/.test(noApi) && /可能在空間不足時清掉/.test(noApi) && e10.length === 0,
+    '[B9] 瀏覽器沒有 navigator.storage 時，統計頁照常畫出來且不報錯', e10.join(' | '));
+  await p10.close();
+
+  // 收尾：把這一節造出來的狀態清掉，避免污染後面的檢查
+  await p9.evaluate(async () => {
+    const { idb } = await import('./js/db.js');
+    for (const s of ['meta', 'daily', 'progress', 'mistakes', 'favorites']) await idb.clear(s);
+  });
+  ok(e9.length === 0, '備份提醒流程無 console 錯誤', e9.slice(0, 3).join(' | '));
+  await p9.close();
 }
 
 /* ================= 14. console ================= */

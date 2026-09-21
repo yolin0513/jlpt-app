@@ -1,6 +1,9 @@
 import { h, progressBar, pct, spinner } from '../ui.js';
 import { getManifest, getTravelManifest, LEVELS } from '../data.js';
-import { progressMap, dailyFor, streak, getDailyGoal, allFavorites, getSetting, setSetting } from '../store.js';
+import { progressMap, dailyFor, streak, getDailyGoal, allFavorites, getSetting, setSetting,
+  backupReminder, snoozeBackupReminder } from '../store.js';
+import { downloadBackup } from '../backup.js';
+import { toast } from '../ui.js';
 import { idb } from '../db.js';
 import { LEARNED_BOX, stageOf, forecast } from '../srs.js';
 import { navigate } from '../router.js';
@@ -9,7 +12,7 @@ export default async function homeView() {
   const wrap = h('div');
   wrap.append(spinner());
 
-  const [man, tm, pmap, today, st, due, goal, favs, seenGuide] = await Promise.all([
+  const [man, tm, pmap, today, st, due, goal, favs, seenGuide, backup] = await Promise.all([
     getManifest(),
     getTravelManifest(),
     progressMap(),
@@ -18,7 +21,8 @@ export default async function homeView() {
     idb.dueProgress(),
     getDailyGoal(),
     allFavorites(),
-    getSetting('seenGuide', false)
+    getSetting('seenGuide', false),
+    backupReminder()
   ]);
   wrap.replaceChildren();
 
@@ -57,6 +61,34 @@ export default async function homeView() {
     h('div', { style: 'margin-top:12px' }, [progressBar(Math.min(doneToday, goal), goal, doneToday >= goal)]),
     doneToday >= goal ? h('div', { class: 'small', style: 'color:var(--good);margin-top:6px', text: '🎯 今日目標達成！' }) : null
   ]));
+
+  // ---- 備份提醒 ----
+  // 學習進度只存在這一個瀏覽器，沒有後端也沒有第二份。太久沒匯出、而且這段期間真的有練，
+  // 才提醒一次；放在今日概況之後、待複習之前，不擋主要動線。
+  if (backup.show) {
+    const card = h('div', { class: 'card guide-card' }, [
+      h('div', { class: 'tile-title', text: '💾 該備份學習進度了' }),
+      h('p', { class: 'small', style: 'margin:6px 0 10px' }, backup.never
+        ? `你已經學了 ${backup.studyDays} 天，但還沒有匯出過備份。學習進度只存在這台裝置的這個瀏覽器裡，沒有別的副本；換裝置、清除瀏覽資料或移除 App 都會一起消失。`
+        : `上次匯出是 ${backup.days} 天前，之後你又練了 ${backup.studyDaysSince} 天。學習進度只存在這台裝置的這個瀏覽器裡，沒有別的副本；建議現在匯出一份存起來。`),
+      h('div', { class: 'row', style: 'gap:8px;flex-wrap:wrap' }, [
+        h('button', {
+          class: 'btn', onclick: async () => {
+            try { await downloadBackup(); } catch (err) { toast('匯出失敗：' + err.message); return; }
+            toast('已匯出');
+            card.remove();
+          }
+        }, '⬇️ 現在匯出'),
+        h('button', {
+          class: 'btn ghost', onclick: async () => {
+            await snoozeBackupReminder();
+            card.remove();
+          }
+        }, '這週先不要')
+      ])
+    ]);
+    wrap.append(card);
+  }
 
   // ---- 待複習 ----
   // 第一天練完，所有項目的 due 都在 1 天後 → 這裡一定是 0。

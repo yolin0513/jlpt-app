@@ -1,7 +1,8 @@
 import { h, spinner, pct, progressBar, toast } from '../ui.js';
 import { getManifest, getTravelManifest, TRAVEL_CATS, LEVELS } from '../data.js';
-import { allProgress, allDaily, streak, todayKey, exportAll, importAll, inspectBackup,
+import { allProgress, allDaily, streak, todayKey, importAll, inspectBackup,
   resetAll, setSetting, getDailyGoal, setDailyGoal, allFavorites } from '../store.js';
+import { downloadBackup, persistedState } from '../backup.js';
 import { LEARNED_BOX, stageOf, tallyStages } from '../srs.js';
 import { navigate } from '../router.js';
 import { isSupported as ttsSupported, getAutoSpeak, setAutoSpeak, hasJapaneseVoice,
@@ -191,19 +192,30 @@ export default async function statsView() {
   mgmt.append(fileInput);
   mgmt.append(h('button', { class: 'btn secondary', style: 'margin-bottom:10px', onclick: () => fileInput.click() }, '⬆️ 匯入學習資料'));
   mgmt.append(h('button', { class: 'btn ghost', style: 'color:var(--bad);border-color:var(--bad)', onclick: doReset }, '🗑 重置所有進度'));
+  // 持久儲存：照實寫瀏覽器答應了什麼，不要講成「資料安全了」
+  const persistLine = h('div', { class: 'small muted', style: 'margin-top:10px' }, '　');
+  mgmt.append(persistLine);
+  refreshPersistLine();
   wrap.append(mgmt);
 
-  wrap.append(h('p', { class: 'small muted', style: 'text-align:center;margin-top:16px' }, 'JLPT 練習 v1.9.0・資料僅儲存在此瀏覽器'));
+  wrap.append(h('p', { class: 'small muted', style: 'text-align:center;margin-top:16px' }, 'JLPT 練習 v1.14.0・資料僅儲存在此瀏覽器'));
 
   async function doExport() {
-    const data = await exportAll({ dataVersion: man.dataVersion });
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `jlpt-progress-${todayKey()}.json`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    try {
+      await downloadBackup();
+    } catch (err) {
+      toast('匯出失敗：' + err.message);   // 失敗就不會記 lastExportAt，提醒卡會留著
+      return;
+    }
     toast('已匯出');
+    refreshPersistLine();
+  }
+  function refreshPersistLine() {
+    persistedState().then((v) => {
+      persistLine.textContent = v
+        ? '💾 這個瀏覽器已答應不會自動清掉這裡的資料（你自己清除瀏覽資料或移除 App 時仍然會清掉）'
+        : '⚠️ 這個瀏覽器可能在空間不足時清掉這裡的資料，請定期匯出備份';
+    });
   }
   async function doImport(e) {
     const file = e.target.files[0];
