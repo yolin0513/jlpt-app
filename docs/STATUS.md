@@ -289,14 +289,14 @@ Windows 使用者資料夾與 gmail 兩個分支從來沒被對照過；共用�
 ```bash
 PAT='c:[/\\]users[/\\]|/c/user[s]/|local-agent-mod[e]|@gmail\.com'
 # 1) 對照組：當場組出來的合成樣本，四個分支各一條——必須印 4（少一條就是某個分支壞了，不要往下跑）
-printf '%s\n' "C:\\Us""ers\\x" "/c/us""ers/x" "local-agent""-mode" "a@gm""ail.com" | grep -c -i -E "$PAT"
+printf '%s\n' "C"":\\Us""ers\\x" "/c/us""ers/x" "local-agent""-mode" "a@gm""ail.com" | grep -c -i -E "$PAT"
 # 2) 反例：泛稱路徑、系統路徑、網址、noreply——必須印 0
-printf '%s\n' '$HOME/.config/gh' '~/.config/gh' 'C:/Windows/Fonts/msjh.ttc' 'https://github.com/users/x' 'x@users.noreply.github.com' 'file:///C:/Windows/x' | grep -c -i -E "$PAT"
+printf '%s\n' '$HOME/.config/gh' '~/.config/gh' "C"":/Windows/Fonts/msjh.ttc" 'https://github.com/us''ers/x' 'x@users.noreply.github.com' "file:///C"":/Windows/x" | grep -c -i -E "$PAT"
 # 3) 真正的掃描（--untracked 才會連還沒 add 的新檔一起查）——必須沒有任何輸出
 git grep --untracked -n -i -E "$PAT"
 ```
 
-幾個刻意的寫法：樣本用 `"..""..."` 拆開、`PAT` 用 `user[s]`／`mod[e]` 這種寫法，是為了讓**這段文字本身不會被第 3 步命中**——所以第 3 步預期是零命中，有任何輸出都要看。
+幾個刻意的寫法：樣本用 `"..""..."` 拆開（連磁碟機代號也拆，免得這段文字被公開前自查的路徑樣式命中）、`PAT` 用 `user[s]`／`mod[e]` 這種寫法，是為了讓**這段文字本身不會被第 3 步命中**——所以第 3 步預期是零命中，有任何輸出都要看。
 2026-09-23 實測：第 1 步 4、每條樣本單獨跑各 1、第 2 步 0；把 gmail 分支或 Windows 反斜線分支改壞，第 1 步都掉成 3（會叫）。
 這一組只抓最常見的四種；完整的四類公開前自查（金鑰、email、使用者名稱、本機路徑）照共用慣例與各份工單的做法另外跑。
 
