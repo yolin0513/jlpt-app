@@ -3,6 +3,7 @@
 # 而且每一種都比對「是哪一關、哪一類擋的」，不是只比回傳值。
 #   bash scripts/test_pushsafe.sh                                   # 正常：全部符合預期回 0，否則回 1
 #   TEST_PUSHSAFE_MUTATE=nofetch bash scripts/test_pushsafe.sh      # 突變：閘門拿掉「取遠端實際狀態」那一步
+#   TEST_PUSHSAFE_MUTATE=nometa  bash scripts/test_pushsafe.sh      # 突變：自查不掃 commit 訊息與作者欄
 # 完全不碰 GitHub：在暫存目錄建一個 bare repo 當假遠端，複製本 repo「已 commit 的內容」過去跑。
 # 所以改了閘門要先在本機 commit（先不推）再跑這支。
 set -u
@@ -54,10 +55,20 @@ PY
   git show HEAD:scripts/pushsafe.sh | grep -q 'fetch -q origin main' && die "HEAD 裡的閘門還有 fetch，突變沒生效"
   git diff --quiet HEAD -- scripts/pushsafe.sh || die "工作區的閘門跟 HEAD 不同，跑到的不是改壞的那一版"
   echo "MUTATION ACTIVE: nofetch（HEAD 與工作區的 scripts/pushsafe.sh 都沒有 fetch；blob $(git rev-parse --short HEAD:scripts/pushsafe.sh)）"
+elif [ "$MUTATE" = nometa ]; then
+  sed -i 's/^    mhits = scan(meta)$/    mhits = []/' scripts/selfcheck_public.py
+  git commit -q -am "MUTATION: 自查不掃 commit 訊息與作者欄" || die "commit 改壞的自查"
+  git show HEAD:scripts/selfcheck_public.py | grep -q '^    mhits = \[\]$' || die "HEAD 裡的自查沒改到，突變沒生效"
+  git diff --quiet HEAD -- scripts/selfcheck_public.py || die "工作區的自查跟 HEAD 不同，跑到的不是改壞的那一版"
+  echo "MUTATION ACTIVE: nometa（HEAD 與工作區的 scripts/selfcheck_public.py 都不掃訊息與作者欄；blob $(git rev-parse --short HEAD:scripts/selfcheck_public.py)）"
+elif [ -n "$MUTATE" ]; then
+  die "不認得的突變 $MUTATE"
 fi
 git push -q origin main || die "初始推送到假遠端"
 
 rhead() { git --git-dir="$T/remote.git" rev-parse --short main; }
+# 情境若在突變下漏到假遠端，把假遠端與本機的追蹤分支還原成開始前的狀態，後面的情境才不會被污染
+restore_remote() { git --git-dir="$T/remote.git" update-ref refs/heads/main "$1" && git fetch -q origin main || die "還原假遠端"; }
 bad=0
 check() {  # check 名稱 期望rc 實際rc 期望假遠端(same|local) before must... [-- mustnot...]
   local name="$1" want="$2" got="$3" expect="$4" before="$5"; shift 5
@@ -78,7 +89,7 @@ hitfile() { printf '%s%s\n' 'path E' ':\foo' > "$1"; }   # 當場組出來的合
 b="$(rhead)"
 hitfile hit.txt
 git add hit.txt && git commit -q -m "synthetic hit" || die "造命中的 commit"
-rc="$(run)"; check "1 新增行命中自查" 1 "$rc" same "$b" 'PUSHSAFE: 自查失敗' 'path 命中' -- '沒有要推的 commit' '取不到遠端'
+rc="$(run)"; check "1 新增行命中自查" 1 "$rc" same "$b" 'PUSHSAFE: 自查失敗' 'path 命中 1 行（新增行）' -- '（commit 訊息或作者欄）' '沒有要推的 commit' '取不到遠端'
 git reset -q --soft HEAD~1 && git rm -q --cached hit.txt && rm hit.txt || die "撤掉命中的 commit"
 
 # 2) 自查的對照組弄壞（email 對照組的頂級網域改成一個字母，樣式就抓不到它）
@@ -116,6 +127,22 @@ rc="$(run)"; check "6 全部正常" 0 "$rc" local "$b" 'SELF-CHECK OK' 'PUSHSAFE
 # 7) 沒有要推的 commit → 自查擋下
 b="$(rhead)"
 rc="$(run)"; check "7 沒有要推的 commit" 1 "$rc" same "$b" 'PUSHSAFE: 自查失敗' '沒有要推的 commit' -- 'path 命中'
+
+# 9) 命中寫在 commit 訊息裡（檔案本身乾淨）
+b="$(rhead)"; bf="$(git --git-dir="$T/remote.git" rev-parse main)"
+echo "m9 $(date +%s)" > m9.txt
+git add m9.txt && git commit -q -m "$(printf '%s%s' 'msg path E' ':\foo')" || die "造訊息帶命中的 commit"
+rc="$(run)"; check "9 命中寫在 commit 訊息裡" 1 "$rc" same "$b" 'PUSHSAFE: 自查失敗' 'path 命中 1 行（commit 訊息或作者欄）' -- '（新增行）' '沒有要推的 commit'
+git reset -q --soft HEAD~1 && git rm -q --cached m9.txt && rm m9.txt || die "撤掉情境 9 的 commit"
+restore_remote "$bf"
+
+# 10) 作者與提交者的信箱不是 noreply（當場組出來的合成信箱，不寫進任何檔）
+b="$(rhead)"; bf="$(git --git-dir="$T/remote.git" rev-parse main)"
+echo "m10 $(date +%s)" > m10.txt
+git add m10.txt && git -c user.email="$(printf '%s@%s' 'someone' 'example.org')" commit -q -m "author test" || die "造作者信箱的 commit"
+rc="$(run)"; check "10 作者信箱不是 noreply" 1 "$rc" same "$b" 'PUSHSAFE: 自查失敗' 'email 命中' '（commit 訊息或作者欄）' -- '（新增行）' '沒有要推的 commit'
+git reset -q --soft HEAD~1 && git rm -q --cached m10.txt && rm m10.txt || die "撤掉情境 10 的 commit"
+restore_remote "$bf"
 
 # 8) 本機以為已經推上去、遠端其實沒有（v8）：帶命中的 commit 繞過閘門推上假遠端、抓回來，再把假遠端倒退
 BASE="$(git --git-dir="$T/remote.git" rev-parse main)"

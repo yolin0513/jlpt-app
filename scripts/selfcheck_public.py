@@ -1,5 +1,5 @@
-"""公開前自查（推送閘門的第一關）：掃「所有還沒推的 commit」的新增行，查四類——金鑰或 token、email、
-本機使用者名稱、本機路徑。
+"""公開前自查（推送閘門的第一關）：掃「所有還沒推的 commit」的新增行，以及每個 commit 的訊息與作者、提交者的
+名字與信箱，查四類——金鑰或 token、email、本機使用者名稱、本機路徑。命中時標明是「新增行」還是「commit 訊息或作者欄」。
 
 回傳值：0＝通過；1＝有命中、任何一類的對照組沒命中、取不到使用者名稱、或沒有要推的 commit（都不該推）。
 由 scripts/pushsafe.sh 呼叫；也可以單獨跑：python scripts/selfcheck_public.py [基準，預設 origin/main]
@@ -38,6 +38,12 @@ if rc != 0:
     print('SELF-CHECK FAILED: 取不到 diff')
     sys.exit(1)
 added = [l[1:] for l in patch.split('\n') if l.startswith('+') and not l.startswith('+++')]
+# commit 訊息與作者、提交者的名字與信箱：一樣會永久留在公開歷史裡（共用慣例 v8 §2.5「自查的範圍」）
+rc, meta_raw = git('log', '--format=%an%n%ae%n%cn%n%ce%n%B%x00', f'{base}..HEAD')
+if rc != 0:
+    print('SELF-CHECK FAILED: 取不到 commit 訊息與作者欄')
+    sys.exit(1)
+meta = [l for l in meta_raw.replace('\x00', '\n').split('\n') if l.strip()]
 
 user = os.environ.get('USERNAME') or os.environ.get('USER') or ''
 if not user:
@@ -69,21 +75,27 @@ failed = []
 for k, rx in checks.items():
     c = controls[k]
     chit = any(not email_ok(m) for m in rx.findall(c)) if k == 'email' else bool(rx.search(c))
-    hits = []
-    for line in added:
-        if k == 'email':
-            if any(not email_ok(m) for m in rx.findall(line)):
-                hits.append(line)
-        elif rx.search(line):
-            hits.append(line)
-    print(f'{k}: control_hit={chit} added_hits={len(hits)}')
+    def scan(lines):
+        out = []
+        for line in lines:
+            if k == 'email':
+                if any(not email_ok(m) for m in rx.findall(line)):
+                    out.append(line)
+            elif rx.search(line):
+                out.append(line)
+        return out
+    hits = scan(added)
+    mhits = scan(meta)
+    print(f'{k}: control_hit={chit} added_hits={len(hits)} meta_hits={len(mhits)}')
     if not chit:
         failed.append(f'{k} 對照組沒命中（檢查器壞了，零命中不可信）')
     if hits:
-        failed.append(f'{k} 命中 {len(hits)} 行')
-    for h in hits[:5]:
+        failed.append(f'{k} 命中 {len(hits)} 行（新增行）')
+    if mhits:
+        failed.append(f'{k} 命中 {len(mhits)} 行（commit 訊息或作者欄）')
+    for h in (hits + mhits)[:5]:
         print('   ', '(使用者名稱，不印)' if k == 'user' else h[:160])
-print(f'commits: {len(commits)}  added lines: {len(added)}')
+print(f'commits: {len(commits)}  added lines: {len(added)}  meta lines: {len(meta)}')
 if failed:
     print('SELF-CHECK FAILED: ' + '；'.join(failed))
     sys.exit(1)
