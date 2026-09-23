@@ -1,0 +1,90 @@
+"""公開前自查（推送閘門的第一關）：掃「所有還沒推的 commit」的新增行，查四類——金鑰或 token、email、
+本機使用者名稱、本機路徑。
+
+回傳值：0＝通過；1＝有命中、任何一類的對照組沒命中、取不到使用者名稱、或沒有要推的 commit（都不該推）。
+由 scripts/pushsafe.sh 呼叫；也可以單獨跑：python scripts/selfcheck_public.py [基準，預設 origin/main]
+
+寫法上的刻意之處：
+- 對照組是當場組出來的合成樣本，跑的是同一個樣式（共用慣例 §5.3）；樣本與樣式都拆開寫，
+  讓這支檔本身的文字不會被自己的掃描命中（這支檔進 repo 時也會被掃到）。
+- 掃的是每一個 commit 的新增行（git log -p），不是只看最後一個：中間 commit 加了又刪掉的內容，推上去照樣在歷史裡。
+- 使用者名稱只從環境變數取，不寫進任何檔、命中時也不印出那一行。
+"""
+import io
+import os
+import re
+import subprocess
+import sys
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+
+def git(*args):
+    r = subprocess.run(['git', *args], capture_output=True)
+    return r.returncode, r.stdout.decode('utf-8', 'replace')
+
+
+base = sys.argv[1] if len(sys.argv) > 1 else 'origin/main'
+rc, commits = git('rev-list', f'{base}..HEAD')
+if rc != 0:
+    print(f'SELF-CHECK FAILED: 算不出 {base}..HEAD（基準不存在？）')
+    sys.exit(1)
+commits = [c for c in commits.split() if c]
+if not commits:
+    print(f'SELF-CHECK FAILED: {base}..HEAD 沒有要推的 commit')
+    sys.exit(1)
+rc, patch = git('log', '--format=', '-p', '-U0', '--no-color', f'{base}..HEAD')
+if rc != 0:
+    print('SELF-CHECK FAILED: 取不到 diff')
+    sys.exit(1)
+added = [l[1:] for l in patch.split('\n') if l.startswith('+') and not l.startswith('+++')]
+
+user = os.environ.get('USERNAME') or os.environ.get('USER') or ''
+if not user:
+    print('SELF-CHECK FAILED: 取不到本機使用者名稱（USERNAME／USER 都是空的），這一類沒辦法查')
+    sys.exit(1)
+
+U = 'U' + 'sers'   # 拆開寫：這支檔本身不能出現「斜線＋Users＋斜線」
+checks = {
+    'secret': re.compile(r'(gh' r'p_|gh' r'o_|github' r'_pat_|sk-an' r't-|sk-[A-Za-z0-9]{20,}|AK' r'IA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY)'),
+    'email': re.compile(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'),
+    'user': re.compile(re.escape(user)),
+    'path': re.compile(r'(?<![A-Za-z])[A-Za-z]:[\\/]|/[a-z]/' + U + '/|[\\/]' + U + r'[\\/]', re.I),
+}
+
+
+def email_ok(m):
+    return m.endswith('@' + 'users.noreply.github.com') or m == 'noreply' + '@' + 'anthropic.com'
+
+
+# 對照組：當場組出來的合成樣本，每一類一個，必須命中
+controls = {
+    'secret': 'token ' + 'gh' + 'p_' + 'A' * 36,
+    'email': 'x' + 'yz' + '@' + 'example' + '.org',
+    'user': 'home ' + user + ' x',
+    'path': 'E' + ':' + '\\' + 'foo',
+}
+
+failed = []
+for k, rx in checks.items():
+    c = controls[k]
+    chit = any(not email_ok(m) for m in rx.findall(c)) if k == 'email' else bool(rx.search(c))
+    hits = []
+    for line in added:
+        if k == 'email':
+            if any(not email_ok(m) for m in rx.findall(line)):
+                hits.append(line)
+        elif rx.search(line):
+            hits.append(line)
+    print(f'{k}: control_hit={chit} added_hits={len(hits)}')
+    if not chit:
+        failed.append(f'{k} 對照組沒命中（檢查器壞了，零命中不可信）')
+    if hits:
+        failed.append(f'{k} 命中 {len(hits)} 行')
+    for h in hits[:5]:
+        print('   ', '(使用者名稱，不印)' if k == 'user' else h[:160])
+print(f'commits: {len(commits)}  added lines: {len(added)}')
+if failed:
+    print('SELF-CHECK FAILED: ' + '；'.join(failed))
+    sys.exit(1)
+print('SELF-CHECK OK')
