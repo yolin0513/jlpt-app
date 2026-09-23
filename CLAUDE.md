@@ -37,7 +37,7 @@ python scripts/check_data.py          # 題庫品質檢查（可加 --sample N�
 python scripts/serve.py               # 開發伺服器 http://localhost:5173/（多執行緒；不要用 python -m http.server）
 
 # 本機驗證（注意：verify-full 不帶參數時測的是「線上」，本機一定要帶網址）
-node scripts/audit.mjs http://localhost:5173/                 # 全面回歸 135 項
+node scripts/audit.mjs http://localhost:5173/                 # 全面回歸 148 項
 node scripts/verify-full.mjs http://localhost:5173/           # 完整驗證 30 項
 node scripts/regress.mjs http://127.0.0.1:5173/index.html     # 路由與互動回歸 23 項
 

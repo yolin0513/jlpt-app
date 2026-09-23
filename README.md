@@ -198,7 +198,7 @@ JLPT_App/
 └── scripts/
     ├── build_data.py       由 data/src/*.txt 產生 data/*.json、manifest、搜尋索引、羅馬字
     ├── check_data.py       題庫品質檢查（--sample N 可隨機抽樣）
-    ├── audit.mjs           全面回歸測試（135 項）
+    ├── audit.mjs           全面回歸測試（148 項）
     ├── verify-full.mjs     完整驗證：各分頁、深色、RWD、SW 更新、離線（30 項）
     ├── regress.mjs         路由與主要互動回歸（23 項）
     ├── verify-live.mjs     線上部署驗證＋線上首頁截圖
@@ -484,7 +484,7 @@ python scripts/check_data.py --sample 30   # 另外隨機抽 30 條供人工核�
 
 ## 開發驗證清單
 
-> **現行驗證以三套自動化測試為準**：`scripts/audit.mjs`（135 項）、`scripts/verify-full.mjs`（30 項）、
+> **現行驗證以三套自動化測試為準**：`scripts/audit.mjs`（148 項）、`scripts/verify-full.mjs`（30 項）、
 > `scripts/regress.mjs`（23 項），本機與線上版各跑一次。測試紀律見 [`docs/STATUS.md`](docs/STATUS.md)。
 > 下面這份是 **v1.2.0 當時**的手動驗證清單，保留作歷史紀錄；其中「每日長條圖」已改為學習熱力圖（v1.12.0）、
 > 匯出格式已升到 v3（v1.7.x）、畫面也多了聽力（`/listening`）、模擬考（`/exam`）、弱點清單（`/weak`）。

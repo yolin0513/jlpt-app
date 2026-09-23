@@ -1,4 +1,4 @@
-/* 全面功能檢測回歸套件（135 項）
+/* 全面功能檢測回歸套件（148 項）
  * 用法：先跑 python scripts/serve.py，再 node scripts/audit.mjs [baseUrl]
  * 涵蓋 verify-full 沒測到的：資料層一致性、掌握度分母、路由健壯性、
  * 匯出匯入、孤兒紀錄、搜尋、收藏即時性、重置、SRS 邊界、聽力、特殊題型、模擬考、備份提醒、詞性篩選。
@@ -16,8 +16,19 @@ const ok = (c, m, note) => {
   if (!c) issues.push(m + (note ? ` — ${note}` : ''));
   console.log(`  ${c ? '✓' : '✗ FAIL'} ${m}`);
 };
+// 安全網：任何一節沒接住的錯誤（例如線上某個 fetch 失敗）都記成一條 FAIL，照樣印出已跑的結果與總結再結束，
+// 不要像 2026-09-21 那樣整支中斷、連前面通過了什麼都看不到
+let browser = null;
+process.on('uncaughtException', async (e) => {
+  ok(false, '執行中斷（未接住的錯誤，後面的項目沒有跑）', String(e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ｜ ') : e));
+  console.log(`\n===== ${pass} passed, ${fail} failed（中途中斷）=====`);
+  console.log('\n--- 需處理清單 ---');
+  issues.forEach((i, n) => console.log(`${n + 1}. ${i}`));
+  try { await browser?.close(); } catch { /* 已經在收尾，關不掉就算了 */ }
+  process.exit(1);
+});
 
-const b = await puppeteer.launch({ headless: true, userDataDir: path.join(tmpdir(), 'audit-' + Date.now()), args: ['--no-sandbox'] });
+const b = browser = await puppeteer.launch({ headless: true, userDataDir: path.join(tmpdir(), 'audit-' + Date.now()), args: ['--no-sandbox'] });
 const p = await b.newPage();
 await p.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
 const errs = [];
@@ -36,25 +47,37 @@ await go('#/home');
 
 /* ================= 1. 資料層一致性 ================= */
 console.log('\n[1] 資料層一致性');
+// 每一步都自己接住錯誤、回報是哪一步哪個檔：以前這裡一個 fetch 失敗就讓整支 audit 當場中斷，
+// 連前面通過的項目與總結都不印（2026-09-21 對剛部署的線上版連續踩到兩次）。
 const d1 = await p.evaluate(async () => {
-  const d = await import('./js/data.js');
-  const man = await d.getManifest();
-  const out = { levels: {} };
-  for (const lv of d.LEVELS) {
-    for (const t of ['vocab', 'grammar']) {
-      const set = man.sets.find((s) => s.type === t && s.level === lv);
-      const list = await d.loadSet(t, lv);
-      out.levels[`${lv}-${t}`] = {
-        manCount: set.count, manActive: set.activeCount,
-        loadSetLen: list.length, loadSetDup: list.filter((x) => x.dup).length
-      };
+  let where = 'import js/data.js';
+  try {
+    const d = await import('./js/data.js');
+    where = 'getManifest（data/manifest.json）';
+    const man = await d.getManifest();
+    const out = { levels: {} };
+    for (const lv of d.LEVELS) {
+      for (const t of ['vocab', 'grammar']) {
+        where = `loadSet('${t}', '${lv}')`;
+        const set = man.sets.find((s) => s.type === t && s.level === lv);
+        const list = await d.loadSet(t, lv);
+        out.levels[`${lv}-${t}`] = {
+          manCount: set.count, manActive: set.activeCount,
+          loadSetLen: list.length, loadSetDup: list.filter((x) => x.dup).length
+        };
+      }
     }
+    where = "loadMany('vocab', 全部級別)";
+    const many = await d.loadMany('vocab', d.LEVELS);
+    out.loadManyDup = many.filter((x) => x.dup).length;
+    out.totalItems = man.totalItems; out.activeItems = man.activeItems;
+    return out;
+  } catch (e) {
+    return { error: `${where} 失敗：${e && e.message ? e.message : e}` };
   }
-  const many = await d.loadMany('vocab', d.LEVELS);
-  out.loadManyDup = many.filter((x) => x.dup).length;
-  out.totalItems = man.totalItems; out.activeItems = man.activeItems;
-  return out;
-});
+}).catch((e) => ({ error: `page.evaluate 本身失敗：${e.message}` }));
+ok(!d1.error, '[1 前置] 題庫資料全部載得到（manifest＋五級單字與文法）', d1.error);
+if (!d1.error) {
 let mismatch = [];
 for (const [k, v] of Object.entries(d1.levels)) {
   if (v.loadSetLen !== v.manActive) mismatch.push(`${k}: loadSet ${v.loadSetLen} != activeCount ${v.manActive}`);
@@ -76,6 +99,7 @@ for (const t of ['vocab', 'grammar']) {
   ok(thin.length === 0,
     `${t} 五級份量均衡（最多 ${max}，最少 ${Math.min(...counts.map(([, n]) => n))}）`,
     thin.map(([lv, n]) => `${lv} 只有 ${n} 條，不到最多者 ${max} 的 70%`).join('; '));
+}
 }
 
 /* ================= 2. 掌握度分母一致性 ================= */
@@ -1315,13 +1339,39 @@ console.log('\n[22] 詞性篩選');
     await p11.waitForFunction(() => document.querySelector('#view')?.children.length > 0, { timeout: 15000 }).catch(() => {});
     await sleep(400);
   };
+  // 換頁後等「這一頁特有的東西」出現；只等 #view 有子節點不夠——那在上一頁就已經成立
+  const goWait = async (hash, pred, ...args) => {
+    await p11.goto('about:blank');
+    await p11.goto(BASE + hash, { waitUntil: 'networkidle2' });
+    const found = await p11.waitForFunction(pred, { timeout: 15000 }, ...args).then(() => true).catch(() => false);
+    await sleep(200);
+    return found;
+  };
+  const idbReset = () => p11.evaluate(async () => {
+    const { idb } = await import('./js/db.js');
+    for (const s of ['progress', 'mistakes', 'daily', 'favorites']) await idb.clear(s);
+  });
+  // 用 puppeteer 的滑鼠點畫面上的按鈕（不是改設定、也不是直接帶網址）
+  const clickButton = async (src) => {
+    const hd = await p11.evaluateHandle((s) => [...document.querySelectorAll('button')].find((x) => new RegExp(s).test(x.textContent.trim())) || null, src);
+    const el = hd.asElement();
+    if (!el) return false;
+    // 先捲到畫面中央：按鈕若在下緣，會被固定的底部導覽列蓋住，滑鼠點到的是導覽列（實測點成了「複習」）
+    await el.evaluate((e) => e.scrollIntoView({ block: 'center' }));
+    await sleep(100);
+    await el.click();
+    return true;
+  };
+  const hasButton = (src) => [...document.querySelectorAll('button')].some((x) => new RegExp(src).test(x.textContent.trim()));
   await goQ('#/home');
 
-  // S1 資料層：每一級每個選項的數字＝題庫實際數出來的筆數
+  // S1 資料層：每一級每個選項的數字＝題庫實際數出來的筆數（T7：形容詞兩類雙向都不能互相命中）
   const s1 = await p11.evaluate(async () => {
     const d = await import('./js/data.js');
     const { countByPos, POS_OPTIONS } = await import('./js/pos.js');
-    const out = { levels: {}, badMap: [] };
+    const iAdj = POS_OPTIONS.find((o) => o.key === 'i-adj');
+    const naAdj = POS_OPTIONS.find((o) => o.key === 'na-adj');
+    const out = { levels: {}, badMap: [], badMapRev: [], iPop: 0, naPop: 0 };
     for (const lv of d.LEVELS) {
       const list = await d.loadSet('vocab', lv);
       const counts = countByPos(list);
@@ -1331,8 +1381,12 @@ console.log('\n[22] 詞性篩選');
       const dual = list.filter((x) => x.pos === '名詞・副詞').length;   // 名詞與副詞都會算到這一筆
       const sumMain = ['verb', 'i-adj', 'na-adj', 'noun', 'adv', 'other'].reduce((s, k) => s + counts[k], 0);
       out.levels[lv] = { total: list.length, counts, manual, dual, sumMain };
-      // い形容詞不可以對到「形容動詞（な形）」，反之亦然
-      if (list.some((x) => /形容動詞/.test(x.pos || '') && POS_OPTIONS.find((o) => o.key === 'i-adj').match(x.pos))) out.badMap.push(lv);
+      // い形容詞不可以對到「形容動詞（な形）」
+      if (list.some((x) => /形容動詞/.test(x.pos || '') && iAdj.match(x.pos))) out.badMap.push(lv);
+      // 反向（T7）：「形容詞（い形）」不可以被な形容詞命中
+      if (list.some((x) => /^形容詞/.test(x.pos || '') && naAdj.match(x.pos))) out.badMapRev.push(lv);
+      out.iPop += list.filter((x) => /^形容詞/.test(x.pos || '')).length;
+      out.naPop += list.filter((x) => /^形容動詞/.test(x.pos || '')).length;
     }
     return out;
   });
@@ -1347,26 +1401,53 @@ console.log('\n[22] 詞性篩選');
   }) && s1.badMap.length === 0,
     '[S1] 各級各詞性的數字與題庫實際筆數相符；六類總和＝該級單字數＋「名詞・副詞」重複計數',
     JSON.stringify(lvKeys.map((lv) => ({ lv, total: s1.levels[lv].total, verb: s1.levels[lv].counts.verb, dual: s1.levels[lv].dual }))));
+  ok(s1.iPop > 0 && s1.naPop > 0, `[T7 前置] 兩個方向的母體都非空：「形容詞（い形）」${s1.iPop} 個、「形容動詞（な形）」${s1.naPop} 個`);
+  ok(s1.iPop > 0 && s1.naPop > 0 && s1.badMap.length === 0 && s1.badMapRev.length === 0,
+    '[T7] い／な形容詞雙向不互相命中（「形容動詞」不算い形容詞、「形容詞（い形）」也不算な形容詞）',
+    JSON.stringify({ badMap: s1.badMap, badMapRev: s1.badMapRev }));
 
-  // S2 真實入口：學習頁選「動詞」→ 測驗與閃卡都只出動詞
+  // 一般四選一的題幹是「單字」或「中文意思」兩種之一；對回題庫時只收唯一相符的，對不回來的不算進母體
+  const bankN5 = await p11.evaluate(async () => {
+    const d = await import('./js/data.js');
+    return (await d.loadSet('vocab', 'N5')).map((x) => ({ id: x.id, kanji: x.kanji, kana: x.kana, meaning: x.meaning, pos: x.pos }));
+  });
+  const mapPrompt = (q) => {
+    const hits = bankN5.filter((x) => (q.jp ? (x.kanji || x.kana) === q.text : x.meaning === q.text));
+    return hits.length === 1 ? hits[0] : null;
+  };
+  const readPrompt = () => p11.evaluate(() => {
+    const el = document.querySelector('.quiz-prompt > span');
+    const cnt = document.querySelector('.study-count')?.textContent || '';
+    return el ? { text: el.textContent, jp: el.classList.contains('jp'), cnt } : null;
+  });
+  const walkQuiz = async (hash, max = 20) => {
+    const out = [];
+    if (!(await goWait(hash, () => !!document.querySelector('.opt')))) return out;
+    for (let i = 0; i < max; i++) {
+      const q = await readPrompt();
+      if (!q) break;
+      out.push(q);
+      const clicked = await p11.evaluate(() => {
+        const o = document.querySelector('.opt:not([disabled])');
+        if (!o) return false;
+        o.click();
+        return true;
+      });
+      if (!clicked) break;
+      await p11.waitForSelector('.quiz-next', { timeout: 5000 }).catch(() => {});
+      await p11.evaluate(() => document.querySelector('.quiz-next')?.click());
+      // 等題號真的換了（或已經跑到結果頁）
+      await p11.waitForFunction((prev) => {
+        const c = document.querySelector('.study-count');
+        return !c || c.textContent !== prev;
+      }, { timeout: 5000 }, q.cnt).catch(() => {});
+    }
+    return out;
+  };
+
+  // S2 真實入口：閃卡帶 pos 只出該詞性
   const verbCount = s1.levels.N5.counts.verb;
   ok(verbCount >= 20, `[S2 前置] N5 動詞 ${verbCount} 個 ≥ 一輪 20 題`);
-  const posOf = async (hash) => p11.evaluate(async (h) => {
-    const { buildSession } = await import('./js/session.js');
-    const { posFilter } = await import('./js/pos.js');
-    const q = Object.fromEntries(new URLSearchParams(h.split('?')[1] || ''));
-    const { items } = await buildSession({
-      type: 'vocab', level: q.level, scope: 'random', src: 'set', filter: posFilter(q.pos)
-    });
-    return { n: items.length, kinds: [...new Set(items.map((i) => i.pos))] };
-  }, hash);
-  await goQ('#/learn?type=vocab&level=N5');
-  const learnHtml = await p11.evaluate(() => document.getElementById('view').innerText);
-  const verbSession = await posOf('?level=N5&pos=verb');
-  const allSession = await posOf('?level=N5&pos=all');
-  ok(verbSession.n === 20 && verbSession.kinds.every((k) => k === '動詞'),
-    '[S2] 選「動詞」後這一輪每一題都是動詞', JSON.stringify(verbSession));
-  ok(allSession.kinds.length >= 2, '[S2 對照] 選「全部」時一輪會出現兩種以上詞性', JSON.stringify(allSession.kinds));
   // 閃卡：走真實畫面把整輪翻完，逐張讀卡片上的詞性標籤（閃卡以前根本沒傳 filter）
   await goQ('#/study?type=vocab&level=N5&mode=flash&scope=random&pos=verb');
   const flashKinds = [];
@@ -1383,6 +1464,16 @@ console.log('\n[22] 詞性篩選');
   ok(flashKinds.length >= 15 && flashKinds.every((k) => k === '動詞'),
     '[S2] 閃卡帶 pos=verb 時，整輪每一張都是動詞',
     JSON.stringify([...new Set(flashKinds)]));
+
+  // T3 測驗那一半改走畫面（經過 quiz.js）：只帶詞性、不帶題型
+  const t3Verb = (await walkQuiz('#/study?type=vocab&level=N5&mode=quiz&scope=random&pos=verb')).map(mapPrompt).filter(Boolean);
+  const t3All = (await walkQuiz('#/study?type=vocab&level=N5&mode=quiz&scope=random')).map(mapPrompt).filter(Boolean);
+  const t3AllKinds = [...new Set(t3All.map((x) => x.pos))];
+  ok(t3Verb.length >= 10, `[T3 前置] 走真實入口、從畫面對回題庫的題目有 ${t3Verb.length} 題（≥ 10）`);
+  ok(t3Verb.length >= 10 && t3Verb.every((x) => x.pos === '動詞'),
+    '[T3] 一般四選一只帶 pos=verb（不帶題型）走 quiz.js：每一題都是動詞',
+    JSON.stringify(t3Verb.filter((x) => x.pos !== '動詞').slice(0, 3).map((x) => `${x.kanji || x.kana}/${x.pos}`)));
+  ok(t3AllKinds.length >= 2, `[T3 對照] 同一條路不帶 pos，一輪出現 ${t3AllKinds.length} 種詞性（≥ 2）`, JSON.stringify(t3AllKinds));
 
   // S3 與題型篩選並存——一定要走真實入口（quiz.js 才是組合兩個 filter 的地方）
   const s3pre = await p11.evaluate(async () => {
@@ -1450,41 +1541,152 @@ console.log('\n[22] 詞性篩選');
     '[S3] 走真實入口「動詞＋例句填空」：每一題既是動詞、又適用填空題（不是後者蓋掉前者）',
     JSON.stringify(s3.bad.slice(0, 3)));
 
-  // S4 入口參數：學習頁按鈕帶 pos；其他入口不帶
-  const s4 = await p11.evaluate(async () => {
+  // T2 點詞性按鈕（取代 S4 前半與 S5 的「記住」）：不預置 verb、不用網址帶 pos
+  const VERB_BTN = '^動詞\\s+\\d+$';
+  const posBtnState = () => p11.evaluate((vsrc) => {
+    const btns = [...document.querySelectorAll('button')];
+    const verb = btns.find((x) => new RegExp(vsrc).test(x.textContent.trim()));
+    const all = btns.find((x) => x.textContent.trim() === '全部');
+    return {
+      hasVerb: !!verb, hasAll: !!all,
+      verbOn: !!verb && !verb.classList.contains('secondary'),   // 沒有 secondary＝目前選中
+      allOn: !!all && !all.classList.contains('secondary')
+    };
+  }, VERB_BTN);
+  await p11.evaluate(async () => {
     const { setSetting } = await import('./js/store.js');
-    await setSetting('lastPos', 'verb');
-    return true;
+    await setSetting('lastPos', 'all');
   });
-  await goQ('#/learn?type=vocab&level=N5&pos=verb');
-  const s4Href = await p11.evaluate(async () => {
-    const btn = [...document.querySelectorAll('button')].find((x) => /四選一測驗/.test(x.textContent));
-    if (!btn) return { clicked: false };
-    btn.click();
-    await new Promise((r) => setTimeout(r, 400));
-    return { clicked: true, hash: location.hash };
+  await goWait('#/learn?type=vocab&level=N5', hasButton, VERB_BTN);
+  const t2a = await posBtnState();
+  ok(t2a.hasVerb && t2a.hasAll && t2a.allOn && !t2a.verbOn,
+    '[T2 前置] lastPos 設回 all 後進學習頁，一進去選中的是「全部」', JSON.stringify(t2a));
+  await clickButton(VERB_BTN);
+  await sleep(300);
+  const t2b = await posBtnState();
+  ok(t2b.verbOn && !t2b.allOn, '[T2] 在畫面上點「動詞」→ 它變成選中、「全部」變成未選中', JSON.stringify(t2b));
+  await clickButton('四選一測驗');
+  await p11.waitForFunction(() => location.hash.startsWith('#/study'), { timeout: 5000 }).catch(() => {});
+  const t2Hash = await p11.evaluate(() => location.hash);
+  ok(/[?&]pos=verb(&|$)/.test(t2Hash), '[T2] 接著點「四選一測驗」→ 網址帶 pos=verb', t2Hash);
+  await goWait('#/learn', hasButton, VERB_BTN);
+  const t2c = await posBtnState();
+  const t2Saved = await p11.evaluate(async () => {
+    const { getSetting } = await import('./js/store.js');
+    return getSetting('lastPos', null);
   });
-  const otherEntries = [];
-  for (const [name, hash] of [['複習', '#/review'], ['錯題本', '#/mistakes'], ['收藏', '#/favorites'], ['弱點', '#/weak'], ['旅行', '#/travel']]) {
-    await goQ(hash);
-    const hrefs = await p11.evaluate(() => [...document.querySelectorAll('button')].map((x) => x.getAttribute('onclick') || '').join(' ') + ' ' + document.getElementById('view').innerHTML);
-    if (/[?&]pos=/.test(hrefs)) otherEntries.push(name);
+  const learnHtml = await p11.evaluate(() => document.getElementById('view').innerText);
+  ok(t2c.verbOn && !t2c.allOn && t2Saved === 'verb',
+    '[T2] 回到不帶參數的學習頁仍選中動詞，且 lastPos 已存成 verb', JSON.stringify({ ...t2c, t2Saved }));
+
+  // T6 畫面上的數字：逐顆讀詞性那一排的按鈕，跟題庫數出來的比；在畫面上切到 N1 後再比一次
+  const SIX = ['verb', 'i-adj', 'na-adj', 'noun', 'adv', 'other'];
+  const readPosNums = () => p11.evaluate(() => {
+    const map = { '動詞': 'verb', 'い形容詞': 'i-adj', 'な形容詞': 'na-adj', '名詞': 'noun', '副詞': 'adv', '其他': 'other' };
+    const out = {};
+    for (const x of document.querySelectorAll('button')) {
+      const m = /^(動詞|い形容詞|な形容詞|名詞|副詞|其他)\s+(\d+)$/.exec(x.textContent.trim());
+      if (m) out[map[m[1]]] = Number(m[2]);
+    }
+    return out;
+  });
+  // 題庫 0 個的選項畫面上不顯示 → 那一格要「沒有按鈕」而不是「數字相等」
+  const sameAsBank = (screen, bank) => SIX.every((k) => (bank[k] > 0 ? screen[k] === bank[k] : screen[k] === undefined));
+  await goWait('#/learn?type=vocab&level=N5', hasButton, VERB_BTN);
+  const n5Screen = await readPosNums();
+  const n5Bank = s1.levels.N5.manual, n1Bank = s1.levels.N1.manual;
+  ok(Object.keys(n5Screen).length === 6 && SIX.every((k) => n5Bank[k] > 0) && SIX.some((k) => n5Bank[k] !== n1Bank[k]),
+    '[T6 前置] N5 畫面上除「全部」外有 6 顆詞性按鈕，且 N5 與 N1 至少一類筆數不同（不然看不出有沒有重算）',
+    JSON.stringify({ n5Screen, n5Bank, n1Bank }));
+  ok(sameAsBank(n5Screen, n5Bank), '[T6] N5 學習頁每顆詞性按鈕上的數字＝題庫實際筆數', JSON.stringify({ n5Screen, n5Bank }));
+  await clickButton('^N1$');
+  await p11.waitForFunction(() => {
+    const x = [...document.querySelectorAll('button')].find((y) => y.textContent.trim() === 'N1');
+    return x && !x.classList.contains('secondary');
+  }, { timeout: 5000 }).catch(() => {});
+  await sleep(200);
+  const n1On = await p11.evaluate(() => {
+    const x = [...document.querySelectorAll('button')].find((y) => y.textContent.trim() === 'N1');
+    return !!x && !x.classList.contains('secondary');
+  });
+  const n1Screen = await readPosNums();
+  ok(n1On && sameAsBank(n1Screen, n1Bank), '[T6] 在畫面上點 N1 之後，詞性按鈕的數字重算成 N1 題庫的筆數',
+    JSON.stringify({ n1On, n1Screen, n1Bank }));
+
+  // T4 其他入口不帶 pos（照 [19] 的做法：點下去看 location.hash）。lastPos＝verb 才是會漏的情境
+  const t4pre = await p11.evaluate(async () => {
+    const { idb } = await import('./js/db.js');
+    const st = await import('./js/store.js');
+    const d = await import('./js/data.js');
+    for (const s of ['progress', 'mistakes', 'daily', 'favorites']) await idb.clear(s);
+    const items = (await d.loadSet('vocab', 'N5')).filter((x) => x.pos === '動詞').slice(0, 3);
+    for (const it of items) {
+      // 錯 3 次：進錯題本、作答次數也夠格上弱點清單
+      for (let i = 0; i < 3; i++) await st.recordAnswer({ item: it, level: 'N5', type: 'vocab', grade: 'again' });
+      await st.addFavorite(it);
+      const r = await idb.get('progress', it.id);
+      r.due = Date.now() - 60000;   // 讓它現在就到期 → 複習頁才有「測驗複習」
+      await idb.put('progress', r);
+    }
+    await st.setSetting('lastPos', 'verb');
+    return { n: items.length, lastPos: await st.getSetting('lastPos', null) };
+  });
+  const t4 = [];
+  for (const [name, hash, src] of [
+    ['複習', '#/review', '測驗複習'],
+    ['錯題本', '#/mistakes', '^測驗這些題$'],
+    ['收藏', '#/favorites', '^📝 測驗$'],
+    ['弱點', '#/weak', '針對這'],
+    ['旅行', '#/travel', '全部混合測驗']
+  ]) {
+    const found = await goWait(hash, hasButton, src);
+    let hash2 = null;
+    if (found && await clickButton(src)) {
+      await p11.waitForFunction(() => location.hash.startsWith('#/study'), { timeout: 5000 }).catch(() => {});
+      hash2 = await p11.evaluate(() => location.hash);
+    }
+    t4.push({ name, found, hash: hash2 });
   }
-  ok(s4 && s4Href.clicked && /pos=verb/.test(s4Href.hash),
-    '[S4] 學習頁的「四選一測驗」把 pos 帶進網址', JSON.stringify(s4Href));
-  ok(otherEntries.length === 0,
-    '[S4] 複習／錯題本／收藏／弱點／旅行的入口都沒有帶 pos', otherEntries.join('、'));
-  // 網址硬加 pos 給非一般題庫的來源 → 不理它，也不能壞
+  ok(t4pre.n === 3 && t4pre.lastPos === 'verb' && t4.every((x) => x.found && /^#\/study/.test(x.hash || '')),
+    '[T4 前置] lastPos＝verb；五個入口都真的點到開始練習的按鈕、真的進了 #/study', JSON.stringify({ t4pre, t4 }));
+  ok(t4.every((x) => /^#\/study/.test(x.hash || '') && !/[?&]pos=/.test(x.hash)),
+    '[T4] 複習／錯題本／收藏／弱點／旅行：點下去進 #/study，網址都不含 pos',
+    t4.filter((x) => /[?&]pos=/.test(x.hash || '')).map((x) => `${x.name}: ${x.hash}`).join('; '));
+
+  // T5 使用者真的走得到的空池：N3「其他」× 漢字讀音
+  const t5pre = await p11.evaluate(async () => {
+    const d = await import('./js/data.js');
+    const { canAskReading } = await import('./js/qtypes.js');
+    const { POS_OPTIONS } = await import('./js/pos.js');
+    const other = POS_OPTIONS.find((o) => o.key === 'other');
+    const list = (await d.loadSet('vocab', 'N3')).filter((x) => other.match(x.pos));
+    return { other: list.length, both: list.filter(canAskReading).length };
+  });
+  ok(t5pre.other > 0 && t5pre.both === 0,
+    `[T5 前置] N3「其他」有 ${t5pre.other} 個（畫面上選得到），其中適用漢字讀音題的是 ${t5pre.both} 個——必須是 0；題庫補了字這條會紅，提醒換一個情境`);
+  const e5 = e11.length;
+  const t5found = await goWait('#/study?type=vocab&level=N3&mode=quiz&qtype=reading&pos=other',
+    () => !!document.querySelector('#view .empty, #view .opt'));
+  const t5 = await p11.evaluate(() => {
+    const e = document.querySelector('#view .empty');
+    const back = e && [...e.querySelectorAll('button')].some((x) => /返回選擇/.test(x.textContent));
+    return { empty: !!e, back: !!back, opts: document.querySelectorAll('#view .opt').length };
+  });
+  let t5Hash = null;
+  if (t5.back && await clickButton('返回選擇')) {
+    await p11.waitForFunction(() => location.hash.startsWith('#/learn'), { timeout: 5000 }).catch(() => {});
+    t5Hash = await p11.evaluate(() => location.hash);
+  }
+  ok(t5found && t5.empty && t5.back && t5.opts === 0 && /^#\/learn/.test(t5Hash || '') && e11.length === e5,
+    '[T5] 走得到的空池（N3 其他×漢字讀音）→ 空池畫面、「返回選擇」點了回學習頁、沒有 console 錯誤',
+    JSON.stringify({ t5found, ...t5, t5Hash, newErrors: e11.slice(e5, e5 + 3) }));
+
+  // S4 網址硬加 pos 給非一般題庫的來源 → 不理它，也不能壞
   await goQ('#/study?src=mistakes&mode=quiz&level=ALL&pos=verb');
   const posIgnored = await p11.evaluate(() => !/pageerror/i.test(document.body.innerText) && document.getElementById('view').children.length > 0);
   ok(posIgnored, '[S4] 非一般題庫的入口就算網址被加上 pos 也照常運作');
 
-  // S5 記住上次選擇；該詞性為 0 時退回全部
-  await goQ('#/learn?type=vocab&level=N5');
-  const remembered = await p11.evaluate(() => {
-    const btns = [...document.querySelectorAll('button')].filter((x) => /^動詞\s*\d+$/.test(x.textContent.trim()));
-    return btns.length === 1 && !btns[0].classList.contains('secondary');   // 沒有 secondary＝目前選中
-  });
+  // S5 該詞性為 0 時退回全部
   // 「這個詞性在這一級是 0 個」目前五級都不會發生（六類都 > 0，見 S1 的數字），
   // 所以退回「全部」這條路徑只能用合成的 counts 驗——這是學習頁實際呼叫的同一支函式。
   const zeroFallback = await p11.evaluate(async () => {
@@ -1502,12 +1704,11 @@ console.log('\n[22] 詞性篩選');
       unknownGoesAll: resolvePos('nope', { verb: 5 })
     };
   });
-  ok(remembered, '[S5] 記住上次選的詞性（離開再回學習頁仍是動詞）');
   ok(zeroFallback.zeroGoesAll === 'all' && zeroFallback.keepsWhenPresent === 'other' && zeroFallback.unknownGoesAll === 'all',
     `[S5] 詞性在該級是 0 個就退回「全部」、還有字就保留（目前五級自然發生的 0 有 ${zeroFallback.naturalZeros} 個，所以用合成 counts 驗）`,
     JSON.stringify(zeroFallback));
 
-  // S6 池子比一輪小：有幾題出幾題、不重複；0 題走空池畫面
+  // S6 池子比一輪小：有幾題出幾題、不重複（0 題的空池改由 T5 從畫面守）
   const s6 = await p11.evaluate(async () => {
     const { buildSession } = await import('./js/session.js');
     const d = await import('./js/data.js');
@@ -1528,17 +1729,10 @@ console.log('\n[22] 詞性篩選');
   ok(s6 && s6.pool > 0 && s6.pool < 20, `[S6 前置] 找到比一輪 20 題小的池子：${JSON.stringify(s6)}`);
   ok(s6 && s6.n === s6.pool && s6.uniq === s6.n,
     '[S6] 池子比題數小 → 有幾題出幾題、沒有重複的 id', JSON.stringify(s6));
-  const emptyPool = await p11.evaluate(async () => {
-    const { buildSession } = await import('./js/session.js');
-    const { items } = await buildSession({
-      type: 'vocab', level: 'N5', scope: 'random', src: 'set', filter: () => false
-    });
-    return items.length;
-  });
   await goQ('#/study?type=grammar&level=N5&mode=quiz&scope=random&pos=verb');
   const grammarWithPos = await p11.evaluate(() => document.getElementById('view').innerText.slice(0, 40));
-  ok(emptyPool === 0 && grammarWithPos.length > 0,
-    '[S6] 空池不丟錯；文法帶著 pos 也照常出題（文法沒有 pos，不會被篩成 0）', grammarWithPos);
+  ok(grammarWithPos.length > 0,
+    '[S6] 文法帶著 pos 也照常出題（文法沒有 pos，不會被篩成 0）', grammarWithPos);
 
   // S7 干擾選項優先同詞性
   const s7 = await p11.evaluate(async () => {
@@ -1559,25 +1753,53 @@ console.log('\n[22] 詞性篩選');
     `[S7] 動詞的干擾選項同詞性比例 ${(s7.ratio * 100).toFixed(1)}%（門檻 95%），且四個選項互異`,
     JSON.stringify(s7));
 
-  // S8 SRS 不變：篩選只決定「從哪些字裡挑」，記分完全一樣
-  const s8 = await p11.evaluate(async () => {
-    const { recordAnswer, getProgress } = await import('./js/store.js');
-    const { idb } = await import('./js/db.js');
-    const d = await import('./js/data.js');
-    const item = (await d.loadSet('vocab', 'N5')).find((x) => x.pos === '動詞');
-    const run = async () => {
-      for (const s of ['progress', 'mistakes', 'daily']) await idb.clear(s);
-      await recordAnswer({ item, level: 'N5', type: 'vocab', grade: 'good' });
-      const r = await getProgress(item.id);
-      return { box: r.box, reps: r.reps, correct: r.correct, wrong: r.wrong };
-    };
-    const a = await run();   // 不篩選時
-    const b2 = await run();  // 篩選下（同一支 recordAnswer，篩選不介入記分）
-    for (const s of ['progress', 'mistakes', 'daily']) await idb.clear(s);
-    return { a, b2, same: JSON.stringify(a) === JSON.stringify(b2) };
-  });
-  ok(s8.same && s8.a.box === 1 && s8.a.reps === 1,
-    '[S8] 篩選下答對，進度的變化與不篩選時完全相同', JSON.stringify(s8));
+  // T1 SRS 不變（取代舊 S8）：從真實入口答對第一題，帶 pos 與不帶 pos 的進度變化要完全相同
+  const firstCorrect = async (hash) => {
+    for (let attempt = 0; attempt < 8; attempt++) {
+      await idbReset();
+      const before = await p11.evaluate(async () => (await (await import('./js/store.js')).allProgress()).length);
+      if (!(await goWait(hash, () => !!document.querySelector('.opt')))) continue;
+      const q = await readPrompt();
+      const item = q && mapPrompt(q);
+      if (!item) continue;   // 題幹對不回唯一一個字 → 重來一次（隨機出題，會換一題）
+      const want = q.jp ? item.meaning : (item.kanji || item.kana);
+      const clicked = await p11.evaluate((w) => {
+        const o = [...document.querySelectorAll('.opt')].find((btn) => {
+          const c = btn.cloneNode(true);
+          c.querySelector('.opt-num')?.remove();
+          return c.textContent.trim() === w;
+        });
+        if (!o) return false;
+        o.click();
+        return true;
+      }, want);
+      if (!clicked) continue;
+      await p11.waitForSelector('.quiz-next', { timeout: 5000 }).catch(() => {});
+      await sleep(200);
+      const res = await p11.evaluate(async () => {
+        const recs = await (await import('./js/store.js')).allProgress();
+        return {
+          gotCorrect: !!document.querySelector('.opt.correct') && !document.querySelector('.opt.wrong'),
+          recs: recs.map((r) => ({ itemId: r.itemId, box: r.box, reps: r.reps, correct: r.correct, wrong: r.wrong }))
+        };
+      });
+      return { attempt, before, item, ...res };
+    }
+    return null;
+  };
+  const t1a = await firstCorrect('#/study?type=vocab&level=N5&mode=quiz&scope=random&pos=verb');
+  const t1b = await firstCorrect('#/study?type=vocab&level=N5&mode=quiz&scope=random');
+  const only = (r) => (r && r.recs.length === 1 && r.recs[0].itemId === r.item.id ? r.recs[0] : null);
+  const strip = (r) => (r ? JSON.stringify({ box: r.box, reps: r.reps, correct: r.correct, wrong: r.wrong }) : null);
+  const brief = (r) => r && { w: r.item.kanji || r.item.kana, pos: r.item.pos, before: r.before, attempt: r.attempt, gotCorrect: r.gotCorrect, recs: r.recs.length };
+  ok(t1a && t1b && t1a.before === 0 && t1b.before === 0 && t1a.gotCorrect && t1b.gotCorrect && t1a.item.pos === '動詞',
+    '[T1 前置] 兩次都從畫面答對第一題；帶 pos=verb 那次答的確實是動詞；答題前都沒有任何進度紀錄',
+    JSON.stringify({ a: brief(t1a), b: brief(t1b) }));
+  ok(strip(only(t1a)) !== null && strip(only(t1a)) === strip(only(t1b))
+    && strip(only(t1a)) === JSON.stringify({ box: 1, reps: 1, correct: 1, wrong: 0 }),
+    '[T1] 從真實入口答對：帶 pos 與不帶 pos 的進度變化完全相同，都是新字第一次答對該有的值（box 1／reps 1／對 1／錯 0）',
+    JSON.stringify({ a: strip(only(t1a)), b: strip(only(t1b)), recsA: t1a?.recs, recsB: t1b?.recs }));
+  await idbReset();
 
   ok(e11.length === 0 && /詞性/.test(learnHtml), '[S2] 學習頁出現「詞性」那一排且全程無 console 錯誤', e11.slice(0, 3).join(' | '));
   await p11.close();
