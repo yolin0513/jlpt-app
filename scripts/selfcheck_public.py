@@ -37,7 +37,33 @@ rc, patch = git('log', '--format=', '-p', '-U0', '--no-color', f'{base}..HEAD')
 if rc != 0:
     print('SELF-CHECK FAILED: 取不到 diff')
     sys.exit(1)
-added = [l[1:] for l in patch.split('\n') if l.startswith('+') and not l.startswith('+++')]
+
+
+def extract_added(text):
+    """照 diff 的結構抽新增行：只有 @@ 之後、以 + 開頭的才是內容。
+    不能用「以 +++ 開頭就當檔頭跳過」——內容本身以 ++ 開頭的行加上 diff 的 + 也是 +++，會被默默丟掉（2026-09-24）。"""
+    out, in_hunk = [], False
+    for line in text.split('\n'):
+        if line.startswith('diff --git '):
+            in_hunk = False
+        elif line.startswith('@@'):
+            in_hunk = True
+        elif in_hunk and line.startswith('+'):
+            out.append(line[1:])
+    return out
+
+
+added = extract_added(patch)
+# ---- 核對行數：用獨立來源（numstat）算新增行數，對不上就停——抽取壞了（或換環境抽少了）時，零命中不可信 ----
+rc, numstat = git('log', '--format=', '--numstat', f'{base}..HEAD')
+if rc != 0:
+    print('SELF-CHECK FAILED: 取不到 numstat，沒辦法核對新增行數')
+    sys.exit(1)
+expected = sum(int(x.split('\t')[0]) for x in numstat.splitlines() if x and x.split('\t')[0].isdigit())
+if len(added) != expected:
+    print(f'SELF-CHECK FAILED: 新增行抽出 {len(added)} 行、git 算 {expected} 行（抽取壞了，零命中不可信）')
+    sys.exit(1)
+# ---- 核對結束 ----
 # commit 訊息與作者、提交者的名字與信箱：一樣會永久留在公開歷史裡（共用慣例 v8 §2.5「自查的範圍」）
 rc, meta_raw = git('log', '--format=%an%n%ae%n%cn%n%ce%n%B%x00', f'{base}..HEAD')
 if rc != 0:

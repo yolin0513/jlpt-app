@@ -4,6 +4,7 @@
 #   bash scripts/test_pushsafe.sh                                   # 正常：全部符合預期回 0，否則回 1
 #   TEST_PUSHSAFE_MUTATE=nofetch bash scripts/test_pushsafe.sh      # 突變：閘門拿掉「取遠端實際狀態」那一步
 #   TEST_PUSHSAFE_MUTATE=nometa  bash scripts/test_pushsafe.sh      # 突變：自查不掃 commit 訊息與作者欄
+#   TEST_PUSHSAFE_MUTATE=oldparse|nocheck|oldparse+nocheck ...      # 突變：抽新增行改回舊寫法／拿掉行數核對／兩個一起
 # 完全不碰 GitHub：在暫存目錄建一個 bare repo 當假遠端，複製本 repo「已 commit 的內容」過去跑。
 # 所以改了閘門要先在本機 commit（先不推）再跑這支。
 set -u
@@ -61,6 +62,31 @@ elif [ "$MUTATE" = nometa ]; then
   git show HEAD:scripts/selfcheck_public.py | grep -q '^    mhits = \[\]$' || die "HEAD 裡的自查沒改到，突變沒生效"
   git diff --quiet HEAD -- scripts/selfcheck_public.py || die "工作區的自查跟 HEAD 不同，跑到的不是改壞的那一版"
   echo "MUTATION ACTIVE: nometa（HEAD 與工作區的 scripts/selfcheck_public.py 都不掃訊息與作者欄；blob $(git rev-parse --short HEAD:scripts/selfcheck_public.py)）"
+elif [ "$MUTATE" = oldparse ] || [ "$MUTATE" = nocheck ] || [ "$MUTATE" = oldparse+nocheck ]; then
+  # 抽新增行改回「以 +++ 開頭就跳過」的舊寫法、拿掉 numstat 行數核對，或兩個一起
+  python - scripts/selfcheck_public.py "$MUTATE" <<'PY' || die "改壞自查"
+import sys
+p, mode = sys.argv[1], sys.argv[2]
+s = open(p, encoding='utf-8', newline='').read()
+if 'oldparse' in mode:
+    a = "added = extract_added(patch)\n"
+    assert s.count(a) == 1
+    s = s.replace(a, "added = [l[1:] for l in patch.split('\\n') if l.startswith('+') and not l.startswith('+++')]\n")
+if 'nocheck' in mode:
+    a = s.index('# ---- 核對行數')
+    b = s.index('# ---- 核對結束 ----\n') + len('# ---- 核對結束 ----\n')
+    s = s[:a] + s[b:]
+open(p, 'w', encoding='utf-8', newline='').write(s)
+PY
+  git commit -q -am "MUTATION: 自查 $MUTATE" || die "commit 改壞的自查"
+  if [ "$MUTATE" != nocheck ]; then
+    git show HEAD:scripts/selfcheck_public.py | grep -qF "not l.startswith('+++')" || die "HEAD 裡的抽取沒改回舊寫法"
+  fi
+  if [ "$MUTATE" != oldparse ]; then
+    git show HEAD:scripts/selfcheck_public.py | grep -qF 'git 算' && die "HEAD 裡的行數核對還在"
+  fi
+  git diff --quiet HEAD -- scripts/selfcheck_public.py || die "工作區的自查跟 HEAD 不同，跑到的不是改壞的那一版"
+  echo "MUTATION ACTIVE: $MUTATE（已確認 HEAD 與工作區的 scripts/selfcheck_public.py 是改壞的那一版；blob $(git rev-parse --short HEAD:scripts/selfcheck_public.py)）"
 elif [ -n "$MUTATE" ]; then
   die "不認得的突變 $MUTATE"
 fi
@@ -81,6 +107,8 @@ check() {  # check 名稱 期望rc 實際rc 期望假遠端(same|local) before m
   [ "$ok" = yes ] || bad=1
   printf '%-4s %-40s rc=%s(期望 %s)  假遠端 %s→%s  %s\n' "$ok" "$name" "$got" "$want" "$before" "$after" "${why:+（$why）}"
   printf '       比對：%s\n' "$*"
+  # 不符時印出閘門實際的擋下訊息，才看得出是被什麼擋的（或為什麼沒擋）
+  [ "$ok" = yes ] || grep -E 'SELF-CHECK FAILED|PUSHSAFE:' "$T/out.txt" | sed 's/^/       實際：/'
 }
 run() { bash scripts/pushsafe.sh > "$T/out.txt" 2>&1; echo $?; }
 hitfile() { printf '%s%s\n' 'path E' ':\foo' > "$1"; }   # 當場組出來的合成樣本（本機路徑的形狀）
@@ -142,6 +170,21 @@ echo "m10 $(date +%s)" > m10.txt
 git add m10.txt && git -c user.email="$(printf '%s@%s' 'someone' 'example.org')" commit -q -m "author test" || die "造作者信箱的 commit"
 rc="$(run)"; check "10 作者信箱不是 noreply" 1 "$rc" same "$b" 'PUSHSAFE: 自查失敗' 'email 命中' '（commit 訊息或作者欄）' -- '（新增行）' '沒有要推的 commit'
 git reset -q --soft HEAD~1 && git rm -q --cached m10.txt && rm m10.txt || die "撤掉情境 10 的 commit"
+restore_remote "$bf"
+
+# 11) 內容以「++ 」開頭的命中行，先加一行、再用第二個 commit 刪掉（只有掃每個 commit 的新增行才抓得到）
+b="$(rhead)"; bf="$(git --git-dir="$T/remote.git" rev-parse main)"
+printf '%s%s%s\n' '++ ' 'path E' ':\foo' > pp.txt
+git add pp.txt && git commit -q -m "pp add" || die "造 ++ 開頭的 commit"
+PP1="$(git rev-parse HEAD)"
+git rm -q pp.txt && git commit -q -m "pp del" || die "造刪掉它的 commit"
+rc="$(run)"; check "11 ++ 開頭的命中、加了又刪" 1 "$rc" same "$b" 'PUSHSAFE: 自查失敗' 'path 命中 1 行（新增行）' -- '抽取壞了' '沒有要推的 commit'
+if git --git-dir="$T/remote.git" merge-base --is-ancestor "$PP1" main 2>/dev/null; then
+  echo "       帶命中的 commit（情境 11）到了假遠端：是"
+else
+  echo "       帶命中的 commit（情境 11）到了假遠端：否"
+fi
+git reset -q --soft HEAD~2 || die "撤掉情境 11 的兩個 commit"
 restore_remote "$bf"
 
 # 8) 本機以為已經推上去、遠端其實沒有（v8）：帶命中的 commit 繞過閘門推上假遠端、抓回來，再把假遠端倒退
