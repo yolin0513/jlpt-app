@@ -283,7 +283,22 @@ GitHub Pages 免費方案不能用 private repo，所以 repo 一直是公開的
 5. 不從 CDN 載入第三方腳本；字型用系統字型。
 
 發現不該公開的東西：未 commit 的直接移除；已公開的要走改寫歷史流程（force push 屬異動較大）。
-commit 前可以跑 `git grep --untracked -n -i -E "c:[/\\\\]users[/\\\\]|/c/users/|local-agent-mode|@gmail\.com"` 自查（`--untracked` 才會連還沒 add 的新檔一起查；預期只命中本檔這一行，用 `$HOME` 開頭的路徑是合法的）。
+commit 前的常設自查（2026-09-23 改寫：原本「預期只命中本檔這一行」是拿本檔當對照組，而那一行只會被四個分支裡的兩個命中，
+Windows 使用者資料夾與 gmail 兩個分支從來沒被對照過；共用慣例 v6 §5.3 要求對照組一定是合成樣本、跑同一個檢查）。三步照順序跑，同一個 `PAT`：
+
+```bash
+PAT='c:[/\\]users[/\\]|/c/user[s]/|local-agent-mod[e]|@gmail\.com'
+# 1) 對照組：當場組出來的合成樣本，四個分支各一條——必須印 4（少一條就是某個分支壞了，不要往下跑）
+printf '%s\n' "C:\\Us""ers\\x" "/c/us""ers/x" "local-agent""-mode" "a@gm""ail.com" | grep -c -i -E "$PAT"
+# 2) 反例：泛稱路徑、系統路徑、網址、noreply——必須印 0
+printf '%s\n' '$HOME/.config/gh' '~/.config/gh' 'C:/Windows/Fonts/msjh.ttc' 'https://github.com/users/x' 'x@users.noreply.github.com' 'file:///C:/Windows/x' | grep -c -i -E "$PAT"
+# 3) 真正的掃描（--untracked 才會連還沒 add 的新檔一起查）——必須沒有任何輸出
+git grep --untracked -n -i -E "$PAT"
+```
+
+幾個刻意的寫法：樣本用 `"..""..."` 拆開、`PAT` 用 `user[s]`／`mod[e]` 這種寫法，是為了讓**這段文字本身不會被第 3 步命中**——所以第 3 步預期是零命中，有任何輸出都要看。
+2026-09-23 實測：第 1 步 4、每條樣本單獨跑各 1、第 2 步 0；把 gmail 分支或 Windows 反斜線分支改壞，第 1 步都掉成 3（會叫）。
+這一組只抓最常見的四種；完整的四類公開前自查（金鑰、email、使用者名稱、本機路徑）照共用慣例與各份工單的做法另外跑。
 
 **事件紀錄**：2026-09-03 資安掃描發現截圖腳本寫死了截圖鏡像資料夾路徑（含 Windows 使用者名稱與兩組工作階段 UUID），
 已改讀 `MIRROR_DIR`，並用 orphan 分支重建乾淨歷史、force push（Yolin 選的 A 案；B 案「新 commit 蓋掉」會讓路徑永遠留在歷史裡）。
