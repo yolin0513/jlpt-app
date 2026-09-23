@@ -47,10 +47,10 @@ node scripts/verify-full.mjs https://yolin0513.github.io/jlpt-app/
 node scripts/regress.mjs https://yolin0513.github.io/jlpt-app/index.html
 ```
 
-push 一般的 `git push` 會卡在看不到的 GUI 登入視窗，一律用這條（gh 放在使用者 Temp 目錄，見 STATUS §8）：
+推送一律用閘門，**不要直接下 `git push`**（共用慣例 §2.5；閘門裡已帶 gh credential helper，一般的 `git push` 會卡在看不到的 GUI 登入視窗，gh 放在使用者 Temp 目錄，見 STATUS §8）：
 
 ```bash
-GIT_TERMINAL_PROMPT=0 GH_CONFIG_DIR="$HOME/.config/gh" timeout 90 git -c credential.helper='!"$HOME/AppData/Local/Temp/gh-cli/bin/gh.exe" auth git-credential' push origin main
+bash scripts/pushsafe.sh   # 自查→推送→比對遠端；回傳 1 自查擋下／2 推送失敗／3 遠端≠本機／0 成功。改過閘門就跑 bash scripts/test_pushsafe.sh
 ```
 
 線上版：https://yolin0513.github.io/jlpt-app/ （repo：github.com/yolin0513/jlpt-app，main 分支根目錄部署）
