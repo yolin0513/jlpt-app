@@ -121,7 +121,9 @@ export default async function learnView(ctx) {
       class: 'btn secondary', style: 'margin-bottom:10px', disabled,
       onclick: () => navigate('/listening', { level: state.level, scope: state.scope })
     }, '🎧 聽力練習'));
-    wrap.append(h('div', { class: 'btn-grid' }, [
+    // 拼寫（排假名方塊）只對單字有意義：文法句型太長、也沒有單一讀音
+    const isVocab = state.type === 'vocab';
+    wrap.append(h('div', { class: 'btn-grid', style: isVocab ? 'grid-template-columns:repeat(3,1fr)' : '' }, [
       h('button', {
         class: 'btn secondary', disabled,
         onclick: () => start('quiz', { qtype: 'reading' })
@@ -129,7 +131,11 @@ export default async function learnView(ctx) {
       h('button', {
         class: 'btn secondary', disabled,
         onclick: () => start('quiz', { qtype: 'cloze' })
-      }, '✏️ 例句填空')
+      }, '✏️ 例句填空'),
+      isVocab ? h('button', {
+        class: 'btn secondary', disabled,
+        onclick: () => start('quiz', { qtype: 'spell' })
+      }, '🔤 拼寫練習') : null
     ]));
     wrap.append(h('button', {
       class: 'btn secondary', style: 'margin-top:10px',

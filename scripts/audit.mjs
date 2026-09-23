@@ -1,7 +1,7 @@
-/* 全面功能檢測回歸套件（148 項）
+/* 全面功能檢測回歸套件（168 項）
  * 用法：先跑 python scripts/serve.py，再 node scripts/audit.mjs [baseUrl]
  * 涵蓋 verify-full 沒測到的：資料層一致性、掌握度分母、路由健壯性、
- * 匯出匯入、孤兒紀錄、搜尋、收藏即時性、重置、SRS 邊界、聽力、特殊題型、模擬考、備份提醒、詞性篩選。
+ * 匯出匯入、孤兒紀錄、搜尋、收藏即時性、重置、SRS 邊界、聽力、特殊題型、模擬考、備份提醒、詞性篩選、拼寫練習。
  */
 import puppeteer from 'puppeteer';
 import { tmpdir } from 'node:os';
@@ -1803,6 +1803,364 @@ console.log('\n[22] 詞性篩選');
 
   ok(e11.length === 0 && /詞性/.test(learnHtml), '[S2] 學習頁出現「詞性」那一排且全程無 console 錯誤', e11.slice(0, 3).join(' | '));
   await p11.close();
+}
+
+/* ================= 23. 拼寫練習（排假名方塊） ================= */
+console.log('\n[23] 拼寫練習');
+{
+  const p12 = await b.newPage();
+  await p12.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  const e12 = [];
+  p12.on('pageerror', (e) => e12.push('pageerror: ' + e.message));
+  p12.on('console', (m) => { if (m.type() === 'error') e12.push('console: ' + m.text()); });
+  const goWait = async (hash, pred, ...args) => {
+    await p12.goto('about:blank');
+    await p12.goto(BASE + hash, { waitUntil: 'networkidle2' });
+    const found = await p12.waitForFunction(pred, { timeout: 15000 }, ...args).then(() => true).catch(() => false);
+    await sleep(200);
+    return found;
+  };
+  const idbReset = () => p12.evaluate(async () => {
+    const { idb } = await import('./js/db.js');
+    for (const s of ['progress', 'mistakes', 'daily', 'favorites']) await idb.clear(s);
+  });
+  // 真的用滑鼠點；先捲到畫面中央，免得被底部導覽列蓋住
+  const clickEl = async (hd) => {
+    const el = hd && hd.asElement();
+    if (!el) return false;
+    await el.evaluate((e) => e.scrollIntoView({ block: 'center' }));
+    await sleep(60);
+    await el.click();
+    return true;
+  };
+  // 點一顆「還沒用過、字是 text」的方塊
+  const clickTile = (text) => p12.evaluateHandle((t) => [...document.querySelectorAll('.spell-tile')].find((x) => !x.disabled && x.textContent === t) || null, text).then(clickEl);
+  const clickSlot = (i) => p12.evaluateHandle((k) => document.querySelectorAll('.spell-slot')[k] || null, i).then(clickEl);
+  const spellState = () => p12.evaluate(() => ({
+    slots: [...document.querySelectorAll('.spell-slot')].map((x) => ({ t: x.textContent, cls: x.className })),
+    tiles: [...document.querySelectorAll('.spell-tile')].map((x) => ({ t: x.textContent, used: x.disabled })),
+    prompt: document.querySelector('.quiz-prompt > span')?.textContent || '',
+    fb: document.querySelector('#fb')?.className || '',
+    fbText: document.querySelector('#fb')?.textContent || '',
+    next: !!document.querySelector('.quiz-next')
+  }));
+  await goWait('#/home', () => document.querySelector('#view')?.children.length > 0);
+
+  // 題庫：每一級的單字（題幹是中文意思 → 對回題庫時只收唯一相符的）
+  const bank = await p12.evaluate(async () => {
+    const d = await import('./js/data.js');
+    const k = await import('./js/kana.js');
+    const out = {};
+    for (const lv of d.LEVELS) {
+      out[lv] = (await d.loadSet('vocab', lv)).map((x) => ({
+        id: x.id, kanji: x.kanji, kana: x.kana, meaning: x.meaning, pos: x.pos, level: x.level,
+        spell: k.canAskSpell(x), units: k.splitKana(x.kana)
+      }));
+    }
+    return out;
+  });
+  const byMeaning = (lv, meaning) => {
+    const hits = bank[lv].filter((x) => x.meaning === meaning);
+    return hits.length === 1 ? hits[0] : null;
+  };
+
+  // P1 拆假名：期望值是手寫的
+  const p1 = await p12.evaluate(async () => {
+    const { splitKana } = await import('./js/kana.js');
+    const cases = {
+      'きょう': ['きょ', 'う'],
+      'がっこう': ['が', 'っ', 'こ', 'う'],
+      'コーヒー': ['コ', 'ー', 'ヒ', 'ー'],
+      'しんぶん': ['し', 'ん', 'ぶ', 'ん'],
+      'チョコレート': ['チョ', 'コ', 'レ', 'ー', 'ト'],
+      'ファイル': ['ファ', 'イ', 'ル']
+    };
+    const bad = [];
+    for (const [w, want] of Object.entries(cases)) {
+      const got = splitKana(w);
+      if (JSON.stringify(got) !== JSON.stringify(want)) bad.push({ w, got, want });
+    }
+    // 含非假名字元 → 不適用（回 null），不要清掉再出
+    for (const w of ['あ・い', 'かみ（紙）', '～ながら', 'あ い', 'ゃあ']) if (splitKana(w) !== null) bad.push({ w, got: splitKana(w), want: null });
+    return bad;
+  });
+  ok(p1.length === 0, '[P1] 拆假名：拗音黏前字、促音／長音／撥音各一格；含「・」「（」「～」空白或小字開頭的回報不適用', JSON.stringify(p1.slice(0, 3)));
+
+  // P2 全題庫掃一遍
+  const p2 = (() => {
+    const SMALL = /^[ゃゅょャュョァィゥェォぁぃぅぇぉゎヮ]$/;
+    let total = 0, applicable = 0, independent = 0;
+    const bad = [];
+    const perLevel = {};
+    for (const lv of Object.keys(bank)) {
+      perLevel[lv] = 0;
+      for (const x of bank[lv]) {
+        total += 1;
+        // 對照：不透過 splitKana，另外用「去掉小字後的字數」數一次拍數
+        const pureKana = /^[ぁ-ゖゝゞァ-ヺーヽヾ]+$/.test(x.kana || '') && !SMALL.test((x.kana || '')[0] || '');
+        const beats = (x.kana || '').replace(/[ゃゅょャュョァィゥェォぁぃぅぇぉゎヮ]/g, '').length;
+        if (pureKana && beats >= 2 && beats <= 8) independent += 1;
+        if (!x.spell) continue;
+        applicable += 1; perLevel[lv] += 1;
+        if (x.units.join('') !== x.kana) bad.push({ kana: x.kana, units: x.units, why: '接回去不等於原讀音' });
+        if (x.units.some((u) => SMALL.test(u))) bad.push({ kana: x.kana, units: x.units, why: '有單獨的小字' });
+      }
+    }
+    return { total, applicable, independent, perLevel, bad };
+  })();
+  ok(p2.total > 2000 && p2.applicable > 0, `[P2 前置] 全題庫 ${p2.total} 筆單字（母體非空），適用 ${p2.applicable} 筆`, JSON.stringify(p2.perLevel));
+  ok(p2.bad.length === 0 && p2.applicable === p2.independent,
+    `[P2] 每一筆適用的字拆完接回去＝原讀音、沒有單獨的小字；適用筆數與另一種數法相同（${JSON.stringify(p2.perLevel)}）`,
+    JSON.stringify({ bad: p2.bad.slice(0, 3), applicable: p2.applicable, independent: p2.independent }));
+
+  // P3 出題抽樣 400 題
+  const p3 = await p12.evaluate(async () => {
+    const d = await import('./js/data.js');
+    const k = await import('./js/kana.js');
+    const bad = [];
+    let n = 0, confusedShare = 0, distractors = 0;
+    for (const lv of d.LEVELS) {
+      const pool = await d.loadSet('vocab', lv);
+      const ok = pool.filter(k.canAskSpell);
+      for (let i = 0; i < 80; i++) {
+        const item = ok[(i * 37) % ok.length];
+        const q = k.makeSpellQuestion(item, pool);
+        if (!q) { bad.push({ kana: item.kana, why: '適用卻出不了題' }); continue; }
+        n += 1;
+        const count = (arr) => arr.reduce((m, u) => m.set(u, (m.get(u) || 0) + 1), new Map());
+        const tileCount = count(q.tiles.map((t) => t.text));
+        const unitCount = count(q.units);
+        for (const [u, c] of unitCount) if ((tileCount.get(u) || 0) < c) bad.push({ kana: item.kana, why: `少了方塊 ${u}` });
+        const extra = [];
+        for (const [u, c] of tileCount) {
+          const e = c - (unitCount.get(u) || 0);
+          for (let j = 0; j < e; j++) extra.push(u);
+        }
+        const unitSet = new Set(q.units);
+        if (extra.some((u) => unitSet.has(u))) bad.push({ kana: item.kana, why: '干擾方塊出現在正確答案裡', extra });
+        if (new Set(extra).size !== extra.length) bad.push({ kana: item.kana, why: '干擾方塊重複', extra });
+        if (q.tiles.length > 12) bad.push({ kana: item.kana, why: `方塊 ${q.tiles.length} 個 > 12` });
+        if (extra.length !== k.distractorCount(q.units.length)) bad.push({ kana: item.kana, why: `干擾 ${extra.length} 個 ≠ ${k.distractorCount(q.units.length)}` });
+        const conf = new Set(q.units.flatMap((u) => k.confusablesOf(u)));
+        distractors += extra.length;
+        confusedShare += extra.filter((u) => conf.has(u)).length;
+      }
+    }
+    return { n, bad, confusedRatio: distractors ? confusedShare / distractors : 0 };
+  });
+  ok(p3.n === 400, `[P3 前置] 抽到的 ${p3.n} 題都適用、都出得了題`, JSON.stringify(p3.bad.filter((x) => x.why === '適用卻出不了題').slice(0, 3)));
+  ok(p3.n === 400 && p3.bad.length === 0,
+    `[P3] 方塊涵蓋正確答案的每一格（含重複次數）；干擾方塊都不在正確答案裡、不重複、數量＝max(3, ⌈n/2⌉)、總數 ≤ 12（干擾裡屬於混淆表的佔 ${(p3.confusedRatio * 100).toFixed(0)}%）`,
+    JSON.stringify(p3.bad.slice(0, 3)));
+
+  // P4 真實入口：學習頁點「拼寫練習」
+  await idbReset();
+  await p12.evaluate(async () => {
+    const { setSetting } = await import('./js/store.js');
+    await setSetting('lastPos', 'all');
+  });
+  await goWait('#/learn?type=vocab&level=N5', () => [...document.querySelectorAll('button')].some((x) => /拼寫練習/.test(x.textContent)));
+  await p12.evaluateHandle(() => [...document.querySelectorAll('button')].find((x) => /拼寫練習/.test(x.textContent)) || null).then(clickEl);
+  await p12.waitForFunction(() => location.hash.startsWith('#/study') && document.querySelector('.spell-slot'), { timeout: 15000 }).catch(() => {});
+  const p4Hash = await p12.evaluate(() => location.hash);
+  const p4a = await spellState();
+  ok(/[?&]qtype=spell(&|$)/.test(p4Hash) && p4a.slots.length >= 2 && p4a.tiles.length > p4a.slots.length,
+    '[P4] 學習頁點「拼寫練習」→ 網址帶 qtype=spell，出現答案列與方塊', JSON.stringify({ p4Hash, slots: p4a.slots.length, tiles: p4a.tiles.length }));
+
+  // 從網址開一題、而且題幹對得回唯一一個字（隨機出題，對不回來就再開一次）
+  const openMapped = async (hash, lv, want = () => true) => {
+    for (let attempt = 0; attempt < 12; attempt++) {
+      if (!(await goWait(hash, () => !!document.querySelector('.spell-slot')))) continue;
+      const st = await spellState();
+      const item = byMeaning(lv, st.prompt);
+      if (item && item.spell && want(item)) return { st, item };
+    }
+    return null;
+  };
+  const SPELL_N5 = '#/study?type=vocab&level=N5&mode=quiz&scope=random&qtype=spell';
+  // P4 答對
+  await idbReset();
+  const r4 = await openMapped(SPELL_N5, 'N5');
+  let p4ok = null;
+  if (r4) {
+    for (const u of r4.item.units) await clickTile(u);
+    await p12.waitForSelector('.quiz-next', { timeout: 5000 }).catch(() => {});
+    const st = await spellState();
+    const rec = await p12.evaluate(async (id) => (await (await import('./js/store.js')).getProgress(id)) || null, r4.item.id);
+    p4ok = { st, rec };
+  }
+  ok(!!r4 && r4.st.slots.length === r4.item.units.length,
+    '[P4 前置] 空格數＝正確單位數', JSON.stringify(r4 && { kana: r4.item.kana, slots: r4.st.slots.length, units: r4.item.units }));
+  ok(!!p4ok && /\bok\b/.test(p4ok.st.fb) && p4ok.st.slots.every((s) => /correct/.test(s.cls)) && p4ok.rec && p4ok.rec.correct === 1 && p4ok.rec.wrong === 0,
+    '[P4] 照正確順序點完 → 自動判定答對、每格標對、進度寫入（對 1／錯 0）',
+    JSON.stringify(p4ok && { fb: p4ok.st.fb, rec: p4ok.rec }));
+  // P4 答錯：第一格故意放一個干擾方塊，其餘照正確順序
+  await idbReset();
+  const r4w = await openMapped(SPELL_N5, 'N5');
+  let p4bad = null;
+  if (r4w) {
+    const unitSet = new Set(r4w.item.units);
+    const decoy = r4w.st.tiles.find((t) => !unitSet.has(t.t));
+    await clickTile(decoy.t);
+    for (const u of r4w.item.units.slice(1)) await clickTile(u);
+    await p12.waitForSelector('.quiz-next', { timeout: 5000 }).catch(() => {});
+    const st = await spellState();
+    const rec = await p12.evaluate(async (id) => (await (await import('./js/store.js')).getProgress(id)) || null, r4w.item.id);
+    p4bad = { st, rec, kana: r4w.item.kana };
+  }
+  ok(!!p4bad && /\bno\b/.test(p4bad.st.fb) && /wrong/.test(p4bad.st.slots[0].cls)
+    && p4bad.st.slots.slice(1).every((s) => /correct/.test(s.cls))
+    && p4bad.st.fbText.includes(`正確讀音：${p4bad.kana}`) && p4bad.rec && p4bad.rec.wrong === 1,
+    '[P4] 故意點錯第一格 → 判定答錯、只標出錯的那一格、顯示正確讀音、進度記一次錯',
+    JSON.stringify(p4bad && { fb: p4bad.st.fb, slots: p4bad.st.slots.map((s) => s.cls), rec: p4bad.rec }));
+
+  // P5 退回：中間那格退回、其餘不動；填滿前不判定
+  const r5 = await openMapped(SPELL_N5, 'N5', (x) => x.units.length >= 4);
+  let p5 = null;
+  if (r5) {
+    const u = r5.item.units;
+    for (const x of u.slice(0, 3)) await clickTile(x);
+    const before = await spellState();
+    await clickSlot(1);
+    const after = await spellState();
+    await clickTile(u[1]);   // 退回的方塊可以再用，而且填回第一個空格
+    const again = await spellState();
+    p5 = { u, before, after, again };
+  }
+  ok(!!r5, '[P5 前置] 找到 4 格以上的字（填 3 格還不會滿）', r5 ? r5.item.kana : '');
+  ok(!!p5
+    && p5.after.slots[1].t === '' && p5.after.slots[0].t === p5.u[0] && p5.after.slots[2].t === p5.u[2]
+    && p5.after.tiles.filter((t) => t.t === p5.u[1] && !t.used).length >= 1
+    && p5.again.slots[1].t === p5.u[1]
+    && !p5.before.next && !p5.after.next && !p5.again.next && p5.again.fb === '',
+    '[P5] 點答案列中間那格 → 它回到方塊區可再用、其他格不動；填滿前不判定',
+    JSON.stringify(p5 && { after: p5.after.slots.map((s) => s.t), again: p5.again.slots.map((s) => s.t), next: p5.again.next }));
+
+  // P6 判定前畫面上沒有漢字與讀音（方塊與答案格本來就是假名，排除掉再看）。
+  // 中文意思本身就含有這個漢字寫法的字（例如「風」的意思就是「風」）不能拿來驗：題幹一定會出現它，
+  // 那是中日共用漢字的本質、不是洩漏（2026-09-23 隨機抽到「風」時這條誤紅過）
+  const r6 = await openMapped(SPELL_N5, 'N5',
+    (x) => /[一-鿿]/.test(x.kanji || '') && x.kanji !== x.kana && !String(x.meaning || '').includes(x.kanji));
+  const visibleText = () => p12.evaluate(() => {
+    const c = document.getElementById('view').cloneNode(true);
+    c.querySelectorAll('.spell-tiles, .spell-slots').forEach((x) => x.remove());
+    return c.textContent;
+  });
+  let p6 = null;
+  if (r6) {
+    const pre = await visibleText();
+    for (const u of r6.item.units) await clickTile(u);
+    await p12.waitForSelector('.quiz-next', { timeout: 5000 }).catch(() => {});
+    const post = await visibleText();
+    p6 = { kanji: r6.item.kanji, kana: r6.item.kana, pre, post };
+  }
+  ok(!!p6, '[P6 前置] 找到有漢字寫法（且漢字≠讀音）的字', p6 ? p6.kanji : '');
+  ok(!!p6 && !p6.pre.includes(p6.kanji) && !p6.pre.includes(p6.kana) && p6.post.includes(p6.kanji) && p6.post.includes(p6.kana),
+    '[P6] 判定前題目畫面沒有該字的漢字與讀音；判定後（對照）兩者都出現',
+    JSON.stringify(p6 && { kanji: p6.kanji, kana: p6.kana, pre: p6.pre.slice(0, 60) }));
+
+  // P7 與詞性篩選並存：動詞＋拼寫
+  const p7pre = bank.N5.filter((x) => x.pos === '動詞' && x.spell).length;
+  const p7seen = [];
+  if (await goWait('#/study?type=vocab&level=N5&mode=quiz&scope=random&qtype=spell&pos=verb', () => !!document.querySelector('.spell-slot'))) {
+    for (let i = 0; i < 20; i++) {
+      const st = await spellState();
+      if (!st.slots.length) break;
+      p7seen.push(st.prompt);
+      const n = st.slots.length;
+      for (let j = 0; j < n; j++) {
+        await p12.evaluateHandle(() => document.querySelector('.spell-tile:not([disabled])')).then(clickEl);
+      }
+      await p12.waitForSelector('.quiz-next', { timeout: 5000 }).catch(() => {});
+      const cnt = await p12.evaluate(() => document.querySelector('.study-count')?.textContent || '');
+      await p12.evaluate(() => document.querySelector('.quiz-next')?.click());
+      await p12.waitForFunction((prev) => { const c = document.querySelector('.study-count'); return !c || c.textContent !== prev; }, { timeout: 5000 }, cnt).catch(() => {});
+    }
+  }
+  const p7mapped = p7seen.map((m) => byMeaning('N5', m)).filter(Boolean);
+  ok(p7pre >= 20 && p7mapped.length >= 10, `[P7 前置] N5 動詞∩適用拼寫 ${p7pre} 個；從畫面對回題庫的有 ${p7mapped.length} 題`);
+  ok(p7mapped.length >= 10 && p7mapped.every((x) => x.pos === '動詞' && x.spell),
+    '[P7] 選「動詞」＋拼寫：每一題都是動詞、而且適用拼寫',
+    JSON.stringify(p7mapped.filter((x) => !(x.pos === '動詞' && x.spell)).slice(0, 3).map((x) => x.kana)));
+
+  // P8 版面：最長的適用字（8 格＋干擾）在 375、360 寬不溢出、點擊區 ≥ 44
+  const longest = Object.values(bank).flat().filter((x) => x.spell && x.units.length === 8)[0];
+  const p8 = [];
+  if (longest) {
+    for (const w of [375, 360]) {
+      await p12.setViewport({ width: w, height: 800, isMobile: true, hasTouch: true });
+      await idbReset();
+      await p12.evaluate(async (id) => {
+        const { findItem } = await import('./js/data.js');
+        const { addFavorite } = await import('./js/store.js');
+        await addFavorite((await findItem(id)).item);
+      }, longest.id);
+      // 收藏裡只有這一個字 → 從收藏開拼寫，保證挑到它
+      await goWait('#/study?src=favorites&mode=quiz&qtype=spell', () => !!document.querySelector('.spell-slot'));
+      p8.push(await p12.evaluate((width) => {
+        const els = [...document.querySelectorAll('.spell-slot, .spell-tile')];
+        const small = els.map((e) => e.getBoundingClientRect()).filter((r) => r.width < 44 || r.height < 44).length;
+        const out = els.filter((e) => { const r = e.getBoundingClientRect(); return r.left < 0 || r.right > width; }).length;
+        return {
+          width, slots: document.querySelectorAll('.spell-slot').length, tiles: document.querySelectorAll('.spell-tile').length,
+          small, out, scroll: document.documentElement.scrollWidth > document.documentElement.clientWidth
+        };
+      }, w));
+    }
+    await p12.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  }
+  ok(!!longest && p8.length === 2 && p8.every((r) => r.slots === 8 && r.tiles === 12),
+    `[P8 前置] 真的挑到 8 格的字（${longest ? longest.kana : '無'}），畫面上 8 格＋12 顆方塊`, JSON.stringify(p8));
+  ok(p8.length === 2 && p8.every((r) => r.small === 0 && r.out === 0 && !r.scroll),
+    '[P8] 375px 與 360px：答案格與方塊的點擊區都 ≥ 44×44、沒有超出畫面、沒有橫向捲動', JSON.stringify(p8));
+
+  // P9 SRS：拼寫答對／答錯對進度的影響，與漢字讀音題相同（都從真實畫面答）
+  const answerReading = async (correct) => {
+    for (let attempt = 0; attempt < 12; attempt++) {
+      await idbReset();
+      if (!(await goWait('#/study?type=vocab&level=N5&mode=quiz&scope=random&qtype=reading', () => !!document.querySelector('.opt')))) continue;
+      const q = await p12.evaluate(() => ({
+        prompt: document.querySelector('.quiz-prompt > span')?.textContent || '',
+        opts: [...document.querySelectorAll('.opt')].map((b) => { const c = b.cloneNode(true); c.querySelector('.opt-num')?.remove(); return c.textContent.trim(); })
+      }));
+      // 題幹是漢字 → 正解是讀音；題幹是讀音 → 正解是漢字。只收唯一對得回的
+      const hits = bank.N5.filter((x) => x.kanji === q.prompt || x.kana === q.prompt);
+      if (hits.length !== 1) continue;
+      const it = hits[0];
+      const right = it.kanji === q.prompt ? it.kana : it.kanji;
+      const target = correct ? right : q.opts.find((o) => o !== right);
+      if (!q.opts.includes(right) || !target) continue;
+      await p12.evaluateHandle((t) => [...document.querySelectorAll('.opt')].find((b) => { const c = b.cloneNode(true); c.querySelector('.opt-num')?.remove(); return c.textContent.trim() === t; }) || null, target).then(clickEl);
+      await p12.waitForSelector('.quiz-next', { timeout: 5000 }).catch(() => {});
+      return p12.evaluate(async (id) => (await (await import('./js/store.js')).getProgress(id)) || null, it.id);
+    }
+    return null;
+  };
+  const answerSpell = async (correct) => {
+    await idbReset();
+    const r = await openMapped(SPELL_N5, 'N5');
+    if (!r) return null;
+    const unitSet = new Set(r.item.units);
+    if (correct) for (const u of r.item.units) await clickTile(u);
+    else {
+      await clickTile(r.st.tiles.find((t) => !unitSet.has(t.t)).t);
+      for (const u of r.item.units.slice(1)) await clickTile(u);
+    }
+    await p12.waitForSelector('.quiz-next', { timeout: 5000 }).catch(() => {});
+    return p12.evaluate(async (id) => (await (await import('./js/store.js')).getProgress(id)) || null, r.item.id);
+  };
+  const shape = (r) => (r ? JSON.stringify({ box: r.box, reps: r.reps, correct: r.correct, wrong: r.wrong, lapses: r.lapses }) : null);
+  const p9 = {
+    spellOk: shape(await answerSpell(true)), readOk: shape(await answerReading(true)),
+    spellNo: shape(await answerSpell(false)), readNo: shape(await answerReading(false))
+  };
+  ok(Object.values(p9).every(Boolean), '[P9 前置] 拼寫與漢字讀音各答對、答錯一次，四筆進度都寫進去了', JSON.stringify(p9));
+  ok(Object.values(p9).every(Boolean) && p9.spellOk === p9.readOk && p9.spellNo === p9.readNo && p9.spellOk !== p9.spellNo,
+    '[P9] 拼寫答對／答錯對進度的影響與漢字讀音題相同', JSON.stringify(p9));
+  await idbReset();
+
+  ok(e12.length === 0, '[23] 拼寫練習全程無 console 錯誤', e12.slice(0, 3).join(' | '));
+  await p12.close();
 }
 
 /* ================= 14. console ================= */

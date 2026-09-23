@@ -5,7 +5,7 @@
  *    傳訊要求 SW 於背景暖機（WARM_DATA），避免拖慢首屏
  *  - 其他請求：network-first，失敗時回退快取
  */
-const VERSION = 'jlpt-v1.15.0';
+const VERSION = 'jlpt-v1.16.0';
 const SHELL_CACHE = `${VERSION}-shell`;
 const DATA_CACHE = `${VERSION}-data`;
 
@@ -43,6 +43,7 @@ const SHELL_ASSETS = [
   './js/views/weak.js',
   './js/weak.js',
   './js/qtypes.js',
+  './js/kana.js',
   './data/manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png'

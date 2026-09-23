@@ -314,6 +314,23 @@ button, input, select { font-family: inherit; font-size: inherit; color: inherit
 .opt.correct { border-color: var(--good); background: var(--good-bg); }
 .opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
 .opt[disabled] { cursor: default; opacity: .95; }
+
+/* ---- 拼寫練習（排假名方塊）：答案格與方塊都是按鈕，點擊區至少 44×44；8 格放不下一行就換行，不橫向捲動 ---- */
+.spell-slots, .spell-tiles { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 10px 0 14px; }
+.spell-slot, .spell-tile {
+  min-width: 44px; min-height: 44px; padding: 0 8px;
+  border-radius: 10px; font-size: 20px; line-height: 1; cursor: pointer;
+  color: var(--text);
+}
+.spell-slot { background: var(--surface-2); border: 1.5px dashed var(--border); }
+.spell-slot.filled { background: var(--surface); border-style: solid; border-color: var(--primary); }
+.spell-slot.correct { border: 1.5px solid var(--good); background: var(--good-bg); }
+.spell-slot.wrong { border: 1.5px solid var(--bad); background: var(--bad-bg); }
+.spell-slot[disabled] { cursor: default; opacity: 1; }
+.spell-tile { min-width: 48px; min-height: 48px; background: var(--surface); border: 1.5px solid var(--border); box-shadow: var(--shadow); }
+.spell-tile:active { background: var(--surface-2); }
+.spell-tile.used { visibility: hidden; }
+.spell-answer { font-weight: 600; margin: 4px 0; }
 .quiz-feedback {
   margin-top: 4px;
   padding: 12px 14px;

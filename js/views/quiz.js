@@ -11,6 +11,7 @@ import {
   canAskReading, canAskCloze, readingIndex,
   makeReadingQuestion, makeClozeQuestion
 } from '../qtypes.js';
+import { canAskSpell, makeSpellQuestion } from '../kana.js';
 
 export default async function quizView(ctx) {
   const wrap = h('div');
@@ -18,20 +19,21 @@ export default async function quizView(ctx) {
 
   const src = ctx.query.src || 'set';
   const level = ctx.query.level || 'N5';
-  const qtype = ctx.query.qtype || '';   // '' = 一般四選一；'reading' = 漢字讀音；'cloze' = 例句填空
+  const qtype = ctx.query.qtype || '';   // '' = 一般四選一；'reading' = 漢字讀音；'cloze' = 例句填空；'spell' = 拼寫（排假名方塊）
   const backTo = { travel: '/travel', review: '/review', mistakes: '/mistakes', favorites: '/favorites', weak: '/weak' }[src] || '/learn';
   const back = () => navigate(backTo);
   // 特殊題型只有部分題目適用，先在組卷階段篩掉
   const qFilter = qtype === 'reading' ? canAskReading
     : qtype === 'cloze' ? canAskCloze
-      : null;
+      : qtype === 'spell' ? canAskSpell
+        : null;
   // 詞性篩選只作用在一般題庫；複習／錯題本／收藏／弱點／旅行不受影響，
   // 網址被手動加上 pos 也一樣不理。兩個條件要同時成立，不是後者蓋掉前者。
   const pFilter = src === 'set' ? posFilter(ctx.query.pos) : null;
   const filter = qFilter && pFilter ? (it) => qFilter(it) && pFilter(it) : (qFilter || pFilter);
   const [{ items }, favSet] = await Promise.all([
     buildSession({
-      type: qtype === 'reading' ? 'vocab' : (ctx.query.type || 'vocab'),
+      type: (qtype === 'reading' || qtype === 'spell') ? 'vocab' : (ctx.query.type || 'vocab'),
       level,
       scope: ctx.query.scope || 'smart',
       src,
@@ -49,6 +51,8 @@ export default async function quizView(ctx) {
     const [v, g] = await Promise.all([loadMany('vocab', lv), loadMany('grammar', lv)]);
     clozePool = [...v, ...g].filter(canAskCloze);
   }
+  // 拼寫：混淆表不夠時，從同級其他單字的假名裡抽干擾方塊
+  const spellPool = qtype === 'spell' ? await loadMany('vocab', level === 'ALL' ? LEVELS : [level]) : null;
 
   wrap.replaceChildren();
   if (!items.length) {
@@ -100,6 +104,10 @@ export default async function quizView(ctx) {
     if (qtype === 'cloze') {
       const q = makeClozeQuestion(item, clozePool);
       if (q && q.opts.length >= 2) return q;
+    }
+    if (qtype === 'spell') {
+      const q = makeSpellQuestion(item, spellPool);
+      if (q) return q;
     }
 
     let prompt, promptSub = '', correct, optionOf, qLabel, distractorField;
@@ -184,6 +192,8 @@ export default async function quizView(ctx) {
       q.promptSub ? h('span', { class: 'sub', text: q.promptSub }) : null
     ]));
 
+    if (q.kind === 'spell') { renderSpell(q); return; }
+
     const optBox = h('div', { role: 'group', 'aria-label': '答案選項' });
     q.opts.forEach((o, i) => {
       const b = h('button', { class: 'opt' + (q.optionsAreJp ? ' jp' : ''), onclick: () => pick(o, b, optBox) }, [
@@ -207,6 +217,69 @@ export default async function quizView(ctx) {
     }
   }
 
+  /* 拼寫（排假名方塊）：點方塊填進下一個空格；點答案列裡的方塊退回（任何位置都能退）；
+   * 填滿就自動判定。題目只顯示中文意思與詞性，不顯示漢字與讀音。 */
+  function renderSpell(q) {
+    const n = q.units.length;
+    const placed = new Array(n).fill(null);   // 每一格放的是哪一個方塊（tile 物件）
+    const slotRow = h('div', { class: 'spell-slots', role: 'group', 'aria-label': `答案列，共 ${n} 格` });
+    const tileBox = h('div', { class: 'spell-tiles', role: 'group', 'aria-label': '假名方塊' });
+    const fb = h('div', { id: 'fb', role: 'status', 'aria-live': 'polite' });
+
+    function paint() {
+      slotRow.replaceChildren(...placed.map((t, i) => h('button', {
+        class: 'spell-slot' + (t ? ' filled' : ''),
+        disabled: answered || !t,
+        'aria-label': t ? `第 ${i + 1} 格：${t.text}（點一下退回）` : `第 ${i + 1} 格：空`,
+        onclick: () => {
+          if (answered || !placed[i]) return;
+          placed[i] = null;
+          paint();
+        }
+      }, t ? t.text : '')));
+      const used = new Set(placed.filter(Boolean).map((t) => t.id));
+      tileBox.replaceChildren(...q.tiles.map((t) => h('button', {
+        class: 'spell-tile jp' + (used.has(t.id) ? ' used' : ''),
+        disabled: answered || used.has(t.id),
+        'aria-label': `假名方塊 ${t.text}${used.has(t.id) ? '（已使用）' : ''}`,
+        onclick: () => {
+          if (answered || used.has(t.id)) return;
+          const at = placed.indexOf(null);
+          if (at < 0) return;
+          placed[at] = t;
+          paint();
+          if (placed.every(Boolean)) judge();
+        }
+      }, t.text)));
+    }
+
+    async function judge() {
+      if (answered) return;
+      answered = true;
+      const got = placed.map((t) => t.text);
+      // 唯一的判定：排出來的單位序列與拆出來的序列逐一相同
+      const wrongAt = got.map((u, i) => (u === q.units[i] ? -1 : i)).filter((i) => i >= 0);
+      const correct = wrongAt.length === 0;
+      paint();
+      slotRow.querySelectorAll('.spell-slot').forEach((el, i) => {
+        el.classList.add(wrongAt.includes(i) ? 'wrong' : 'correct');
+        if (wrongAt.includes(i)) el.setAttribute('aria-label', `第 ${i + 1} 格：${got[i]}（錯，應為 ${q.units[i]}）`);
+      });
+      const extra = correct ? [] : [h('div', { class: 'small spell-answer' }, `正確讀音：${q.item.kana}`)];
+      await afterAnswer(correct, q, extra);
+    }
+
+    paint();
+    wrap.append(slotRow, tileBox, fb);
+    if (!answered) {
+      requestAnimationFrame(() => {
+        const first = tileBox.querySelector('.spell-tile');
+        if (moveFocus && first) first.focus();
+        moveFocus = false;
+      });
+    }
+  }
+
   async function pick(o, btn, optBox) {
     if (answered) return;
     answered = true;
@@ -223,8 +296,14 @@ export default async function quizView(ctx) {
       btn.setAttribute('aria-label', `${o.text}（你的選擇，答錯）`);
     }
 
-    const grade = o.correct ? 'good' : 'again';
-    if (o.correct) correctCount += 1;
+    await afterAnswer(o.correct, q);
+  }
+
+  /* 答題後共用的收尾：記分、寫進度、解說、下一題（四選一與拼寫都走這裡）。
+   * 拼寫與漢字讀音一樣：答對 good、答錯 again，不另訂分數對應。 */
+  async function afterAnswer(correct, q, extraLines = []) {
+    const grade = correct ? 'good' : 'again';
+    if (correct) correctCount += 1;
     else wrongItems.push(q.item);
     await recordAnswer({ item: q.item, level: q.item.level, type: q.item.type, grade });
 
@@ -256,12 +335,13 @@ export default async function quizView(ctx) {
     }
 
     const fb = document.getElementById('fb');
-    fb.className = 'quiz-feedback ' + (o.correct ? 'ok' : 'no');
+    fb.className = 'quiz-feedback ' + (correct ? 'ok' : 'no');
     fb.append(
       h('div', { class: 'row spread' }, [
-        h('div', { class: 'fb-title', text: o.correct ? '答對了！' : '答錯了' }),
+        h('div', { class: 'fb-title', text: correct ? '答對了！' : '答錯了' }),
         actionRow(it, favSet)
       ]),
+      ...extraLines,
       ...detail.filter(Boolean)
     );
 

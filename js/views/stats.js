@@ -198,7 +198,7 @@ export default async function statsView() {
   refreshPersistLine();
   wrap.append(mgmt);
 
-  wrap.append(h('p', { class: 'small muted', style: 'text-align:center;margin-top:16px' }, 'JLPT 練習 v1.15.0・資料僅儲存在此瀏覽器'));
+  wrap.append(h('p', { class: 'small muted', style: 'text-align:center;margin-top:16px' }, 'JLPT 練習 v1.16.0・資料僅儲存在此瀏覽器'));
 
   async function doExport() {
     try {
