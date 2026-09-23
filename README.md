@@ -104,7 +104,7 @@ Service Worker 需要透過 `http(s)://`（或 `localhost`）載入，**不能�
 ### 方式 A：專案內建伺服器（建議）
 
 ```bash
-cd D:\Claude\App\JLPT_App
+cd JLPT_App                        # 進到專案資料夾（clone 下來的那一層）
 python scripts/serve.py            # 預設 http://localhost:5173
 python scripts/serve.py 8000      # 或自訂埠號
 ```
@@ -114,7 +114,7 @@ python scripts/serve.py 8000      # 或自訂埠號
 ### 方式 B：Python 內建模組（不建議在 Windows 用）
 
 ```bash
-cd D:\Claude\App\JLPT_App
+cd JLPT_App                        # 進到專案資料夾（clone 下來的那一層）
 python -m http.server 5173
 ```
 
@@ -124,7 +124,7 @@ python -m http.server 5173
 ### 方式 C：Node
 
 ```bash
-cd D:\Claude\App\JLPT_App
+cd JLPT_App                        # 進到專案資料夾（clone 下來的那一層）
 npx serve -l 5173
 # 或： npx http-server -p 5173
 ```
