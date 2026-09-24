@@ -1,6 +1,7 @@
 # SPEC_共用慣例導入 — JLPT_App（第 3 批）
 
 > 狀態：已執行（2026-09-19）
+> 〔2026-09-24 註：本檔寫的推送做法已作廢，推送一律用本 App 的推送閘門（見 `CLAUDE.md`）。〕
 > 撰寫：Fable 統籌 Session，2026-09-19。依據：統籌工作區的 `SPEC_共用慣例.md` v2（Yolin 2026-09-19 拍板，七項全數照案；三代理投票 5 題 3:0）。第 1 批 TripQuest、第 2 批 StockDiary 已完成；TripQuest 全新開場的 Session 第一行自動出現了回執，機制有實據。
 > 這是 docs-only 的工作：**不 bump `sw.js` VERSION、不改版本號、不算一版、不用跑三件套。**
 
