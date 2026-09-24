@@ -56,11 +56,15 @@ show_head() {  # show_head 路徑：HEAD 的那一版寫到 $T/show.txt；git sh
 
 # ---- 比對「是誰擋的」：輸出裡必須有 must 的每一句、不能有 -- 後面的任何一句（都用固定字串比） ----
 reason_ok() {  # reason_ok 檔案 must... [-- mustnot...]
+  # must 只認「判定訊息」那幾行：PUSHSAFE:／SELF-CHECK／LINT-GATE 開頭，以及 lint 逐條報的「命中（沒登記）」
+  # 與對照組失敗（固定縮排＋固定開頭）。自查會把命中的內容原樣印出來（縮排四格），只數「整份輸出有沒有出現」的話，
+  # 命中內容裡剛好有那幾個字就會被誤當成擋下理由。mustnot 仍看整份（寧可多報不符）。
   local f="$1"; shift
-  local mode=must s
+  local mode=must s msg="$f.msg"
+  grep -E '^(PUSHSAFE:|SELF-CHECK |LINT-GATE |  命中（沒登記）：|   對照組沒命中：|   反例被誤抓：|   孤兒檢查的對照組不對：)' "$f" > "$msg"
   for s in "$@"; do
     if [ "$s" = "--" ]; then mode=not; continue; fi
-    if [ $mode = must ]; then grep -qF -- "$s" "$f" || return 1
+    if [ $mode = must ]; then grep -qF -- "$s" "$msg" || return 1
     else grep -qF -- "$s" "$f" && return 1; fi
   done
   return 0
@@ -72,7 +76,15 @@ printf '%s\n' 'PUSHSAFE: 自查失敗（rc=1），沒有推送' 'SELF-CHECK FAIL
 reason_ok "$S1" 'path 命中' -- '沒有要推的 commit' || die "比對函式抓不到已知的『path 命中』"
 reason_ok "$S2" 'path 命中' && die "比對函式把『沒有要推的 commit』當成『path 命中』"
 reason_ok "$S1" 'PUSHSAFE: 自查失敗' -- 'path 命中' && die "比對函式沒擋下不該出現的句子"
-echo "比對函式的對照組：3/3 符合"
+S3="$T/sample3.txt"   # 那句話只出現在自查原樣印出的命中內容裡，判定訊息講的是別的理由
+printf '%s\n' 'path: control_hit=True added_hits=1 meta_hits=0' '    path 命中 1 行（新增行）' 'SELF-CHECK FAILED: email 對照組沒命中' 'PUSHSAFE: 自查失敗（rc=1），沒有推送' > "$S3"
+reason_ok "$S3" 'path 命中 1 行（新增行）' && die "比對函式把命中內容裡的字當成擋下理由"
+reason_ok "$S3" 'email 對照組沒命中' || die "比對函式抓不到判定訊息裡的理由"
+S4="$T/sample4.txt"   # lint 逐條報的兩種縮排行要認得；同樣的字縮排四格（自查印命中內容的格式）不能認
+printf '%s\n' '  命中（沒登記）：scripts/pushsafe.sh:70 [pipe] x' '   對照組沒命中：pipe 抓不到 x' '    反例被誤抓：y' 'LINT-GATE FAILED: 1 處已知的壞寫法' > "$S4"
+reason_ok "$S4" '命中（沒登記）' '對照組沒命中' || die "比對函式抓不到 lint 逐條報的理由"
+reason_ok "$S4" '反例被誤抓' && die "比對函式把縮排四格的命中內容當成 lint 的理由"
+echo "比對函式的對照組：7/7 符合"
 
 # ---- 假遠端與工作複本 ----
 git init -q --bare "$T/remote.git" || die "建假遠端"
