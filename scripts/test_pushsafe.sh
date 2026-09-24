@@ -1,19 +1,58 @@
 #!/usr/bin/env bash
-# 推送閘門的驗法（共用慣例 §2.5、§5.11）：用實際推送的那一支 scripts/pushsafe.sh，分別製造每一關的失敗，
+# 推送閘門的驗法（共用慣例 §2.5、§5.11、§5.15）：用實際推送的那一支 scripts/pushsafe.sh，分別製造每一關的失敗，
 # 而且每一種都比對「是哪一關、哪一類擋的」，不是只比回傳值。
-#   bash scripts/test_pushsafe.sh                                   # 正常：全部符合預期回 0，否則回 1
-#   TEST_PUSHSAFE_MUTATE=nofetch bash scripts/test_pushsafe.sh      # 突變：閘門拿掉「取遠端實際狀態」那一步
-#   TEST_PUSHSAFE_MUTATE=nometa  bash scripts/test_pushsafe.sh      # 突變：自查不掃 commit 訊息與作者欄
-#   TEST_PUSHSAFE_MUTATE=oldparse|nocheck|oldparse+nocheck ...      # 突變：抽新增行改回舊寫法／拿掉行數核對／兩個一起
+#   bash scripts/test_pushsafe.sh                              # 正常：全部符合回 0，並登記四支閘門檔案的雜湊
+#   TEST_PUSHSAFE_ORDER=reverse bash scripts/test_pushsafe.sh  # 情境反過來跑一次，結果必須一樣（J8）
+#   TEST_PUSHSAFE_MUTATE=<突變> bash scripts/test_pushsafe.sh   # 突變：nofetch nometa oldparse nocheck oldparse+nocheck nolint noregistry
 # 完全不碰 GitHub：在暫存目錄建一個 bare repo 當假遠端，複製本 repo「已 commit 的內容」過去跑。
 # 所以改了閘門要先在本機 commit（先不推）再跑這支。
+# 登記（J7）：正常跑、全部符合時，把 pushsafe.sh、selfcheck_public.py、test_pushsafe.sh、lint_gate.py 被驗的那一版雜湊
+# 寫進 .git/pushsafe-verified；沒全過或跑的是突變，就刪掉登記——pushsafe.sh 第一步會比對，沒有登記或對不上就不推。
+# 每個情境都自己準備前提、跑完還原到同一個起點（本機＝假遠端＝BASE、工作區乾淨），所以順序換了結果也不變。
+# 改檔與找字串一律用下面寫在檔案裡的 Python（共用慣例 §5.5：樣式不寫在 shell 指令列）。
 set -u
 SRC="$(git rev-parse --show-toplevel)" || exit 1
+SRC_REG="$(cd "$SRC" && git rev-parse --path-format=absolute --git-path pushsafe-verified)"
 T="$(mktemp -d)"
 cleanup() { chmod -R u+w "$T" 2>/dev/null; rm -r "$T" 2>/dev/null; }
 trap cleanup EXIT
-die() { echo "ABORT: $*（造情境失敗，不帶著沒造成的情境往下驗）"; exit 2; }
+FILES="scripts/pushsafe.sh scripts/selfcheck_public.py scripts/test_pushsafe.sh scripts/lint_gate.py"
+die() { echo "ABORT: $*（造情境失敗，不帶著沒造成的情境往下驗）"; rm -f "$SRC_REG"; exit 2; }
 MUTATE="${TEST_PUSHSAFE_MUTATE:-}"
+ORDER="${TEST_PUSHSAFE_ORDER:-normal}"
+
+# ---- Python 小工具：改檔（錨點必須恰好一處）、查某段文字在不在 ----
+pyedit() {  # pyedit 檔案 錨點 取代成
+  python - "$@" <<'PY'
+import sys
+p, a, b = sys.argv[1], sys.argv[2], sys.argv[3]
+s = open(p, encoding='utf-8', newline='').read()
+if s.count(a) != 1:
+    print(f'錨點出現 {s.count(a)} 次（應為 1）：{a[:60]!r}'); sys.exit(1)
+open(p, 'w', encoding='utf-8', newline='').write(s.replace(a, b))
+PY
+}
+pycut() {  # pycut 檔案 起點錨點 終點錨點：刪掉 [起點, 終點) 那一段
+  python - "$@" <<'PY'
+import sys
+p, a, b = sys.argv[1], sys.argv[2], sys.argv[3]
+s = open(p, encoding='utf-8', newline='').read()
+if s.count(a) != 1 or s.count(b) != 1:
+    print('錨點不是恰好一處'); sys.exit(1)
+i, j = s.index(a), s.index(b)
+open(p, 'w', encoding='utf-8', newline='').write(s[:i] + s[j:])
+PY
+}
+has_text() {  # has_text 檔案 文字：在 → 0，不在 → 1
+  python - "$@" <<'PY'
+import sys
+sys.exit(0 if sys.argv[2] in open(sys.argv[1], encoding='utf-8').read() else 1)
+PY
+}
+show_head() {  # show_head 路徑：HEAD 的那一版寫到 $T/show.txt；git show 失敗就中止（不讓空輸入被判成「沒有」）
+  git show "HEAD:$1" > "$T/show.txt" 2> "$T/show.err" || die "git show HEAD:$1 失敗（$(head -1 "$T/show.err")）"
+  [ -s "$T/show.txt" ] || die "git show HEAD:$1 取到空的"
+}
 
 # ---- 比對「是誰擋的」：輸出裡必須有 must 的每一句、不能有 -- 後面的任何一句（都用固定字串比） ----
 reason_ok() {  # reason_ok 檔案 must... [-- mustnot...]
@@ -42,169 +81,155 @@ cd "$T/work" || die "進工作複本"
 git remote set-url origin "$T/remote.git" || die "設遠端"
 git config user.name test
 git config user.email "test@users.noreply.github.com"
-if [ "$MUTATE" = nofetch ]; then
-  # 在複本裡把閘門的 fetch 那一段拿掉並 commit；再確認實際會被執行的就是這一份（§5.11 第三層）
-  python - scripts/pushsafe.sh <<'PY' || die "改壞閘門"
-import sys
-p = sys.argv[1]
-s = open(p, encoding='utf-8', newline='').read()
-a = s.index('# 0) 先拿遠端的最新狀態')
-b = s.index('# 1) 自查')
-open(p, 'w', encoding='utf-8', newline='').write(s[:a] + s[b:])
-PY
-  git commit -q -am "MUTATION: pushsafe 拿掉 fetch" || die "commit 改壞的閘門"
-  git show HEAD:scripts/pushsafe.sh | grep -q 'fetch -q origin main' && die "HEAD 裡的閘門還有 fetch，突變沒生效"
-  git diff --quiet HEAD -- scripts/pushsafe.sh || die "工作區的閘門跟 HEAD 不同，跑到的不是改壞的那一版"
-  echo "MUTATION ACTIVE: nofetch（HEAD 與工作區的 scripts/pushsafe.sh 都沒有 fetch；blob $(git rev-parse --short HEAD:scripts/pushsafe.sh)）"
-elif [ "$MUTATE" = nometa ]; then
-  sed -i 's/^    mhits = scan(meta)$/    mhits = []/' scripts/selfcheck_public.py
-  git commit -q -am "MUTATION: 自查不掃 commit 訊息與作者欄" || die "commit 改壞的自查"
-  git show HEAD:scripts/selfcheck_public.py | grep -q '^    mhits = \[\]$' || die "HEAD 裡的自查沒改到，突變沒生效"
-  git diff --quiet HEAD -- scripts/selfcheck_public.py || die "工作區的自查跟 HEAD 不同，跑到的不是改壞的那一版"
-  echo "MUTATION ACTIVE: nometa（HEAD 與工作區的 scripts/selfcheck_public.py 都不掃訊息與作者欄；blob $(git rev-parse --short HEAD:scripts/selfcheck_public.py)）"
-elif [ "$MUTATE" = oldparse ] || [ "$MUTATE" = nocheck ] || [ "$MUTATE" = oldparse+nocheck ]; then
-  # 抽新增行改回「以 +++ 開頭就跳過」的舊寫法、拿掉 numstat 行數核對，或兩個一起
-  python - scripts/selfcheck_public.py "$MUTATE" <<'PY' || die "改壞自查"
-import sys
-p, mode = sys.argv[1], sys.argv[2]
-s = open(p, encoding='utf-8', newline='').read()
-if 'oldparse' in mode:
-    a = "added = extract_added(patch)\n"
-    assert s.count(a) == 1
-    s = s.replace(a, "added = [l[1:] for l in patch.split('\\n') if l.startswith('+') and not l.startswith('+++')]\n")
-if 'nocheck' in mode:
-    a = s.index('# ---- 核對行數')
-    b = s.index('# ---- 核對結束 ----\n') + len('# ---- 核對結束 ----\n')
-    s = s[:a] + s[b:]
-open(p, 'w', encoding='utf-8', newline='').write(s)
-PY
-  git commit -q -am "MUTATION: 自查 $MUTATE" || die "commit 改壞的自查"
-  if [ "$MUTATE" != nocheck ]; then
-    git show HEAD:scripts/selfcheck_public.py | grep -qF "not l.startswith('+++')" || die "HEAD 裡的抽取沒改回舊寫法"
-  fi
-  if [ "$MUTATE" != oldparse ]; then
-    git show HEAD:scripts/selfcheck_public.py | grep -qF 'git 算' && die "HEAD 裡的行數核對還在"
-  fi
-  git diff --quiet HEAD -- scripts/selfcheck_public.py || die "工作區的自查跟 HEAD 不同，跑到的不是改壞的那一版"
-  echo "MUTATION ACTIVE: $MUTATE（已確認 HEAD 與工作區的 scripts/selfcheck_public.py 是改壞的那一版；blob $(git rev-parse --short HEAD:scripts/selfcheck_public.py)）"
-elif [ -n "$MUTATE" ]; then
-  die "不認得的突變 $MUTATE"
-fi
+TESTED=""   # 被驗的那一版四支檔案的雜湊（還沒套任何突變之前）
+for f in $FILES; do TESTED="$TESTED$f $(git rev-parse "HEAD:$f")"$'\n'; done
+register_clone() {  # 複本自己的登記：讓「登記」那一關放行，才驗得到後面幾關
+  : > "$(git rev-parse --git-path pushsafe-verified)"
+  for f in $FILES; do printf '%s %s\n' "$f" "$(git rev-parse "HEAD:$f")" >> "$(git rev-parse --git-path pushsafe-verified)"; done
+}
+
+# ---- 突變：先確認改壞之前那段文字在，改壞、commit，再確認它不在（§5.11 第三層、J5） ----
+mutate() {  # mutate 檔案 改壞之前一定在的文字 ——之後呼叫者自己改檔
+  show_head "$1"; has_text "$T/show.txt" "$2" || die "改壞之前 HEAD:$1 裡就沒有「$2」，突變的前提不成立"
+}
+confirm_mutated() {  # confirm_mutated 檔案 改壞之後不該在的文字
+  git commit -q -am "MUTATION: $MUTATE" || die "commit 改壞的版本"
+  show_head "$1"; has_text "$T/show.txt" "$2" && die "改壞之後 HEAD:$1 裡還有「$2」，突變沒生效"
+  git diff --quiet HEAD -- "$1" || die "工作區的 $1 跟 HEAD 不同，跑到的不是改壞的那一版"
+}
+PS=scripts/pushsafe.sh; SC=scripts/selfcheck_public.py
+case "$MUTATE" in
+  "") ;;
+  nofetch)
+    mutate $PS 'fetch -q origin main'; pycut $PS '# 0) 先拿遠端的最新狀態' '# 1) 自查' || die "改壞閘門"
+    confirm_mutated $PS 'fetch -q origin main' ;;
+  nometa)
+    mutate $SC 'mhits = scan(meta)'; pyedit $SC '    mhits = scan(meta)' '    mhits = []' || die "改壞自查"
+    confirm_mutated $SC 'mhits = scan(meta)' ;;
+  oldparse|nocheck|oldparse+nocheck)
+    [ "$MUTATE" != nocheck ] && { mutate $SC 'added = extract_added(patch)'; pyedit $SC 'added = extract_added(patch)' "added = [l[1:] for l in patch.split('\\n') if l.startswith('+') and not l.startswith('+++')]" || die "改壞抽法"; }
+    [ "$MUTATE" != oldparse ] && { mutate $SC 'git 算'; pycut $SC '# ---- 核對行數' '# ---- 核對結束 ----' || die "拿掉核對"; }
+    python -m py_compile $SC || die "改壞之後自查連編譯都過不了，紅的理由會不對"
+    [ "$MUTATE" != nocheck ] && confirm_mutated $SC 'added = extract_added(patch)'
+    [ "$MUTATE" = nocheck ] && confirm_mutated $SC 'git 算'
+    [ "$MUTATE" = oldparse+nocheck ] && { show_head $SC; has_text "$T/show.txt" 'git 算' && die "HEAD 裡的核對還在"; } ;;
+  nolint)
+    mutate $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法'
+    pyedit $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' 'if false; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' || die "改壞閘門"
+    confirm_mutated $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' ;;
+  noregistry)
+    mutate $PS 'if [ ! -f "$REG" ]; then'
+    pyedit $PS 'if [ ! -f "$REG" ]; then' 'if false; then' || die "改壞閘門"
+    pyedit $PS 'if [ -n "$stale" ]; then' 'if false; then' || die "改壞閘門"
+    confirm_mutated $PS 'if [ ! -f "$REG" ]; then' ;;
+  *) die "不認得的突變 $MUTATE" ;;
+esac
+[ -n "$MUTATE" ] && echo "MUTATION ACTIVE: $MUTATE（已確認改壞之前那段在、改壞之後不在，HEAD 與工作區一致）"
+register_clone
 git push -q origin main || die "初始推送到假遠端"
+BASE="$(git --git-dir="$T/remote.git" rev-parse main)"
 
 rhead() { git --git-dir="$T/remote.git" rev-parse --short main; }
-# 情境若在突變下漏到假遠端，把假遠端與本機的追蹤分支還原成開始前的狀態，後面的情境才不會被污染
-restore_remote() { git --git-dir="$T/remote.git" update-ref refs/heads/main "$1" && git fetch -q origin main || die "還原假遠端"; }
+restore() {  # 還原到起點：假遠端＝本機＝BASE、工作區乾淨、沒有 hook、遠端網址正確、登記對得上
+  rm -f "$T/remote.git/hooks/pre-receive" "$T/remote.git/hooks/post-receive"
+  git remote set-url origin "$T/remote.git" || die "還原遠端網址"
+  git --git-dir="$T/remote.git" update-ref refs/heads/main "$BASE" || die "還原假遠端"
+  git fetch -q origin main || die "還原追蹤分支"
+  git reset -q --hard "$BASE" && git clean -fdq || die "還原工作區"
+  register_clone
+}
+at_start() {  # 每個情境開始前確認起點真的一樣（互不污染）
+  [ "$(git rev-parse HEAD)" = "$BASE" ] && [ "$(git --git-dir="$T/remote.git" rev-parse main)" = "$BASE" ] \
+    && [ -z "$(git status --porcelain)" ] || die "情境開始前起點不對（上一個情境沒還原乾淨）"
+}
 bad=0
-check() {  # check 名稱 期望rc 實際rc 期望假遠端(same|local) before must... [-- mustnot...]
-  local name="$1" want="$2" got="$3" expect="$4" before="$5"; shift 5
+check() {  # check 名稱 期望rc 實際rc 期望假遠端(same|local) must... [-- mustnot...]
+  local name="$1" want="$2" got="$3" expect="$4"; shift 4
   local after ok why=""
   after="$(rhead)"; ok=yes
   [ "$got" = "$want" ] || { ok=no; why="回傳值"; }
-  if [ "$expect" = same ]; then [ "$after" = "$before" ] || { ok=no; why="$why 假遠端被動到"; }
+  if [ "$expect" = same ]; then [ "$after" = "$(git rev-parse --short "$BASE")" ] || { ok=no; why="$why 假遠端被動到"; }
   else [ "$after" = "$(git rev-parse --short HEAD)" ] || { ok=no; why="$why 假遠端≠本機"; }; fi
   reason_ok "$T/out.txt" "$@" || { ok=no; why="$why 擋下理由不對"; }
   [ "$ok" = yes ] || bad=1
-  printf '%-4s %-40s rc=%s(期望 %s)  假遠端 %s→%s  %s\n' "$ok" "$name" "$got" "$want" "$before" "$after" "${why:+（$why）}"
-  printf '       比對：%s\n' "$*"
+  printf '%-4s %-40s rc=%s(期望 %s)  %s\n' "$ok" "$name" "$got" "$want" "${why:+（$why）}"
   # 不符時印出閘門實際的擋下訊息，才看得出是被什麼擋的（或為什麼沒擋）
-  [ "$ok" = yes ] || grep -E 'SELF-CHECK FAILED|PUSHSAFE:' "$T/out.txt" | sed 's/^/       實際：/'
+  [ "$ok" = yes ] || grep -E 'SELF-CHECK FAILED|PUSHSAFE:|LINT-GATE' "$T/out.txt" | sed 's/^/       實際：/'
 }
-run() { bash scripts/pushsafe.sh > "$T/out.txt" 2>&1; echo $?; }
+run() { rm -f "$T/out.txt"; bash scripts/pushsafe.sh > "$T/out.txt" 2>&1; echo $?; }
 hitfile() { printf '%s%s\n' 'path E' ':\foo' > "$1"; }   # 當場組出來的合成樣本（本機路徑的形狀）
+clean_commit() { echo "clean $1 $(date +%s%N)" > "clean_$1.txt"; git add "clean_$1.txt" && git commit -q -m "clean $1" || die "造乾淨的 commit（$1）"; }
+BAR="$(printf '\174')"   # 管線字元另外組：這支檔本身的文字不能出現「git … 接管線」（lint 會掃這支）
 
-# 1) 要推的檔有命中
-b="$(rhead)"
-hitfile hit.txt
-git add hit.txt && git commit -q -m "synthetic hit" || die "造命中的 commit"
-rc="$(run)"; check "1 新增行命中自查" 1 "$rc" same "$b" 'PUSHSAFE: 自查失敗' 'path 命中 1 行（新增行）' -- '（commit 訊息或作者欄）' '沒有要推的 commit' '取不到遠端'
-git reset -q --soft HEAD~1 && git rm -q --cached hit.txt && rm hit.txt || die "撤掉命中的 commit"
+s01() { at_start; hitfile hit.txt; git add hit.txt && git commit -q -m "synthetic hit" || die "造命中的 commit"
+  rc="$(run)"; check "01 新增行命中自查" 1 "$rc" same 'PUSHSAFE: 自查失敗' 'path 命中 1 行（新增行）' -- '（commit 訊息或作者欄）' '沒有要推的 commit' '取不到遠端'; restore; }
+s02() { at_start; clean_commit 02
+  pyedit $SC "'example' + '.org'" "'example' + '.o'" > /dev/null || die "改自查的 email 對照組"
+  has_text $SC "'example' + '.o'" || die "沒改到自查的 email 對照組"
+  rc="$(run)"; check "02 自查的對照組壞掉" 1 "$rc" same 'PUSHSAFE: 自查失敗' 'email 對照組沒命中' -- '取不到遠端'; restore; }
+s03() { at_start; clean_commit 03; git remote set-url origin "$T/nope.git" || die "改遠端網址"
+  rc="$(run)"; check "03 抓不到遠端" 1 "$rc" same 'PUSHSAFE: 取不到遠端的最新狀態' -- 'SELF-CHECK' '推送失敗'; restore; }
+s04() { at_start; clean_commit 04
+  printf '#!/bin/sh\nexit 1\n' > "$T/remote.git/hooks/pre-receive" && chmod +x "$T/remote.git/hooks/pre-receive" || die "放 pre-receive"
+  rc="$(run)"; check "04 推送被拒（pre-receive）" 2 "$rc" same 'SELF-CHECK OK' 'PUSHSAFE: 推送失敗' -- '遠端與本機不一致' '推送成功'; restore; }
+s05() { at_start; clean_commit 05
+  printf '#!/bin/sh\nwhile read old new ref; do [ "$ref" = refs/heads/main ] && git update-ref refs/heads/main "$old"; done\n' > "$T/remote.git/hooks/post-receive" \
+    && chmod +x "$T/remote.git/hooks/post-receive" || die "放 post-receive"
+  rc="$(run)"; check "05 推了遠端卻沒更新（post-receive）" 3 "$rc" same 'SELF-CHECK OK' 'PUSHSAFE: 遠端與本機不一致' -- '推送成功'; restore; }
+s06() { at_start; clean_commit 06
+  rc="$(run)"; check "06 全部正常" 0 "$rc" local 'SELF-CHECK OK' 'PUSHSAFE: 推送成功'; restore; }
+s07() { at_start
+  rc="$(run)"; check "07 沒有要推的 commit" 1 "$rc" same 'PUSHSAFE: 自查失敗' '沒有要推的 commit' -- 'path 命中'; restore; }
+s08() { at_start; hitfile hit8.txt; git add hit8.txt && git commit -q -m "synthetic hit 8" || die "造命中的 commit（08）"
+  local hit8; hit8="$(git rev-parse HEAD)"
+  git push -q origin main && git fetch -q origin main || die "把命中的 commit 推上假遠端再抓回來"
+  git --git-dir="$T/remote.git" update-ref refs/heads/main "$BASE" || die "倒退假遠端"
+  [ "$(git rev-parse origin/main)" = "$hit8" ] || die "本機的追蹤分支沒指著命中的 commit（前提沒造成）"
+  clean_commit 08
+  rc="$(run)"; check "08 本機以為已推、遠端被倒退" 1 "$rc" same 'PUSHSAFE: 自查失敗' 'path 命中' -- '推送成功' '沒有要推的 commit'
+  git --git-dir="$T/remote.git" merge-base --is-ancestor "$hit8" main 2>/dev/null && echo "       帶命中的 commit 到了假遠端：是"
+  restore; }
+s09() { at_start; echo "m9 $(date +%s%N)" > m9.txt
+  git add m9.txt && git commit -q -m "$(printf '%s%s' 'msg path E' ':\foo')" || die "造訊息帶命中的 commit"
+  rc="$(run)"; check "09 命中寫在 commit 訊息裡" 1 "$rc" same 'PUSHSAFE: 自查失敗' 'path 命中 1 行（commit 訊息或作者欄）' -- '（新增行）' '沒有要推的 commit'; restore; }
+s10() { at_start; echo "m10 $(date +%s%N)" > m10.txt
+  git add m10.txt && git -c user.email="$(printf '%s@%s' 'someone' 'example.org')" commit -q -m "author test" || die "造作者信箱的 commit"
+  rc="$(run)"; check "10 作者信箱不是 noreply" 1 "$rc" same 'PUSHSAFE: 自查失敗' 'email 命中' '（commit 訊息或作者欄）' -- '（新增行）' '沒有要推的 commit'; restore; }
+s11() { at_start; printf '%s%s%s\n' '++ ' 'path E' ':\foo' > pp.txt
+  git add pp.txt && git commit -q -m "pp add" || die "造 ++ 開頭的 commit"
+  local pp1; pp1="$(git rev-parse HEAD)"
+  git rm -q pp.txt && git commit -q -m "pp del" || die "造刪掉它的 commit"
+  rc="$(run)"; check "11 ++ 開頭的命中、加了又刪" 1 "$rc" same 'PUSHSAFE: 自查失敗' 'path 命中 1 行（新增行）' -- '抽取壞了' '沒有要推的 commit'
+  git --git-dir="$T/remote.git" merge-base --is-ancestor "$pp1" main 2>/dev/null && echo "       帶命中的 commit（11）到了假遠端：是"
+  restore; }
+s12() { at_start; git rm -q README.md && git commit -q -m "delete only" || die "造只刪不增的 commit"
+  rc="$(run)"; check "12 只刪不增（要放行）" 0 "$rc" local 'SELF-CHECK OK' 'PUSHSAFE: 推送成功' -- '抽取壞了'; restore; }
+s13() { at_start
+  printf '%s %s cat\n' 'git fetch -q origin main' "$BAR" >> $PS   # 被掃的腳本寫回一行壞寫法（放在 exit 0 之後，不會被執行）
+  git commit -q -am "bad line in gate" || die "造壞寫法的 commit"
+  register_clone   # 讓登記那一關放行：這一種驗的是 lint，不是登記
+  rc="$(run)"; check "13 被掃的腳本寫回壞寫法" 1 "$rc" same 'PUSHSAFE: 閘門腳本有已知的壞寫法' '命中（沒登記）' -- 'SELF-CHECK'; restore; }
+s14() { at_start
+  pyedit scripts/lint_gate.py "'git fetch -q origin main ' + BAR + ' cat'" "'git fetch -q origin main ' + ' cat'" > /dev/null || die "改 lint 的對照組"
+  git commit -q -am "break lint control" || die "造 lint 對照組壞掉的 commit"
+  register_clone
+  rc="$(run)"; check "14 lint 自己的對照組壞掉" 1 "$rc" same 'PUSHSAFE: 閘門腳本有已知的壞寫法或檢查器壞了' '對照組沒命中' -- 'SELF-CHECK'; restore; }
+s15() { at_start; clean_commit 15; rm -f "$(git rev-parse --git-path pushsafe-verified)"
+  rc="$(run)"; check "15 沒有驗法登記" 1 "$rc" same '沒有驗法登記' -- 'LINT-GATE' 'SELF-CHECK'; restore; }
+s16() { at_start; printf '%s\n' '# 改過一行，沒重跑驗法' >> $PS; git commit -q -am "touch gate" || die "改閘門的 commit"
+  rc="$(run)"; check "16 閘門改過、沒重跑驗法" 1 "$rc" same '還沒重跑驗法' 'scripts/pushsafe.sh' -- 'LINT-GATE' 'SELF-CHECK'; restore; }
 
-# 2) 自查的對照組弄壞（email 對照組的頂級網域改成一個字母，樣式就抓不到它）
-echo "clean $(date +%s)" > clean.txt
-git add clean.txt && git commit -q -m "clean commit" || die "造乾淨的 commit"
-b="$(rhead)"
-sed -i "s/+ '\.org'/+ '.o'/" scripts/selfcheck_public.py
-grep -q "+ '\.o'," scripts/selfcheck_public.py || die "沒改到自查的 email 對照組"
-rc="$(run)"; check "2 自查的對照組壞掉" 1 "$rc" same "$b" 'PUSHSAFE: 自查失敗' 'email 對照組沒命中' -- '取不到遠端'
-git checkout -q -- scripts/selfcheck_public.py
-
-# 3) 抓不到遠端（遠端網址不存在）→ 停在取遠端那一步，自查根本不跑
-b="$(rhead)"
-git remote set-url origin "$T/nope.git" || die "改遠端網址"
-rc="$(run)"; check "3 抓不到遠端" 1 "$rc" same "$b" 'PUSHSAFE: 取不到遠端的最新狀態' -- 'SELF-CHECK' '推送失敗'
-git remote set-url origin "$T/remote.git" || die "改回遠端網址"
-
-# 4) 推送被拒：pre-receive 回傳 1 → 停在推送、後面的比對不跑
-b="$(rhead)"
-printf '#!/bin/sh\nexit 1\n' > "$T/remote.git/hooks/pre-receive" && chmod +x "$T/remote.git/hooks/pre-receive" || die "放 pre-receive"
-rc="$(run)"; check "4 推送被拒（pre-receive）" 2 "$rc" same "$b" 'SELF-CHECK OK' 'PUSHSAFE: 推送失敗' -- '遠端與本機不一致' '推送成功'
-rm "$T/remote.git/hooks/pre-receive"
-
-# 5) 推送回報成功、遠端卻沒更新：post-receive 把 main 退回舊值 → 停在比對遠端
-b="$(rhead)"
-printf '#!/bin/sh\nwhile read old new ref; do [ "$ref" = refs/heads/main ] && git update-ref refs/heads/main "$old"; done\n' > "$T/remote.git/hooks/post-receive" \
-  && chmod +x "$T/remote.git/hooks/post-receive" || die "放 post-receive"
-rc="$(run)"; check "5 推了遠端卻沒更新（post-receive）" 3 "$rc" same "$b" 'SELF-CHECK OK' 'PUSHSAFE: 遠端與本機不一致' -- '推送成功'
-rm "$T/remote.git/hooks/post-receive"
-
-# 6) 全部正常 → 推上去、假遠端＝本機
-b="$(rhead)"
-rc="$(run)"; check "6 全部正常" 0 "$rc" local "$b" 'SELF-CHECK OK' 'PUSHSAFE: 推送成功'
-
-# 7) 沒有要推的 commit → 自查擋下
-b="$(rhead)"
-rc="$(run)"; check "7 沒有要推的 commit" 1 "$rc" same "$b" 'PUSHSAFE: 自查失敗' '沒有要推的 commit' -- 'path 命中'
-
-# 9) 命中寫在 commit 訊息裡（檔案本身乾淨）
-b="$(rhead)"; bf="$(git --git-dir="$T/remote.git" rev-parse main)"
-echo "m9 $(date +%s)" > m9.txt
-git add m9.txt && git commit -q -m "$(printf '%s%s' 'msg path E' ':\foo')" || die "造訊息帶命中的 commit"
-rc="$(run)"; check "9 命中寫在 commit 訊息裡" 1 "$rc" same "$b" 'PUSHSAFE: 自查失敗' 'path 命中 1 行（commit 訊息或作者欄）' -- '（新增行）' '沒有要推的 commit'
-git reset -q --soft HEAD~1 && git rm -q --cached m9.txt && rm m9.txt || die "撤掉情境 9 的 commit"
-restore_remote "$bf"
-
-# 10) 作者與提交者的信箱不是 noreply（當場組出來的合成信箱，不寫進任何檔）
-b="$(rhead)"; bf="$(git --git-dir="$T/remote.git" rev-parse main)"
-echo "m10 $(date +%s)" > m10.txt
-git add m10.txt && git -c user.email="$(printf '%s@%s' 'someone' 'example.org')" commit -q -m "author test" || die "造作者信箱的 commit"
-rc="$(run)"; check "10 作者信箱不是 noreply" 1 "$rc" same "$b" 'PUSHSAFE: 自查失敗' 'email 命中' '（commit 訊息或作者欄）' -- '（新增行）' '沒有要推的 commit'
-git reset -q --soft HEAD~1 && git rm -q --cached m10.txt && rm m10.txt || die "撤掉情境 10 的 commit"
-restore_remote "$bf"
-
-# 11) 內容以「++ 」開頭的命中行，先加一行、再用第二個 commit 刪掉（只有掃每個 commit 的新增行才抓得到）
-b="$(rhead)"; bf="$(git --git-dir="$T/remote.git" rev-parse main)"
-printf '%s%s%s\n' '++ ' 'path E' ':\foo' > pp.txt
-git add pp.txt && git commit -q -m "pp add" || die "造 ++ 開頭的 commit"
-PP1="$(git rev-parse HEAD)"
-git rm -q pp.txt && git commit -q -m "pp del" || die "造刪掉它的 commit"
-rc="$(run)"; check "11 ++ 開頭的命中、加了又刪" 1 "$rc" same "$b" 'PUSHSAFE: 自查失敗' 'path 命中 1 行（新增行）' -- '抽取壞了' '沒有要推的 commit'
-if git --git-dir="$T/remote.git" merge-base --is-ancestor "$PP1" main 2>/dev/null; then
-  echo "       帶命中的 commit（情境 11）到了假遠端：是"
-else
-  echo "       帶命中的 commit（情境 11）到了假遠端：否"
-fi
-git reset -q --soft HEAD~2 || die "撤掉情境 11 的兩個 commit"
-restore_remote "$bf"
-
-# 8) 本機以為已經推上去、遠端其實沒有（v8）：帶命中的 commit 繞過閘門推上假遠端、抓回來，再把假遠端倒退
-BASE="$(git --git-dir="$T/remote.git" rev-parse main)"
-hitfile hit8.txt
-git add hit8.txt && git commit -q -m "synthetic hit 8" || die "造命中的 commit（情境 8）"
-HIT8="$(git rev-parse HEAD)"
-git push -q origin main && git fetch -q origin main || die "把命中的 commit 推上假遠端再抓回來"
-git --git-dir="$T/remote.git" update-ref refs/heads/main "$BASE" || die "倒退假遠端"
-[ "$(git --git-dir="$T/remote.git" rev-parse main)" = "$BASE" ] || die "假遠端沒退回 BASE"
-[ "$(git rev-parse origin/main)" = "$HIT8" ] || die "本機的追蹤分支沒指著命中的 commit（前提沒造成）"
-echo "clean8 $(date +%s)" > clean8.txt
-git add clean8.txt && git commit -q -m "clean commit 8" || die "疊乾淨的 commit（情境 8）"
-rc="$(run)"; check "8 本機以為已推、遠端被倒退" 1 "$rc" same "$(git rev-parse --short "$BASE")" 'PUSHSAFE: 自查失敗' 'path 命中' -- '推送成功' '沒有要推的 commit'
-if git --git-dir="$T/remote.git" merge-base --is-ancestor "$HIT8" main 2>/dev/null; then
-  echo "       帶命中的 commit 到了假遠端：是"
-else
-  echo "       帶命中的 commit 到了假遠端：否"
-fi
+LIST="s01 s02 s03 s04 s05 s06 s07 s08 s09 s10 s11 s12 s13 s14 s15 s16"
+[ "$ORDER" = reverse ] && LIST="$(printf '%s\n' $LIST | sort -r | tr '\n' ' ')"
+echo "順序：$ORDER（$LIST）"
+for s in $LIST; do $s; done
 
 [ -n "$MUTATE" ] && echo "（這一輪是突變 $MUTATE：預期至少有一種報不符）"
-[ $bad -eq 0 ] && echo "TEST-PUSHSAFE: 全部符合預期" || echo "TEST-PUSHSAFE: 有不符合預期的情況"
+if [ $bad -eq 0 ] && [ -z "$MUTATE" ]; then
+  printf '%s' "$TESTED" > "$SRC_REG"
+  echo "TEST-PUSHSAFE: 全部符合預期；已登記被驗的四支檔案雜湊（$SRC_REG）"
+else
+  rm -f "$SRC_REG"
+  echo "TEST-PUSHSAFE: $( [ $bad -eq 0 ] && echo '全部符合，但這一輪是突變' || echo '有不符合預期的情況' )；已刪掉驗法登記"
+fi
 exit $bad

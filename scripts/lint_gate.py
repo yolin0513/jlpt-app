@@ -151,23 +151,63 @@ NEGATIVES = [   # 合法寫法：任何一種都不該抓
 
 # ---- 登記的例外：(檔, 規則, 那一行裡的一段固定字串, 理由)。每一條都必須在這次掃描裡命中 ----
 EXCEPTIONS = [
-    ('scripts/test_pushsafe.sh', 'plushdr', "s.replace(a, \"added = [l[1:] for l in patch.split",
-     '驗法的 oldparse 突變：故意把舊抽法寫進暫存複本的自查，這一行就是那段壞寫法的樣本'),
-    ('scripts/test_pushsafe.sh', 'plushdr', 'grep -qF "not l.startswith',
-     '驗法的 oldparse 突變：確認暫存複本 HEAD 裡真的是舊抽法（驗到的是改壞的那一版）'),
+    # 2026-09-24 J5 之後重新盤過：舊的 7 條（nofetch／nocheck 的恆真斷言、三行 grep／sed 樣式含反斜線、舊寫法的突變）
+    # 已經隨程式改掉而不再命中、刪除。下面每一條都是這一版實際命中之後才補登的（例外不預寫）。
+    ('scripts/pushsafe.sh', 'absent', 'if [ ! -f "$REG" ]; then',
+     '「登記檔不存在就停」：方向是故障時停下，不是斷言「某東西不見了」；驗法情境 15 守著（刪掉登記 → 停、理由對）'),
     ('scripts/test_pushsafe.sh', 'absent', 'grep -qF -- "$s" "$f" && return 1',
-     'reason_ok 的「不該出現」分支；開頭有對照組（sample1 帶了不該出現的句子，必須被擋），同一次執行裡先驗過'),
-    ('scripts/test_pushsafe.sh', 'absent', "grep -q 'fetch -q origin main' && die",
-     '【已回報、待 Dispatch 決定】nofetch 突變斷言「HEAD 裡沒有 fetch」，但沒先確認改壞之前真的有 fetch（python 只確認了註解錨點在）；未修前暫列例外'),
-    ('scripts/test_pushsafe.sh', 'absent', "grep -qF 'git 算' && die",
-     '【已回報、待 Dispatch 決定】nocheck 突變斷言「HEAD 裡沒有行數核對」，但沒先確認改壞之前真的有那一句；未修前暫列例外'),
-    ('scripts/test_pushsafe.sh', 'backslash', "sed -i \"s/+ '\\.org'/+ '.o'/\"",
-     '下一行立刻用 grep 確認改到了，沒改到就 die（同一次執行裡的對照）'),
-    ('scripts/test_pushsafe.sh', 'backslash', "grep -q \"+ '\\.o',\"",
-     '這一行就是上一行 sed 的確認；樣式若壞掉會找不到而 die，不會空轉放行'),
-    ('scripts/test_pushsafe.sh', 'backslash', "grep -q '^    mhits = \\[\\]$'",
-     'nometa 突變的確認；樣式若壞掉會找不到而 die，不會空轉放行'),
+     'reason_ok 的「不該出現」分支；驗法開頭有對照組（sample1 帶了不該出現的句子，必須被擋），同一次執行裡先驗過'),
+    ('scripts/test_pushsafe.sh', 'plushdr', "pyedit $SC 'added = extract_added(patch)' \"added = [l[1:]",
+     '驗法 oldparse 突變：故意把舊抽法寫進暫存複本的自查，這一行就是那段壞寫法的樣本'),
+    ('scripts/test_pushsafe.sh', 'absent', "mutate $PS 'if [ ! -f \"$REG\" ]; then'",
+     '驗法 noregistry 突變的錨點字串（確認改壞之前那段在），不是斷言'),
+    ('scripts/test_pushsafe.sh', 'absent', "pyedit $PS 'if [ ! -f \"$REG\" ]; then' 'if false; then'",
+     '驗法 noregistry 突變的改檔指令（錨點字串），不是斷言'),
+    ('scripts/test_pushsafe.sh', 'absent', "confirm_mutated $PS 'if [ ! -f \"$REG\" ]; then'",
+     '驗法 noregistry 突變的確認（改壞之後那段不在），前面 mutate 已先確認它原本在'),
 ]
+
+
+# ---- 孤兒檢查（J9，共用慣例 v9 F4）：專案裡寫了推送指令、卻沒登記進 TARGETS 的腳本，一律報出來 ----
+PUSH_CMD = re.compile(r'\bgit\b[^\n#]*\spush\b')
+SCRIPT_EXT = ('.sh', '.py', '.mjs', '.js', '.cjs')
+# 登記的「不是目標」：每一條都要寫理由，而且這次必須真的含推送指令（沒命中也算失敗，免得清單默默過期）
+ORPHAN_EXEMPT = {
+    'scripts/lint_gate.py': '掃描器本身：對照組樣本字串裡有推送指令，不是真的在推',
+}
+
+
+def push_scripts(files):
+    """files：[(路徑, 內容)]。回傳內容裡有推送指令（不算註解行）的路徑。"""
+    out = set()
+    for name, text in files:
+        if not name.endswith(SCRIPT_EXT):
+            continue
+        if any(PUSH_CMD.search(l) for l in text.split('\n') if not is_comment(l)):
+            out.add(name)
+    return out
+
+
+def orphan_check():
+    import subprocess
+    r1 = subprocess.run(['git', '-c', 'core.quotepath=false', 'ls-files'], cwd=ROOT, capture_output=True)
+    r2 = subprocess.run(['git', '-c', 'core.quotepath=false', 'ls-files', '--others', '--exclude-standard'], cwd=ROOT, capture_output=True)
+    if r1.returncode != 0 or r2.returncode != 0:
+        return None, '取不到檔案清單（git ls-files 失敗）'
+    names = [n for n in (r1.stdout + r2.stdout).decode('utf-8').split('\n') if n.strip()]
+    if not names:
+        return None, '檔案清單是空的'
+    files = []
+    for n in names:
+        if n.endswith(SCRIPT_EXT):
+            try:
+                files.append((n, open(os.path.join(ROOT, n), encoding='utf-8').read()))
+            except OSError:
+                pass   # 追蹤中但這次被刪掉的檔：沒有內容就沒有推送指令
+    found = push_scripts(files)
+    orphans = sorted(found - set(TARGETS) - set(ORPHAN_EXEMPT))
+    stale = sorted(set(ORPHAN_EXEMPT) - found)
+    return (orphans, stale, len(files)), None
 
 
 def run_rule(rule, name, text):
@@ -186,6 +226,13 @@ def main():
         for rule in RULES:
             if run_rule(rule, name, text):
                 bad.append(f'反例被誤抓：{rule} 抓了 {text[:60]!r}（檢查器壞了）')
+    # 孤兒檢查的對照組：當場組出來的兩份假腳本，一份有推送指令（必須抓到）、一份只在註解提到（不能抓）
+    fake = [('scripts/x_new.sh', 'echo hi\ngit -c a=b push origin main\n'),
+            ('scripts/y_note.sh', '# 不要直接 git push，一律用閘門\necho hi\n'),
+            ('docs/z.md', 'git push origin main')]
+    got = push_scripts(fake)
+    if got != {'scripts/x_new.sh'}:
+        bad.append(f'孤兒檢查的對照組不對：抓到 {sorted(got)}，應該只有 scripts/x_new.sh（檢查器壞了）')
     n_controls = sum(len(v) for v in CONTROLS.values())
     print(f'對照組 {n_controls} 條、反例 {len(NEGATIVES)} 條：{"全部符合" if not bad else "有問題"}')
     if bad:
@@ -219,6 +266,15 @@ def main():
                     unexpected.append((f, i, rule, line.strip()))
     print(f'掃了 {len(TARGETS)} 支檔、共 {total_lines} 行；登記的例外命中 {len(used)}／{len(EXCEPTIONS)} 條')
     stale = [e for k, e in enumerate(EXCEPTIONS) if k not in used]
+    res, err = orphan_check()
+    if err:
+        print(f'LINT-GATE FAILED: 孤兒檢查{err}（檢查器壞了）')
+        return 1
+    orphans, orphan_stale, n_scripts = res
+    print(f'孤兒檢查：看了 {n_scripts} 支腳本，有推送指令卻沒登記的 {len(orphans)} 支')
+    for o in orphans:
+        unexpected.append((o, 0, 'orphan', '有推送指令，卻沒登記進 TARGETS（也沒登記成「不是目標」）'))
+    stale = stale + [(o, 'orphan', '登記成「不是目標」但這次沒有推送指令', '') for o in orphan_stale]
     for f, i, rule, line in unexpected:
         print(f'  命中（沒登記）：{f}:{i} [{rule}] {line[:140]}')
     for e in stale:
