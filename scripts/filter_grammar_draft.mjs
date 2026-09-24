@@ -43,6 +43,9 @@ for (const lv of LEVELS) {
 }
 
 const BAD_CHAR = /[A-Za-z\u0400-\u04FF\uAC00-\uD7A3]/;
+// \u4E2D\u6587\u610F\u601D\u8207\u4F8B\u53E5\u4E2D\u8B6F\uFF1A\u53EA\u64CB\u897F\u91CC\u723E\u5B57\u6BCD\u8207\u97D3\u6587\uFF08\u751F\u6210\u96DC\u8A0A\uFF09\uFF1B\u82F1\u6587\u5B57\u6BCD\u53EF\u80FD\u662F A\u3001B \u9019\u985E\u4EE3\u7A31\uFF0C\u4E0D\u64CB\u3002
+// \u4EE5\u524D\u9019\u5169\u6B04\u5B8C\u5168\u4E0D\u67E5\uFF0C\u96DC\u8A0A\u6DF7\u9032\u4F86\u6703\u88AB\u4FDD\u7559\uFF082026-09-24 v9 \u76E4\u9EDE\u767C\u73FE\uFF09\u3002
+const NOISE_ZH = /[\u0400-\u04FF\uAC00-\uD7A3]/;
 const KANA_ONLY = new RegExp(`^[${HIRA}${KATA}\u3001\u3002\u30FB\uFF1F\uFF01\uFF08\uFF09\uFF10-\uFF19 0-9]+$`);
 const HAS_KANJI = new RegExp(`[${KANJI}]`);
 const HAS_JP = new RegExp(`[${KANJI}${HIRA}${KATA}]`);
@@ -52,6 +55,7 @@ function problem(f) {
   const [pat, yomi, mean, conn, ex, exk, exz] = f;
   if (!pat || !mean || !conn || !ex || !exk || !exz) return '有空欄位（讀音欄可空，其餘必填）';
   if (BAD_CHAR.test(pat + yomi + conn + ex + exk)) return '含英文、西里爾字母或韓文（生成雜訊）';
+  if (NOISE_ZH.test(mean + exz)) return '中文意思或例句中譯含西里爾字母或韓文（生成雜訊）';
   if (HAS_KANJI.test(exk)) return `例句假名殘留漢字：${exk}`;
   if (!KANA_ONLY.test(exk)) return `例句假名含異常字元：${exk}`;
   if (!HAS_JP.test(ex)) return '例句不含日文';
