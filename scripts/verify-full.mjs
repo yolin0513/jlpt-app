@@ -4,11 +4,13 @@
 import puppeteer from 'puppeteer';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { createHarness, selfTestHarness } from './lib/harness.mjs';
 
 const BASE = (process.argv[2] || 'https://yolin0513.github.io/jlpt-app/').replace(/\/?$/, '/');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-let pass = 0, fail = 0;
-const ok = (c, m) => { c ? pass++ : fail++; console.log(`  ${c ? '✓' : '✗ FAIL'} ${m}`); };
+// 判定用共用的 harness（J3）：先跑判定自己的對照組，壞了就不開跑；新增或刪掉斷言要同步改 expected。
+selfTestHarness();
+const { ok, finish } = createHarness({ name: 'verify-full', expected: 30 });
 
 const b = await puppeteer.launch({ headless: true, userDataDir: path.join(tmpdir(), 'vf-' + Date.now()), args: ['--no-sandbox', '--disable-gpu'] });
 
@@ -236,6 +238,5 @@ for (const [label, vp] of [
   await pr.close();
 }
 
-console.log(`\n===== ${pass} passed, ${fail} failed =====`);
 await b.close();
-process.exit(fail ? 1 : 0);
+process.exit(finish());

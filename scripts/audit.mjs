@@ -6,27 +6,15 @@
 import puppeteer from 'puppeteer';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { createHarness, selfTestHarness } from './lib/harness.mjs';
 
 const BASE = (process.argv[2] || 'http://localhost:5173/').replace(/\/?$/, '/');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-let pass = 0, fail = 0;
-const issues = [];
-const ok = (c, m, note) => {
-  c ? pass++ : fail++;
-  if (!c) issues.push(m + (note ? ` — ${note}` : ''));
-  console.log(`  ${c ? '✓' : '✗ FAIL'} ${m}`);
-};
-// 安全網：任何一節沒接住的錯誤（例如線上某個 fetch 失敗）都記成一條 FAIL，照樣印出已跑的結果與總結再結束，
-// 不要像 2026-09-21 那樣整支中斷、連前面通過了什麼都看不到
+// 判定用共用的 harness（J2）：先跑判定自己的對照組（五個探針），壞了就不開跑；
+// 有失敗、一條都沒跑、條數和登記的不同、走到總結前就崩掉，都回 1。新增或刪掉斷言要同步改 expected。
+selfTestHarness();
 let browser = null;
-process.on('uncaughtException', async (e) => {
-  ok(false, '執行中斷（未接住的錯誤，後面的項目沒有跑）', String(e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ｜ ') : e));
-  console.log(`\n===== ${pass} passed, ${fail} failed（中途中斷）=====`);
-  console.log('\n--- 需處理清單 ---');
-  issues.forEach((i, n) => console.log(`${n + 1}. ${i}`));
-  try { await browser?.close(); } catch { /* 已經在收尾，關不掉就算了 */ }
-  process.exit(1);
-});
+const { ok, finish } = createHarness({ name: 'audit', expected: 168, onCrash: () => browser?.close() });
 
 const b = browser = await puppeteer.launch({ headless: true, userDataDir: path.join(tmpdir(), 'audit-' + Date.now()), args: ['--no-sandbox'] });
 const p = await b.newPage();
@@ -2167,11 +2155,5 @@ console.log('\n[23] 拼寫練習');
 console.log('\n[14] Console');
 ok(errs.length === 0, `全程 console 無錯誤`, errs.slice(0, 5).join(' | '));
 
-console.log(`\n===== ${pass} passed, ${fail} failed =====`);
-if (issues.length) {
-  console.log('\n--- 需處理清單 ---');
-  issues.forEach((i, n) => console.log(`${n + 1}. ${i}`));
-}
 await b.close();
-// 有任何斷言失敗就回傳非 0：只看結束碼的自動化才抓得到（原本全部跑完一律回 0）
-process.exit(fail > 0 ? 1 : 0);
+process.exit(finish());
