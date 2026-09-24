@@ -98,6 +98,8 @@ cd "$T/work" || die "進工作複本"
 # 跑到的閘門就是舊的，新加的情境會對著舊閘門驗）；本機工作區的四支閘門檔也要跟 HEAD 一樣，登記才對得上實際的內容
 cmp -s "$SELF" scripts/test_pushsafe.sh || die "正在跑的驗法跟 HEAD 的不一樣（還沒 commit？），跑到的會是舊的閘門"
 TESTED_HEAD="$(git rev-parse HEAD)"
+# 最後登記用的共用判斷：套任何突變之前先取一份 HEAD 的（情境用的是複本裡的、突變時是改壞的那一份；登記不能交給改壞的判斷）
+git show HEAD:scripts/lib/verified_reg.py > "$T/verified_reg_head.py" 2> /dev/null && [ -s "$T/verified_reg_head.py" ] || die "取不到 HEAD 的登記判斷"
 # 情境 23 用：只跑到這裡（開頭的檢查）就結束，不跑情境、不登記
 if [ "${TEST_PUSHSAFE_STARTUP_ONLY:-}" = 1 ]; then echo "TEST-PUSHSAFE: STARTUP-ONLY OK（開頭的檢查都過了，沒跑情境、不登記）"; exit 0; fi
 git -C "$SRC" diff --quiet HEAD -- $FILES || echo "注意：本機工作區的閘門檔跟 HEAD 不一樣，這一輪跑完也不會登記"
@@ -138,6 +140,19 @@ case "$MUTATE" in
     mutate $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法'
     pyedit $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' 'if false; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' || die "改壞閘門"
     confirm_mutated $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' ;;
+  regnopass)   # 登記的共用判斷不看「驗法全過沒有」
+    mutate scripts/lib/verified_reg.py "    if passed != 'yes':"
+    pyedit scripts/lib/verified_reg.py "    if passed != 'yes':" '    if False:' || die "改壞登記判斷"
+    confirm_mutated scripts/lib/verified_reg.py "    if passed != 'yes':" ;;
+  regnotested)   # 登記的共用判斷不比「驗過的那一份是不是 HEAD」
+    mutate scripts/lib/verified_reg.py '    if mismatch:'
+    pyedit scripts/lib/verified_reg.py '    if mismatch:' '    if False:' || die "改壞登記判斷"
+    confirm_mutated scripts/lib/verified_reg.py '    if mismatch:' ;;
+  dienorm)   # 中止時不刪登記（改的是這支自己：錨點在執行時才組，這幾行的字面跟真正那一行不一樣）
+    A="rm -f \"\$SRC_REG\"; exit 2"
+    mutate scripts/test_pushsafe.sh "$A"
+    pyedit scripts/test_pushsafe.sh "$A" "exit 2" || die "改壞驗法"
+    confirm_mutated scripts/test_pushsafe.sh "$A" ;;
   regclean)   # 登記的共用判斷把「工作區跟 HEAD 不一樣」一律當作沒改動（統籌者 2026-09-24 查出缺口用的突變）
     mutate scripts/lib/verified_reg.py '        if rc == 1:'
     pyedit scripts/lib/verified_reg.py '        if rc == 1:' '        if False:' || die "改壞登記判斷"
@@ -294,14 +309,15 @@ REGHELP=scripts/lib/verified_reg.py   # 複本裡的＝HEAD 那一版（突變�
 s20() { at_start; local reg="$T/reg20"; echo old > "$reg"
   printf '%s\n' '# 改了還沒 commit' >> $PS || die "改工作區的閘門檔"
   git diff --quiet HEAD -- $PS && die "工作區的閘門檔沒有改到（前提沒造成）"
-  python $REGHELP "$PWD" "$reg" "$(git rev-parse HEAD)" $FILES > "$T/out.txt" 2>&1; local rc=$?
+  python $REGHELP "$PWD" "$reg" yes $FILES > "$T/out.txt" 2>&1; local rc=$?
   local ok=yes why=""
   [ $rc -eq 1 ] || { ok=no; why="回傳 $rc（期望 1）"; }
   [ -e "$reg" ] && { ok=no; why="$why 舊登記還在"; }
   grep -qF 'VERIFIED-REG: 工作區跟 HEAD 不一樣' "$T/out.txt" && grep -qF 'scripts/pushsafe.sh' "$T/out.txt" || { ok=no; why="$why 判定訊息沒講明是哪一支有改動"; }
   check_plain "20 閘門檔工作區有改動（不能登記、舊登記要刪）" "$ok" "$why"; restore; }
 s21() { at_start; local reg="$T/reg21"; echo old > "$reg"
-  python $REGHELP "$PWD" "$reg" "$(git rev-parse HEAD)" $FILES > "$T/out.txt" 2>&1; local rc=$?
+  local specs=""; for f in $FILES; do specs="$specs $f=$PWD/$f"; done   # 驗過的那一份＝HEAD 那一版（複本是乾淨的）
+  python $REGHELP "$PWD" "$reg" yes $specs > "$T/out.txt" 2>&1; local rc=$?
   local ok=yes why="" want=""
   for f in $FILES; do want="$want$f $(git rev-parse "HEAD:$f")"$'\n'; done
   [ $rc -eq 0 ] || { ok=no; why="回傳 $rc（期望 0）"; }
@@ -312,13 +328,34 @@ s23() { at_start; local ok=yes why="" rc0 rc1
   # 從複本拿（HEAD 那一版；突變時是改壞的那一版），不是拿正在跑的這支——否則突變改的那一份根本沒被執行到
   cp scripts/test_pushsafe.sh "$T/copy0.sh" && cp scripts/test_pushsafe.sh "$T/copy1.sh" && printf '%s\n' '# 改了還沒 commit' >> "$T/copy1.sh" || die "複製驗法"
   TEST_PUSHSAFE_STARTUP_ONLY=1 bash "$T/copy0.sh" > "$T/out0.txt" 2>&1; rc0=$?
+  local creg; creg="$(git rev-parse --path-format=absolute --git-path pushsafe-verified)"
+  [ -s "$creg" ] || die "複本的驗法登記不在（前提沒造成：要先有登記，才驗得到中止時會刪掉它）"
   TEST_PUSHSAFE_STARTUP_ONLY=1 bash "$T/copy1.sh" > "$T/out1.txt" 2>&1; rc1=$?
+  [ -e "$creg" ] && { ok=no; why="中止之後驗法登記還在（die 沒有刪登記）"; }
   [ $rc0 -eq 0 ] && grep -qF 'STARTUP-ONLY OK' "$T/out0.txt" || { ok=no; why="原樣的驗法沒過開頭檢查（對照組）"; }
   [ $rc1 -eq 2 ] && grep -qF '正在跑的驗法跟 HEAD 的不一樣' "$T/out1.txt" || { ok=no; why="$why 改過沒 commit 的驗法沒有被擋（回傳 $rc1）"; }
-  check_plain "23 正在跑的驗法跟 HEAD 不一樣（要中止）" "$ok" "$why"; restore; }
+  check_plain "23 正在跑的驗法跟 HEAD 不一樣（要中止、刪登記）" "$ok" "$why"; restore; }
+s24() { at_start; local reg="$T/reg24"; echo old > "$reg"
+  local specs=""; for f in $FILES; do specs="$specs $f=$PWD/$f"; done   # 其他條件都成立，只有「驗法沒全過」
+  python $REGHELP "$PWD" "$reg" no $specs > "$T/out.txt" 2>&1; local rc=$?
+  local ok=yes why=""
+  [ $rc -eq 1 ] || { ok=no; why="回傳 $rc（期望 1）"; }
+  [ -e "$reg" ] && { ok=no; why="$why 舊登記還在"; }
+  grep -qF 'VERIFIED-REG: 驗法沒有全過' "$T/out.txt" || { ok=no; why="$why 判定訊息不是「驗法沒有全過」"; }
+  check_plain "24 驗法沒全過（不能登記、舊登記要刪）" "$ok" "$why"; restore; }
+s25() { at_start; local reg="$T/reg25"; echo old > "$reg"
+  cp $PS "$T/t25.sh" && printf '%s\n' '# 驗的是改過的這一份' >> "$T/t25.sh" || die "造驗過的那一份"
+  git diff --quiet HEAD -- $FILES || die "工作區不乾淨（前提沒造成：這一種要只有「驗過的不是 HEAD」）"
+  local specs=""; for f in $FILES; do [ "$f" = $PS ] && specs="$specs $f=$T/t25.sh" || specs="$specs $f=$PWD/$f"; done
+  python $REGHELP "$PWD" "$reg" yes $specs > "$T/out.txt" 2>&1; local rc=$?
+  local ok=yes why=""
+  [ $rc -eq 1 ] || { ok=no; why="回傳 $rc（期望 1）"; }
+  [ -e "$reg" ] && { ok=no; why="$why 舊登記還在"; }
+  grep -qF 'VERIFIED-REG: 跑的不是 HEAD 那一版' "$T/out.txt" && grep -qF 'scripts/pushsafe.sh' "$T/out.txt" || { ok=no; why="$why 判定訊息沒講明驗的不是 HEAD 那一版"; }
+  check_plain "25 驗過的那一份不是 HEAD（開始時有改動又改回去）" "$ok" "$why"; restore; }
 
-LIST="s01 s02 s03 s04 s05 s06 s07 s08 s09 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 s21 s22 s23"
-N_SCEN=23
+LIST="s01 s02 s03 s04 s05 s06 s07 s08 s09 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 s21 s22 s23 s24 s25"
+N_SCEN=25
 run_list() {  # run_list normal|reverse
   local l="$LIST"; [ "$1" = reverse ] && l="$(printf '%s\n' $LIST | sort -r | tr '\n' ' ')"
   echo "順序：$1（$l）"; RESULT=(); for s in $l; do $s; done
@@ -336,17 +373,17 @@ else
 fi
 
 [ -n "$MUTATE" ] && echo "（這一輪是突變 $MUTATE：預期至少有一種報不符）"
-if [ $bad -eq 0 ] && [ -z "$MUTATE" ] && [ "$ORDER" = both ]; then
-  # 登記用 HEAD 那一版的共用判斷（複本裡的，情境 20、21 驗過的就是它）：本機 HEAD 還是被驗的那一個、
-  # 被守的檔工作區跟 HEAD 一模一樣，才登記 HEAD 那一版的雜湊
-  python $REGHELP "$SRC" "$SRC_REG" "$TESTED_HEAD" $FILES; rrc=$?
-  if [ $rrc -ne 0 ]; then echo "TEST-PUSHSAFE: 全部符合，但沒有登記（見上一行）"; exit 1; fi
+# 登記：該不該登記全部交給共用判斷（HEAD 那一版，情境 20、21、24、25 守著）；這裡只把「驗法全過沒有」交進去、照它的判斷執行。
+# 「全過」＝沒有不符、不是突變、兩種順序都跑了。實際驗過的那一份：閘門與自查是複本裡的（跑完已還原到起點），驗法是正在跑的這支。
+# 【已知限制】下面算 passed 的這一行本身沒有常設情境守著（要守得讓整套驗法再跑一輪失敗，一輪要好幾分鐘）；
+#  替代的證明見證據檔「F10：驗法沒全過 → 刪登記」。
+passed=no; [ $bad -eq 0 ] && [ -z "$MUTATE" ] && [ "$ORDER" = both ] && passed=yes
+SPECS=""; for f in $FILES; do [ "$f" = scripts/test_pushsafe.sh ] && SPECS="$SPECS $f=$SELF" || SPECS="$SPECS $f=$T/work/$f"; done
+python "$T/verified_reg_head.py" "$SRC" "$SRC_REG" "$passed" $SPECS; rrc=$?
+if [ "$passed" = yes ]; then
+  [ $rrc -eq 0 ] || { echo "TEST-PUSHSAFE: 全部符合，但沒有登記（見上一行）"; exit 1; }
   echo "TEST-PUSHSAFE: 全部符合預期（兩種順序）；已登記被驗的 $(echo $FILES | wc -w) 支檔案雜湊"
-elif [ $bad -eq 0 ] && [ -z "$MUTATE" ]; then
-  rm -f "$SRC_REG"
-  echo "TEST-PUSHSAFE: 全部符合，但只跑了一個順序（$ORDER）；不登記、已刪掉驗法登記"
 else
-  rm -f "$SRC_REG"
-  echo "TEST-PUSHSAFE: $( [ $bad -eq 0 ] && echo '全部符合，但這一輪是突變' || echo '有不符合預期的情況' )；已刪掉驗法登記"
+  echo "TEST-PUSHSAFE: $( [ $bad -ne 0 ] && echo '有不符合預期的情況' || { [ -n "$MUTATE" ] && echo '全部符合，但這一輪是突變' || echo "全部符合，但只跑了一個順序（$ORDER）"; } )；沒有登記"
 fi
 exit $bad

@@ -152,34 +152,48 @@ GUARDED = ['scripts/build_data.py', 'scripts/check_data.py', 'scripts/test_datac
 REG = os.path.join(ROOT, '.logs', 'datacheck-verified')
 
 
-def head_state():
-    """（HEAD 的 commit, {檔: HEAD 的 blob}, 工作區跟 HEAD 不一樣的檔）。取不到就中止。"""
-    def git(*a):
-        r = subprocess.run(['git', *a], cwd=ROOT, capture_output=True)
-        return r.returncode, r.stdout.decode('utf-8', 'replace').strip()
-    rc, head = git('rev-parse', 'HEAD')
-    if rc != 0 or not head:
-        raise Abort('取不到 HEAD，沒辦法確認跑的是已 commit 的版本')
-    blobs = {}
-    for f in GUARDED:
-        rc, b = git('rev-parse', f'HEAD:{f}')
-        if rc != 0 or not b:
-            raise Abort(f'取不到 HEAD:{f}')
-        blobs[f] = b
-    rc, _ = git('diff', '--quiet', 'HEAD', '--', *GUARDED)
-    if rc not in (0, 1):
-        raise Abort('git diff 失敗，沒辦法確認工作區跟 HEAD 一樣')
-    dirty = [] if rc == 0 else [f for f in GUARDED if git('diff', '--quiet', 'HEAD', '--', f)[0] == 1]
-    return head, blobs, dirty
+# 實際驗過的那幾份：這支自己在啟動那一刻的內容、複製進暫存複本的 build_data.py／check_data.py——
+# 登記時交給共用判斷比對它們是不是 HEAD 那一版（開始時工作區有改動、跑完前又改回去，比的是驗過的內容，時序騙不過）
+TESTED_DIR = tempfile.mkdtemp()
+with open(os.path.abspath(__file__), 'rb') as _fh:
+    open(os.path.join(TESTED_DIR, 'test_datacheck.py'), 'wb').write(_fh.read())
+
+
+def self_probe():
+    """F10 第 3 點：拿一個故意改壞的版本跑這支驗法，跑完斷言登記已經不在（「驗法沒全過 → 刪登記」的呼叫端分支）。
+    暫存 clone 裡把 build_data.py 改成一開始就失敗（第一步基準就中止，幾十秒跑完），先放一份舊登記。
+    子行程帶 --no-selfprobe：只是不再往下探測，不會讓任何東西故意失敗。"""
+    t = tempfile.mkdtemp()
+    try:
+        w = os.path.join(t, 'w')
+        r = subprocess.run(['git', 'clone', '-q', '--no-local', ROOT, w], capture_output=True)
+        if r.returncode != 0:
+            raise Abort('自我探測：clone 失敗')
+        # 取新版也要先證明它真的是新版：探測跑的是 clone 裡（HEAD）的這支，必須跟正在跑的這支一樣，否則探到的是別的版本
+        norm = lambda b: b.replace(b'\r\n', b'\n')
+        if norm(open(os.path.join(w, 'scripts', 'test_datacheck.py'), 'rb').read()) != norm(open(os.path.join(TESTED_DIR, 'test_datacheck.py'), 'rb').read()):
+            raise Abort('自我探測：正在跑的這支跟 HEAD 的不一樣（還沒 commit？），探測到的會是別的版本')
+        p = os.path.join(w, 'scripts', 'build_data.py')
+        s = open(p, encoding='utf-8', newline='').read()
+        marker = 'import hashlib\n'
+        if s.count(marker) != 1:
+            raise Abort('自我探測：改壞 build_data.py 的錨點不在')
+        open(p, 'w', encoding='utf-8', newline='').write(s.replace(marker, 'raise SystemExit("自我探測：故意改壞的版本")\n' + marker))
+        reg = os.path.join(w, '.logs', 'datacheck-verified')
+        os.makedirs(os.path.dirname(reg))
+        open(reg, 'w', encoding='utf-8').write('舊登記\n')
+        r = subprocess.run([sys.executable, 'scripts/test_datacheck.py', '--no-selfprobe'], cwd=w, capture_output=True, timeout=900)
+        out = r.stdout.decode('utf-8', 'replace')
+        return r.returncode != 0, not os.path.exists(reg), 'VERIFIED-REG: 驗法沒有全過' in out
+    finally:
+        rmtree(t)
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--ref', help='用這個 commit 的 build_data.py 與 check_data.py（不碰 F9 登記）')
+    ap.add_argument('--no-selfprobe', action='store_true', help='不跑開頭的自我探測（自我探測的子行程用）')
     args = ap.parse_args()
-    start = None if args.ref else head_state()
-    if start and start[2]:
-        print(f'注意：工作區跟 HEAD 不一樣（{"、".join(start[2])}），這一輪跑完也不會登記（F9：登記的是已 commit 的版本）')
 
     # §5.11 第二層：比對函式自己的對照組
     assert names('缺檔：data/vocab/n5.json', 'vocab/n5.json'), '比對函式抓不到已知的句子'
@@ -208,6 +222,7 @@ def main():
             open(os.path.join(base, 'scripts', s), 'wb').write(r.stdout)
         else:
             shutil.copy(os.path.join(ROOT, 'scripts', s), os.path.join(base, 'scripts', s))
+            shutil.copy(os.path.join(base, 'scripts', s), os.path.join(TESTED_DIR, s))   # 驗的就是這一份
     print(f'被測的版本：{"commit " + args.ref if args.ref else "工作區"}')
 
     bad = 0
@@ -217,6 +232,12 @@ def main():
         if not ok:
             bad = 1
         print(f'{"yes" if ok else "no ":4s} {name:34s} {detail}')
+
+    if not args.ref and not args.no_selfprobe:
+        failed, dropped, said = self_probe()
+        report(failed and dropped and said, 'F10 自我探測：驗法沒全過 → 登記被刪',
+               ('' if failed else '（改壞的版本竟然全過）') + ('' if dropped else '（跑完舊登記還在）')
+               + ('' if said else '（判定訊息不是「驗法沒有全過」）'))
 
     def not_applicable(name, why):
         """被測的舊版根本不走這條路（例如還沒有暫存檔、沒有換上這一步），注入不會發生：不算洞，也不算過。"""
@@ -453,34 +474,26 @@ def main():
     print(f'共 {len(SETS)} 組 × 4 種情境＋基準＋J13（C-alldup 10 組、B-alldup 8 組＋成對對照 8 組）'
           f'＋寫到一半失敗 {len(OUTPUTS)} 個輸出檔＋暫存檔位置被佔 {len(OUTPUTS)}＋清理失敗 {len(OUTPUTS) - 1}'
           f'＋換上失敗 {len(OUTPUTS)}＋換上失敗且清理失敗 {len(OUTPUTS)}；' + ('全部符合' if not bad else '有不符合'))
-    if start:
-        if bad:
-            if os.path.exists(REG):
-                os.remove(REG)
-            print('F9：有不符合，已刪掉登記')
-        elif start[2]:
-            if os.path.exists(REG):
-                os.remove(REG)
-            print(f'F9：沒有登記——開始時工作區就跟 HEAD 不一樣（{"、".join(start[2])}），跑的不是已 commit 的版本（舊登記已刪）')
-            return 1
-        else:
-            # 登記用 HEAD 那一版的共用判斷（跟推送閘門驗法同一支、情境 20、21 守著）：
-            # 結束時本機 HEAD 還是開始那一個、被守的檔工作區跟 HEAD 一模一樣，才登記 HEAD 那一版的雜湊
-            r = subprocess.run(['git', 'show', 'HEAD:scripts/lib/verified_reg.py'], cwd=ROOT, capture_output=True)
-            if r.returncode != 0 or not r.stdout:
-                raise Abort('取不到 HEAD:scripts/lib/verified_reg.py，沒辦法登記')
-            helper = os.path.join(tmp_root(), 'verified_reg.py')
-            open(helper, 'wb').write(r.stdout)
-            r = subprocess.run([sys.executable, helper, ROOT, REG, start[0], *GUARDED], capture_output=True)
-            print('F9：' + r.stdout.decode('utf-8', 'replace').strip())
-            if r.returncode != 0:
-                return 1
     return bad
 
 
-def tmp_root():
-    d = tempfile.mkdtemp()
-    return d
+def finish(code):
+    """F9 登記：該不該登記全部交給共用判斷（HEAD 那一版；test_pushsafe.sh 情境 20、21、24、25 守著），
+    這裡只把「驗法全過沒有」與「實際驗過的那幾份」交進去、照它的判斷執行。任何結束方式（全過、不符、中止）都走這裡。
+    開頭的自我探測守著這一段：拿改壞的版本跑一輪，跑完登記必須不在。"""
+    passed = 'yes' if code == 0 else 'no'
+    r = subprocess.run(['git', 'show', 'HEAD:scripts/lib/verified_reg.py'], cwd=ROOT, capture_output=True)
+    if r.returncode != 0 or not r.stdout:
+        if os.path.exists(REG):
+            os.remove(REG)
+        print('F9：取不到 HEAD 的登記判斷，沒有登記（舊登記已刪）')
+        return code or 1
+    helper = os.path.join(TESTED_DIR, 'verified_reg.py')
+    open(helper, 'wb').write(r.stdout)
+    specs = [f'{f}={os.path.join(TESTED_DIR, os.path.basename(f))}' for f in GUARDED]
+    r = subprocess.run([sys.executable, helper, ROOT, REG, passed, *specs], capture_output=True)
+    print('F9：' + r.stdout.decode('utf-8', 'replace').strip())
+    return code if code else (0 if r.returncode == 0 else 1)
 
 
 if __name__ == '__main__':
@@ -489,7 +502,6 @@ if __name__ == '__main__':
     except Abort as e:
         print(f'ABORT：{e}')
         code = 2
-    if code and '--ref' not in sys.argv and os.path.exists(REG):
-        os.remove(REG)   # 沒全過、中止、或沒辦法登記：舊的登記也不能留著放行
-        print('F9：這一輪沒有全過，已刪掉登記')
+    if '--ref' not in sys.argv:
+        code = finish(code)
     sys.exit(code)
