@@ -4,7 +4,7 @@
 #   bash scripts/test_pushsafe.sh                              # 正常：全部符合回 0，並登記四支閘門檔案的雜湊
 #   （預設：正常順序跑一輪、反過來再跑一輪，逐個情境比對兩輪結果一樣才算全過——J8 的「換序結果不變」每次都驗）
 #   TEST_PUSHSAFE_ORDER=normal|reverse bash scripts/test_pushsafe.sh  # 只跑一個順序（除錯用；不會登記）
-#   TEST_PUSHSAFE_MUTATE=<突變> bash scripts/test_pushsafe.sh   # 突變：nofetch nometa oldparse nocheck oldparse+nocheck nolint noregistry nof9 f9always regnopass regnotested regclean dienorm noselfhead regrevparse regdiff reghash nometa2 f9nofile f9nohash f9neverok f9regexists regwrongblob regnever noenvguard envguardall envtargetsempty
+#   TEST_PUSHSAFE_MUTATE=<突變> bash scripts/test_pushsafe.sh   # 突變：nofetch nometa oldparse nocheck oldparse+nocheck nolint noregistry nof9 f9always regnopass regnotested regclean dienorm noselfhead regrevparse regdiff reghash nometa2 f9nofile f9nohash f9neverok f9regexists regwrongblob regnever noenvguard envguardall envtargetsempty noae noce nochkauthor nochkcommitter pyscenv pylintenv regnodrop
 # 完全不碰 GitHub：在暫存目錄建一個 bare repo 當假遠端，複製本 repo「已 commit 的內容」過去跑。
 # 所以改了閘門要先在本機 commit（先不推）再跑這支。
 # 登記（J7）：正常跑、全部符合時，把 pushsafe.sh、selfcheck_public.py、test_pushsafe.sh、lint_gate.py 被驗的那一版雜湊
@@ -19,7 +19,7 @@ SRC_REG="$(cd "$SRC" && git rev-parse --path-format=absolute --git-path pushsafe
 T="$(mktemp -d)"
 cleanup() { chmod -R u+w "$T" 2>/dev/null; rm -r "$T" 2>/dev/null; }
 trap cleanup EXIT
-FILES="scripts/pushsafe.sh scripts/selfcheck_public.py scripts/test_pushsafe.sh scripts/lint_gate.py scripts/lib/verified_reg.py scripts/test_verified_reg.py scripts/test_selfcheck_meta.py"
+FILES="scripts/pushsafe.sh scripts/selfcheck_public.py scripts/test_pushsafe.sh scripts/lint_gate.py scripts/lib/verified_reg.py scripts/test_verified_reg.py scripts/test_selfcheck_meta.py scripts/lib/gitenv.py"
 die() { echo "ABORT: $*（造情境失敗，不帶著沒造成的情境往下驗）"; rm -f "$SRC_REG"; exit 2; }
 MUTATE="${TEST_PUSHSAFE_MUTATE:-}"
 ORDER="${TEST_PUSHSAFE_ORDER:-}"
@@ -152,10 +152,33 @@ case "$MUTATE" in
     mutate scripts/lint_gate.py "ENV_TARGETS = ['scripts/pushsafe.sh'"
     pyedit scripts/lint_gate.py "ENV_TARGETS = ['scripts/pushsafe.sh'" "ENV_TARGETS = [] and ['scripts/pushsafe.sh'" || die "改壞 lint"
     confirm_mutated scripts/lint_gate.py "ENV_TARGETS = ['scripts/pushsafe.sh'" ;;
+  noae)   # 自查不掃作者信箱（提交者信箱照掃）
+    mutate $SC '    meta += [an, ae]'; pyedit $SC '    meta += [an, ae]' '    meta += [an]' || die "改壞自查"
+    confirm_mutated $SC '    meta += [an, ae]' ;;
+  noce)   # 自查不掃提交者信箱（作者信箱照掃）
+    mutate $SC '    meta += [cn, ce]'; pyedit $SC '    meta += [cn, ce]' '    meta += [cn]' || die "改壞自查"
+    confirm_mutated $SC '    meta += [cn, ce]' ;;
+  nochkauthor)   # 第二道不看作者兩欄是不是空的（提交者兩欄照看）
+    A='if len(records) != len(commits) or blank_a or blank_c:'
+    mutate $SC "$A"; pyedit $SC "$A" 'if len(records) != len(commits) or blank_c:' || die "改壞自查"
+    confirm_mutated $SC "$A" ;;
+  nochkcommitter)   # 第二道不看提交者兩欄是不是空的（作者兩欄照看）
+    A='if len(records) != len(commits) or blank_a or blank_c:'
+    mutate $SC "$A"; pyedit $SC "$A" 'if len(records) != len(commits) or blank_a:' || die "改壞自查"
+    confirm_mutated $SC "$A" ;;
+  pyscenv)   # 自查的 Python 層入口拒絕：算出來了但不擋
+    mutate $SC 'if _bad:'; pyedit $SC 'if _bad:' 'if False:' || die "改壞自查"
+    confirm_mutated $SC 'if _bad:' ;;
+  pylintenv)   # lint 的 Python 層入口拒絕：算出來了但不擋
+    mutate scripts/lint_gate.py '    if _genv_bad:'; pyedit scripts/lint_gate.py '    if _genv_bad:' '    if False:' || die "改壞 lint"
+    confirm_mutated scripts/lint_gate.py '    if _genv_bad:' ;;
+  regnodrop)   # 共用判斷的「處置」那一環：該刪舊登記時不刪（偵測照舊）
+    mutate scripts/lib/verified_reg.py '        os.remove(reg)'; pyedit scripts/lib/verified_reg.py '        os.remove(reg)' '        pass' || die "改壞登記判斷"
+    confirm_mutated scripts/lib/verified_reg.py '        os.remove(reg)' ;;
   nometa2)   # 自查的第二道改成放行（取到空的、少一筆、欄位空白都當成 0 命中）——F10 第 5 點：讓那段邏輯放行
-    mutate $SC 'if len(records) != len(commits) or blank:'
-    pyedit $SC 'if len(records) != len(commits) or blank:' 'if False:' || die "改壞自查"
-    confirm_mutated $SC 'if len(records) != len(commits) or blank:' ;;
+    mutate $SC 'if len(records) != len(commits) or blank_a or blank_c:'
+    pyedit $SC 'if len(records) != len(commits) or blank_a or blank_c:' 'if False:' || die "改壞自查"
+    confirm_mutated $SC 'if len(records) != len(commits) or blank_a or blank_c:' ;;
   f9nofile)   # F9：沒有登記檔時「讀不到當成一樣」（隱式的擋：讀不到＝空字串＝對不上）
     mutate $PS '    reg=""'
     pyedit $PS '    reg=""' '    reg="$now"' || die "改壞閘門"
@@ -301,9 +324,14 @@ s08() { at_start; hitfile hit8.txt; git add hit8.txt && git commit -q -m "synthe
 s09() { at_start; echo "m9 $(date +%s%N)" > m9.txt
   git add m9.txt && git commit -q -m "$(printf '%s%s' 'msg path E' ':\foo')" || die "造訊息帶命中的 commit"
   rc="$(run)"; check "09 命中寫在 commit 訊息裡" 1 "$rc" same 'PUSHSAFE: 自查失敗' 'path 命中 1 行（commit 訊息或作者欄）' -- '（新增行）' '沒有要推的 commit'; restore; }
-s10() { at_start; echo "m10 $(date +%s%N)" > m10.txt
-  git add m10.txt && git -c user.email="$(printf '%s@%s' 'someone' 'example.org')" commit -q -m "author test" || die "造作者信箱的 commit"
-  rc="$(run)"; check "10 作者信箱不是 noreply" 1 "$rc" same 'PUSHSAFE: 自查失敗' 'email 命中' '（commit 訊息或作者欄）' -- '（新增行）' '沒有要推的 commit'; restore; }
+s10() { at_start; echo "m10 $(date +%s%N)" > m10.txt   # 只有作者是一般信箱、提交者是 noreply（--author、rebase 別人的 commit——最常見的外洩形態）
+  git add m10.txt && git commit -q --author="someone <$(printf '%s@%s' 'someone' 'example.org')>" -m "author test" || die "造作者信箱的 commit"
+  [ "$(git log -1 --pretty=%ce)" = "test@users.noreply.github.com" ] && [ "$(git log -1 --pretty=%ae)" != "$(git log -1 --pretty=%ce)" ] || die "前提沒造成：要只有作者是一般信箱"
+  rc="$(run)"; check "10 只有作者信箱不是 noreply" 1 "$rc" same 'PUSHSAFE: 自查失敗' 'email 命中' '（commit 訊息或作者欄）' -- '（新增行）' '沒有要推的 commit'; restore; }
+s32() { at_start; echo "m32 $(date +%s%N)" > m32.txt   # 只有提交者是一般信箱、作者是 noreply
+  git add m32.txt && GIT_COMMITTER_EMAIL="$(printf '%s@%s' 'someone' 'example.org')" git commit -q -m "committer test" || die "造提交者信箱的 commit"
+  [ "$(git log -1 --pretty=%ae)" = "test@users.noreply.github.com" ] && [ "$(git log -1 --pretty=%ae)" != "$(git log -1 --pretty=%ce)" ] || die "前提沒造成：要只有提交者是一般信箱"
+  rc="$(run)"; check "32 只有提交者信箱不是 noreply" 1 "$rc" same 'PUSHSAFE: 自查失敗' 'email 命中' '（commit 訊息或作者欄）' -- '（新增行）' '沒有要推的 commit'; restore; }
 s11() { at_start; printf '%s%s%s\n' '++ ' 'path E' ':\foo' > pp.txt
   git add pp.txt && git commit -q -m "pp add" || die "造 ++ 開頭的 commit"
   local pp1; pp1="$(git rev-parse HEAD)"
@@ -418,13 +446,13 @@ s28() { at_start; clean_commit 28a; clean_commit 28b   # 自查「commit 訊息�
   python scripts/test_selfcheck_meta.py $SC origin/main > "$T/out.txt" 2>&1; local rc=$?
   local ok=yes why=""
   [ $rc -eq 0 ] || { ok=no; why="回傳 $rc：$(grep -E '^(no |ABORT)' "$T/out.txt" | paste -s -d ' ' | cut -c1-140)"; }
-  [ "$(grep -c '^yes ' "$T/out.txt")" -eq 4 ] || { ok=no; why="$why 結果行不是 4 條 yes"; }
+  [ "$(grep -c '^yes ' "$T/out.txt")" -eq 5 ] || { ok=no; why="$why 結果行不是 5 條 yes"; }
   check_plain "28 作者欄取到空的／少一筆／欄位空白（要停）" "$ok" "$why"; restore; }
 
 s29() { at_start; clean_commit 29   # git 自己認得的 GIT_ 變數設在環境裡 → 閘門開頭就停（逐一試，含一個 git 目前沒有的名字，證明是照前綴擋）
   local ok=yes why="" kv name rc
   for kv in "GIT_DIR=$T/remote.git" "GIT_WORK_TREE=$PWD" "GIT_INDEX_FILE=$T/idx29" "GIT_OBJECT_DIRECTORY=$T/obj29" \
-            "GIT_CEILING_DIRECTORIES=$T" "GIT_COMMON_DIR=$T/remote.git" "GIT_CONFIG_COUNT=0" "GIT_SOMETHING_NEW_29=1"; do
+            "GIT_CEILING_DIRECTORIES=$T" "GIT_COMMON_DIR=$T/remote.git" "GIT_CONFIG_COUNT=0" "GIT_EXEC_PATH=$T" "GIT_SOMETHING_NEW_29=1"; do
     name="${kv%%=*}"; RUN_ENV="$kv"; rc="$(run)"; RUN_ENV=""
     [ "$rc" = 1 ] || { ok=no; why="$why $name 回傳 $rc"; }
     reason_ok "$T/out.txt" 'PUSHSAFE: 環境裡設了 git 自己認得的變數' "$name" -- '推送成功' || { ok=no; why="$why $name 擋下理由不對"; }
@@ -440,8 +468,22 @@ s31() { at_start
   register_clone
   rc="$(run)"; check "31 正式閘門讀了沒登記的環境變數（lint 要擋）" 1 "$rc" same 'PUSHSAFE: 閘門腳本有已知的壞寫法' '[envread]' -- 'SELF-CHECK'; restore; }
 
-LIST="s01 s02 s03 s04 s05 s06 s07 s08 s09 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 s21 s22 s23 s24 s25 s26 s27 s28 s29 s30 s31"
-N_SCEN=31
+s33() { at_start; clean_commit 33   # 入口拒絕的 Python 層：自查、lint 單獨跑時也要擋（該攔的攔、不該攔的不攔）
+  local ok=yes why="" kv out rc
+  for kv in "GIT_DIR=$T/remote.git" "GIT_EXEC_PATH=$T" "GIT_SOMETHING_NEW_33=1"; do
+    env $ENV_UNSET "$kv" python $SC origin/main > "$T/o33.txt" 2>&1; rc=$?
+    [ $rc -eq 1 ] && grep -q "^SELF-CHECK FAILED: 環境裡設了 git 自己認得的變數：${kv%%=*}" "$T/o33.txt" || { ok=no; why="$why 自查沒擋 ${kv%%=*}（rc=$rc）"; }
+    env $ENV_UNSET "$kv" python scripts/lint_gate.py > "$T/o33.txt" 2>&1; rc=$?
+    [ $rc -eq 1 ] && grep -q "^LINT-GATE FAILED: 環境裡設了 git 自己認得的變數：${kv%%=*}" "$T/o33.txt" || { ok=no; why="$why lint 沒擋 ${kv%%=*}（rc=$rc）"; }
+  done
+  env $ENV_UNSET GIT_EDITOR=true GIT_PAGER=cat GIT_TERMINAL_PROMPT=0 python $SC origin/main > "$T/o33.txt" 2>&1; rc=$?
+  [ $rc -eq 0 ] && grep -q '^SELF-CHECK OK' "$T/o33.txt" || { ok=no; why="$why 自查連白名單也擋（rc=$rc）"; }
+  env $ENV_UNSET GIT_EDITOR=true GIT_PAGER=cat GIT_TERMINAL_PROMPT=0 python scripts/lint_gate.py > "$T/o33.txt" 2>&1; rc=$?
+  [ $rc -eq 0 ] && grep -q '^LINT-GATE OK' "$T/o33.txt" || { ok=no; why="$why lint 連白名單也擋（rc=$rc）"; }
+  check_plain "33 GIT_ 變數的入口拒絕：Python 層（自查、lint）" "$ok" "$why"; restore; }
+
+LIST="s01 s02 s03 s04 s05 s06 s07 s08 s09 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 s21 s22 s23 s24 s25 s26 s27 s28 s29 s30 s31 s32 s33"
+N_SCEN=33
 run_list() {  # run_list normal|reverse
   local l="$LIST"; [ "$1" = reverse ] && l="$(printf '%s\n' $LIST | sort -r | tr '\n' ' ')"
   echo "順序：$1（$l）"; RESULT=(); for s in $l; do $s; done

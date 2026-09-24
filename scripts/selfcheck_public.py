@@ -18,6 +18,18 @@ import sys
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
+# 入口拒絕（Python 這一層）：git 自己認得的 GIT_ 變數設著時，下面每一個 git 呼叫都可能對著別的 repo（2026-09-25）
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
+import gitenv  # noqa: E402
+_err = gitenv.self_check()
+if _err:
+    print(f'SELF-CHECK FAILED: {_err}（檢查器壞了）')
+    sys.exit(1)
+_bad = gitenv.offending()
+if _bad:
+    print(f'SELF-CHECK FAILED: 環境裡設了 git 自己認得的變數：{" ".join(_bad)}——可能對著別的 repo 查完說通過；先 unset 再跑')
+    sys.exit(1)
+
 
 def git(*args):
     r = subprocess.run(['git', *args], capture_output=True)
@@ -73,12 +85,21 @@ if rc != 0:
 # 一樣要停——這一道擋的是姓名與信箱不進 GitHub，取到空的就會變成「0 行、0 命中」默默放行，沒有人會知道。
 records = [r.lstrip('\n') for r in meta_raw.split('\x00')]
 records = [r for r in records if r.strip()]
-blank = [r for r in records if len(r.split('\n')) < 4 or not all(x.strip() for x in r.split('\n')[:4])]
-if len(records) != len(commits) or blank:
+# 作者兩欄與提交者兩欄分開判斷（2026-09-25 補充十一）：只有作者是一般信箱（--author、rebase 別人的 commit）是最常見的外洩形態，
+# 兩半要各自有情境與突變，不能讓一半的檢查被另一半順便補上。
+fields = [(r.split('\n') + ['', '', '', ''])[:4] for r in records]
+blank_a = [f for f in fields if not (f[0].strip() and f[1].strip())]
+blank_c = [f for f in fields if not (f[2].strip() and f[3].strip())]
+if len(records) != len(commits) or blank_a or blank_c:
     print(f'SELF-CHECK FAILED: commit 訊息與作者欄取到 {len(records)} 筆、要推的 commit 有 {len(commits)} 個'
-          f'（作者／提交者欄是空的：{len(blank)} 筆）——沒拿到該掃的東西，零命中不可信')
+          f'（作者欄是空的：{len(blank_a)} 筆、提交者欄是空的：{len(blank_c)} 筆）——沒拿到該掃的東西，零命中不可信')
     sys.exit(1)
-meta = [l for l in meta_raw.replace('\x00', '\n').split('\n') if l.strip()]
+meta = []
+for r in records:
+    an, ae, cn, ce = (r.split('\n') + ['', '', '', ''])[:4]
+    meta += [an, ae]   # 作者名、作者信箱
+    meta += [cn, ce]   # 提交者名、提交者信箱
+    meta += [l for l in r.split('\n')[4:] if l.strip()]   # commit 訊息
 
 user = os.environ.get('USERNAME') or os.environ.get('USER') or ''
 if not user:
@@ -90,7 +111,9 @@ checks = {
     'secret': re.compile(r'(gh' r'p_|gh' r'o_|github' r'_pat_|sk-an' r't-|sk-[A-Za-z0-9]{20,}|AK' r'IA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY)'),
     'email': re.compile(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'),
     'user': re.compile(re.escape(user)),
-    'path': re.compile(r'(?<![A-Za-z])[A-Za-z]:[\\/]|/[a-z]/' + U + '/|[\\/]' + U + r'[\\/]', re.I),
+    # 第三個分支的前半段原本不是原始字串（'/|[\\/]'），字元類裡只剩斜線、沒有反斜線：不帶磁碟代號的「反斜線 Users 反斜線」
+    # 抓不到（2026-09-25 逐分支對照組抓到的；帶磁碟代號的會被第一個分支順便抓到，所以一直沒人發現）
+    'path': re.compile(r'(?<![A-Za-z])[A-Za-z]:[\\/]|/[a-z]/' + U + r'/|[\\/]' + U + r'[\\/]', re.I),
 }
 
 
@@ -98,18 +121,30 @@ def email_ok(m):
     return m.endswith('@' + 'users.noreply.github.com') or m == 'noreply' + '@' + 'anthropic.com'
 
 
-# 對照組：當場組出來的合成樣本，每一類一個，必須命中
+# 對照組：當場組出來的合成樣本，樣式的每一個分支各一個，全部都要命中（2026-09-25 補充十一：原本每一類只有一個樣本，
+# 金鑰那一類七個分支只打到一個，拿掉其他分支對照組照樣全過）。反例：該放行的（noreply 信箱）不能命中。
+BS = chr(92)
 controls = {
-    'secret': 'token ' + 'gh' + 'p_' + 'A' * 36,
-    'email': 'x' + 'yz' + '@' + 'example' + '.org',
-    'user': 'home ' + user + ' x',
-    'path': 'E' + ':' + '\\' + 'foo',
+    'secret': ['token ' + 'gh' + 'p_' + 'A' * 36, 'gh' + 'o_' + 'B' * 36, 'github' + '_pat_' + 'C' * 22,
+               'sk-an' + 't-' + 'D' * 20, 'sk-' + 'E' * 24, 'AK' + 'IA' + 'F' * 16, '-----BEGIN ' + 'RSA PRIVATE KEY-----'],
+    'email': ['x' + 'yz' + '@' + 'example' + '.org'],
+    'user': ['home ' + user + ' x'],
+    'path': ['E' + ':' + BS + 'foo', 'E' + ':' + '/foo', '/c/' + U + '/x', BS + U + BS + 'x', '/' + U + '/x'],
 }
+negatives = {
+    'email': ['x' + '@' + 'users.noreply.github.com', 'noreply' + '@' + 'anthropic.com'],
+}
+
+
+def hit(k, rx, line):
+    return any(not email_ok(m) for m in rx.findall(line)) if k == 'email' else bool(rx.search(line))
+
 
 failed = []
 for k, rx in checks.items():
-    c = controls[k]
-    chit = any(not email_ok(m) for m in rx.findall(c)) if k == 'email' else bool(rx.search(c))
+    missed = [i for i, c in enumerate(controls[k], 1) if not hit(k, rx, c)]
+    wrong = [i for i, c in enumerate(negatives.get(k, []), 1) if hit(k, rx, c)]
+    chit = not missed and not wrong
     def scan(lines):
         out = []
         for line in lines:
@@ -122,8 +157,10 @@ for k, rx in checks.items():
     hits = scan(added)
     mhits = scan(meta)
     print(f'{k}: control_hit={chit} added_hits={len(hits)} meta_hits={len(mhits)}')
-    if not chit:
-        failed.append(f'{k} 對照組沒命中（檢查器壞了，零命中不可信）')
+    if missed:
+        failed.append(f'{k} 對照組沒命中：第 {missed} 個樣本（檢查器壞了，零命中不可信）')
+    if wrong:
+        failed.append(f'{k} 反例被命中：第 {wrong} 個（該放行的也擋，檢查器壞了）')
     if hits:
         failed.append(f'{k} 命中 {len(hits)} 行（新增行）')
     if mhits:

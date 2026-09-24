@@ -37,7 +37,7 @@ ESCAPE_TARGETS = [
     'js/views/listening.js', 'js/views/mistakes.js', 'js/views/quiz.js', 'js/views/review.js',
     'js/views/search.js', 'js/views/stats.js', 'js/views/travel.js', 'js/views/weak.js',
     'scripts/audit.mjs', 'scripts/build_data.py', 'scripts/check_data.py', 'scripts/filter_grammar_draft.mjs',
-    'scripts/filter_vocab_draft.mjs', 'scripts/lib/harness.mjs', 'scripts/lib/verified_reg.py', 'scripts/lint_gate.py', 'scripts/make_icons.py',
+    'scripts/filter_vocab_draft.mjs', 'scripts/lib/harness.mjs', 'scripts/lib/gitenv.py', 'scripts/lib/verified_reg.py', 'scripts/lint_gate.py', 'scripts/make_icons.py',
     'scripts/pushsafe.sh', 'scripts/regress.mjs', 'scripts/screenshots.mjs', 'scripts/selfcheck_public.py',
     'scripts/serve.py', 'scripts/test_datacheck.py', 'scripts/test_filters.py', 'scripts/test_harness.mjs',
     'scripts/test_pushsafe.sh', 'scripts/test_selfcheck_meta.py', 'scripts/test_verified_reg.py', 'scripts/verify-full.mjs', 'scripts/verify-live.mjs', 'sw.js',
@@ -162,7 +162,7 @@ def r_overescape(name, lines):
 # 正式閘門不讀未登記的環境變數（2026-09-25；MealMate 在正式閘門找到一個沒人用、設了就把檢查與推送改指到別的遠端的旋鈕，
 # StockDiary、TripQuest 也各有類似的）。只掃正式閘門這幾支（驗法本身讀 TEST_PUSHSAFE_* 是測試用，不在這裡）；
 # 白名單只放取使用者名稱與 gh 位置要用的。git 自己認得的 GIT_* 變數不是「讀取」，由 pushsafe.sh 開頭擋。
-ENV_TARGETS = ['scripts/pushsafe.sh', 'scripts/selfcheck_public.py', 'scripts/lib/verified_reg.py', 'scripts/lint_gate.py']
+ENV_TARGETS = ['scripts/pushsafe.sh', 'scripts/selfcheck_public.py', 'scripts/lib/verified_reg.py', 'scripts/lint_gate.py', 'scripts/lib/gitenv.py']
 ENV_ALLOW = {'HOME', 'USERNAME', 'USER'}
 _ENV_PY = re.compile(r'(?:os\.environ\.get|os\.getenv|environ\.get)\(\s*[\'"](\w+)|os\.environ\[\s*[\'"](\w+)')
 _SH_ASSIGN = re.compile(r'^\s*(?:export\s+|local\s+|readonly\s+)?([A-Za-z_]\w*)=|\bfor\s+([A-Za-z_]\w*)\s+in\b|\bread\s+(?:-\w+\s+)*([A-Za-z_]\w*)')
@@ -213,22 +213,40 @@ CONTROLS = {
         ('x.sh', 'python scripts/selfcheck_public.py > "$LOG" 2>&1 ' + BAR + ' tail -1'),                       # 合成：自查接管線
         ('x.sh', 'git fetch -q origin main ' + BAR + ' cat'),                                                    # 合成：取遠端接管線
         ('x.sh', 'python "$SELF/u7.py" && GIT_TERMINAL_PROMPT=0 timeout 90 git -c credential.helper=x push origin main 2>&1 ' + BAR + ' tail -1'),  # 2026-09-23 本 App 真實的舊推送行（節錄）
+        # 2026-09-25 補充十一：樣式的每一個分支各一個樣本（原本只打到自查、fetch、push，ls-remote／diff／log 沒有）
+        ('x.sh', 'git ls-remote origin refs/heads/main ' + BAR + ' cut -f1'),                                  # 合成：取遠端狀態接管線
+        ('x.sh', 'git diff origin/main ' + BAR + ' wc -l'),                                                    # 合成：取 diff 接管線
+        ('x.sh', 'git log -p origin/main..HEAD ' + BAR + ' head'),                                             # 合成：取 log 接管線
     ],
     'swallow': [
         ('x.sh', 'python scripts/selfcheck_public.py ' + BAR * 2 + ' true'),                                     # 合成
         ('x.py', 'try:\n    x = 1\nexcept Exception:\n    pass'),                                              # 合成
         ('x.mjs', 'try { a() } catch (e) {}'),                                                                 # 合成
+        ('x.sh', 'python scripts/selfcheck_public.py ' + BAR * 2 + ' :'),                                       # 合成：|| :
+        ('x.py', 'try:\n    x = 1\nexcept Exception: pass'),                                                 # 合成：同一行的 except: pass
+        ('x.mjs', 'try { a() } catch {}'),                                                                     # 合成：不帶參數的空 catch
     ],
     'plushdr': [
         ('x.py', "added = [l[1:] for l in diff.split('\\n') if l.startswith('+') and not l.startswith('" + P3 + "')]"),  # 2026-09-24 以前本 App 真實的抽法
         ('x.sh', "grep -v '^" + P3 + "' diff.txt"),                                                            # 合成
+        ('x.py', "if line[:3] == '" + P3 + "':"),                                                              # 合成：== 三個加號
+        ('x.py', "re.match('^" + (BS + '+') * 3 + "', line)"),                                               # 合成：跳脫過的三個加號
     ],
     'formatonly': [
         ('x.py', "rc, patch = git('log', '--format=', '-p', '-U0', '--no-color', f'{base}..HEAD')"),          # 2026-09-23 v7 那版本 App 真實的自查（沒取 %B、%ae）
+        ('x.py', "rc, patch = git('log', '--format=%B', '-p')"),                                               # 合成：有 %B、沒 %ae
+        ('x.py', "rc, patch = git('log', '--format=%ae', '-p')"),                                              # 合成：有 %ae、沒 %B
+        ('x.sh', 'git diff --format= origin/main > p.txt'),                                                    # 合成：diff 那一支
     ],
     'absent': [
         ('x.sh', 'grep -q "舊的登記" reg.txt && die "登記還在"'),                                                # 合成
         ('x.sh', '[ ! -e reg.txt ] && echo 已刪除'),                                                            # 合成
+        ('x.sh', 'grep -q "舊的" reg.txt && exit 1'),                                                           # 合成：&& exit
+        ('x.sh', 'grep -qF "舊的" reg.txt && return 1'),                                                        # 合成：&& return 1
+        ('x.sh', '! grep -q "舊的" reg.txt'),                                                                   # 合成：! grep
+        ('x.sh', '[ ! -f reg.txt ] && echo 已刪除'),                                                            # 合成：[ ! -f
+        ('x.py', 'if os.path.exists(p) == False: ok()'),                                                       # 合成：== False
+        ('x.py', 'assert not os.path.exists(p)'),                                                              # 合成：not os.path.exists
     ],
     'backslash': [
         ('x.sh', "grep -q '\\.org' out.txt"),                                                                  # 合成
@@ -239,6 +257,9 @@ CONTROLS = {
         ('x.sh', 'printenv PRE' + 'CHECK'),                                       # printenv 讀
         ('x.py', "scan = os.environ" + ".get('PII" + "SCAN') or 'on'"),           # Python 讀沒登記的名字
         ('x.py', "t = os.environ" + "['PUSH" + "_TARGET']"),                      # Python 用 [] 讀
+        ('x.py', "t = os.get" + "env('PUSH" + "_TARGET')"),                       # os.getenv
+        ('x.py', "t = environ" + ".get('PUSH" + "_TARGET')"),                     # from os import environ
+        ('x.sh', 'echo "${!' + 'NAME}"'),                                         # 間接取值 ${!…}
     ],
     'overescape': [   # 全部當場組出來（每一種語言、每一個分支各一條）
         ('x.py', "PAT = re.compile(r'" + BS * 2 + "d+')"),                   # Python 原始字串多跳脫
@@ -332,6 +353,17 @@ def run_rule(rule, name, text):
 
 
 def main():
+    # 入口拒絕（Python 這一層，2026-09-25）：孤兒檢查會叫 git，git 自己認得的 GIT_ 變數設著時會對著別的 repo 取清單
+    sys.path.insert(0, os.path.join(ROOT, 'scripts', 'lib'))
+    import gitenv
+    _genv_err = gitenv.self_check()
+    if _genv_err:
+        print(f'LINT-GATE FAILED: {_genv_err}（檢查器壞了）')
+        return 1
+    _genv_bad = gitenv.offending()
+    if _genv_bad:
+        print(f'LINT-GATE FAILED: 環境裡設了 git 自己認得的變數：{" ".join(_genv_bad)}——孤兒檢查可能對著別的 repo；先 unset 再跑')
+        return 1
     bad = []
     # 1) 對照組：每一條都要被對應的規則抓到
     for rule, samples in CONTROLS.items():

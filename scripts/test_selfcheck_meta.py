@@ -10,7 +10,9 @@
   對照組   原樣                      → SELF-CHECK OK
   空的     回傳 0、內容是空的          → 停，訊息「取到 0 筆」
   少一筆   回傳 0、少了最後一個 commit  → 停，訊息「取到 N-1 筆」
-  欄位空白 回傳 0、第一筆的作者信箱是空的 → 停，訊息「作者／提交者欄是空的：1 筆」
+  作者欄空白   回傳 0、第一筆的作者信箱是空的   → 停，訊息「作者欄是空的：1 筆」
+  提交者欄空白 回傳 0、第一筆的提交者信箱是空的 → 停，訊息「提交者欄是空的：1 筆」
+  （作者、提交者兩半各自一格——2026-09-25 補充十一：一半的檢查不能被另一半順便補上）
 每一種都比對擋下的是這一道（訊息），不是只看回傳值——被別的關卡擋下不算。
 """
 import io
@@ -45,9 +47,9 @@ def fake(args, *a, **k):
         elif mode == 'short':
             recs = out.split(b'\\x00')
             out = b'\\x00'.join(recs[:-2] + recs[-1:])
-        elif mode == 'blank':
+        elif mode in ('blank', 'blankc'):
             lines = out.split(b'\\n')
-            lines[1] = b''
+            lines[1 if mode == 'blank' else 3] = b''
             out = b'\\n'.join(lines)
         return subprocess.CompletedProcess(r.args, 0, out, r.stderr)
     return r
@@ -72,7 +74,8 @@ def report(name, ok, detail=''):
 for mode, want_rc, must in (('ok', 0, 'SELF-CHECK OK'),
                             ('empty', 1, f'取到 0 筆、要推的 commit 有 {N} 個'),
                             ('short', 1, f'取到 {N - 1} 筆、要推的 commit 有 {N} 個'),
-                            ('blank', 1, '作者／提交者欄是空的：1 筆')):
+                            ('blank', 1, '作者欄是空的：1 筆'),
+                            ('blankc', 1, '提交者欄是空的：1 筆')):
     mark = os.path.join(t, mode + '.mark')
     r = subprocess.run([sys.executable, wrap, mode, SC, BASE, mark], capture_output=True)
     out = (r.stdout + r.stderr).decode('utf-8', 'replace')

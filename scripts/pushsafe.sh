@@ -43,7 +43,7 @@ if [ ! -f "$REG" ]; then
   echo "PUSHSAFE: 沒有驗法登記（沒跑過 bash scripts/test_pushsafe.sh，或上次沒全過），沒有推送"; rm -f "$LOG"; exit 1
 fi
 stale=""
-for f in scripts/pushsafe.sh scripts/selfcheck_public.py scripts/test_pushsafe.sh scripts/lint_gate.py scripts/lib/verified_reg.py scripts/test_verified_reg.py scripts/test_selfcheck_meta.py; do
+for f in scripts/pushsafe.sh scripts/selfcheck_public.py scripts/test_pushsafe.sh scripts/lint_gate.py scripts/lib/verified_reg.py scripts/test_verified_reg.py scripts/test_selfcheck_meta.py scripts/lib/gitenv.py; do
   now="$(git rev-parse "HEAD:$f" 2>/dev/null)"
   reg="$(awk -v f="$f" '$1 == f { print $2 }' "$REG")"
   if [ -z "$now" ] || [ "$now" != "$reg" ]; then stale="$stale $f"; fi
