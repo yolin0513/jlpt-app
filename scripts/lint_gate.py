@@ -153,7 +153,7 @@ NEGATIVES = [   # 合法寫法：任何一種都不該抓
 EXCEPTIONS = [
     # 2026-09-24 J5 之後重新盤過：舊的 7 條（nofetch／nocheck 的恆真斷言、三行 grep／sed 樣式含反斜線、舊寫法的突變）
     # 已經隨程式改掉而不再命中、刪除。下面每一條都是這一版實際命中之後才補登的（例外不預寫）。
-    ('scripts/pushsafe.sh', 'absent', 'if [ ! -f "$REG" ]; then',
+    ('scripts/pushsafe.sh', 'absent', 'if [ ! -f "$REG" ]',
      '「登記檔不存在就停」：方向是故障時停下，不是斷言「某東西不見了」；驗法情境 15 守著（刪掉登記 → 停、理由對）'),
     ('scripts/test_pushsafe.sh', 'absent', 'grep -qF -- "$s" "$f" && return 1',
      'reason_ok 的「不該出現」分支；驗法開頭有對照組（sample1 帶了不該出現的句子，必須被擋），同一次執行裡先驗過'),
@@ -161,7 +161,7 @@ EXCEPTIONS = [
      '驗法 oldparse 突變：故意把舊抽法寫進暫存複本的自查，這一行就是那段壞寫法的樣本'),
     ('scripts/test_pushsafe.sh', 'absent', "mutate $PS 'if [ ! -f \"$REG\" ]; then'",
      '驗法 noregistry 突變的錨點字串（確認改壞之前那段在），不是斷言'),
-    ('scripts/test_pushsafe.sh', 'absent', "pyedit $PS 'if [ ! -f \"$REG\" ]; then' 'if false; then'",
+    ('scripts/test_pushsafe.sh', 'absent', "pyedit $PS 'if [ ! -f \"$REG\" ]; then' 'if [ ! -f \"$REG\" ] && false; then'",
      '驗法 noregistry 突變的改檔指令（錨點字串），不是斷言'),
     ('scripts/test_pushsafe.sh', 'absent', "confirm_mutated $PS 'if [ ! -f \"$REG\" ]; then'",
      '驗法 noregistry 突變的確認（改壞之後那段不在），前面 mutate 已先確認它原本在'),

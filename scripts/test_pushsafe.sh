@@ -118,9 +118,11 @@ case "$MUTATE" in
     pyedit $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' 'if false; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' || die "改壞閘門"
     confirm_mutated $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' ;;
   noregistry)
+    # 字面留著、只讓條件失效：若把整行換掉，lint 登記的例外就對不上、變成「例外過期」，
+    # lint 會在第一步把所有情境都擋下——紅了，但不是被「拿掉登記檢查」弄紅的（2026-09-24 第一版就這樣被污染）
     mutate $PS 'if [ ! -f "$REG" ]; then'
-    pyedit $PS 'if [ ! -f "$REG" ]; then' 'if false; then' || die "改壞閘門"
-    pyedit $PS 'if [ -n "$stale" ]; then' 'if false; then' || die "改壞閘門"
+    pyedit $PS 'if [ ! -f "$REG" ]; then' 'if [ ! -f "$REG" ] && false; then' || die "改壞閘門"
+    pyedit $PS 'if [ -n "$stale" ]; then' 'if [ -n "$stale" ] && false; then' || die "改壞閘門"
     confirm_mutated $PS 'if [ ! -f "$REG" ]; then' ;;
   *) die "不認得的突變 $MUTATE" ;;
 esac
