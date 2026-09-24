@@ -6,7 +6,7 @@
 
 每個「取不到就停」的分支一種情境（F10：拿掉那個「停」只能紅那一種；照樣停了但理由不對也算紅）：
   取不到 HEAD:<檔>   → 回 2、舊登記刪掉、訊息「取不到 HEAD:」
-  git diff 失敗      → 回 2、舊登記刪掉、訊息「比不出」
+  git status 失敗    → 回 2、舊登記刪掉、訊息「比不出」
   hash-object 失敗   → 回 2、舊登記刪掉、訊息「算不出驗過的那一份」
 前兩種以外的子指令照常交給真的 git（F10 1b 第 2 步：把執行 git 的函式當參數傳進去）；
 另一種用 GIT_DIR 指向不存在的目錄，讓真的 git 整個失敗（第 1 步，不能只挑一個子指令）。
@@ -81,7 +81,7 @@ if not (rc == 0 and left):
     print('ABORT：對照組就不過，後面的失敗情境沒有意義'); sys.exit(2)
 
 for name, g, want in (('取不到 HEAD:<檔>', failing('rev-parse', 'HEAD:'), '取不到 HEAD:'),
-                      ('git diff 失敗', failing('diff'), '比不出'),
+                      ('git status 失敗', failing('status'), '比不出'),
                       ('hash-object 失敗', failing('hash-object'), '算不出驗過的那一份')):
     rc, out, left = run(g)
     report(name, rc == 2 and not left and want in out,

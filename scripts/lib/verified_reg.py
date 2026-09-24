@@ -43,10 +43,11 @@ def main(argv, git=git):
         rc, blob = git(root, 'rev-parse', f'HEAD:{f}')
         if rc != 0 or not blob:
             drop(reg); print(f'VERIFIED-REG: 取不到 HEAD:{f}，沒有登記（舊登記已刪）'); return 2
-        rc, _ = git(root, 'diff', '--quiet', 'HEAD', '--', f)
-        if rc not in (0, 1):
-            drop(reg); print(f'VERIFIED-REG: 比不出 {f} 跟 HEAD 一不一樣（git diff 失敗），沒有登記（舊登記已刪）'); return 2
-        if rc == 1:
+        # 用 status 不用 diff --quiet：不在 repo 裡時 diff 會自動退成 --no-index、回 1，跟「有改動」分不出來
+        rc, st = git(root, 'status', '--porcelain', '--untracked-files=no', '--', f)
+        if rc != 0:
+            drop(reg); print(f'VERIFIED-REG: 比不出 {f} 跟 HEAD 一不一樣（git status 失敗），沒有登記（舊登記已刪）'); return 2
+        if st:
             dirty.append(f)
         if tested:
             rc, h = git(root, 'hash-object', f'--path={f}', os.path.abspath(tested))

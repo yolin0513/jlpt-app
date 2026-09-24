@@ -141,7 +141,7 @@ case "$MUTATE" in
     pyedit $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' 'if false; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' || die "改壞閘門"
     confirm_mutated $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' ;;
   regrevparse|regdiff|reghash)   # 共用判斷拿掉某一個「git 失敗就停」
-    case "$MUTATE" in regrevparse) A='        if rc != 0 or not blob:' ;; regdiff) A='        if rc not in (0, 1):' ;; reghash) A='            if rc != 0 or not h:' ;; esac
+    case "$MUTATE" in regrevparse) A='        if rc != 0 or not blob:' ;; regdiff) A='        if rc != 0:' ;; reghash) A='            if rc != 0 or not h:' ;; esac
     mutate scripts/lib/verified_reg.py "$A"
     pyedit scripts/lib/verified_reg.py "$A" "${A%%if*}if False:" || die "改壞登記判斷"
     confirm_mutated scripts/lib/verified_reg.py "$A" ;;
