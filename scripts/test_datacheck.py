@@ -19,6 +19,9 @@ v9 盤點時發現：清空 N3 的來源檔會停，只是因為剛好有一條�
                → build_data 必須回非 0、錯誤訊息點名那個檔，而且 data/ 一個位元組都沒變、沒留下 .tmp
   B-tmpdir     每一個輸出檔的暫存檔位置先放一個同名資料夾（寫不進去、也不該去刪）→ 同上，而且不能是錯誤堆疊
   B-cleanupfail 寫某個檔失敗、而且已寫好的一個暫存檔刪不掉 → 點名兩者、不能是錯誤堆疊、正式輸出不變
+  B-replacefail 每一個輸出檔換上時失敗 → 已換上的全部退回，data/ 一個位元組都沒變
+  B-replacecleanup 同上、而且那個檔的暫存檔刪不掉 → 另外點名清不掉的暫存檔、正式輸出不變
+  （舊版沒有「換上」這一步時，後兩類記成 n/a：注入不會發生，不算洞也不算過。）
 
 每一格三件事都要成立：回傳值非 0、**錯誤訊息區**（stderr 去掉「  ! 略過…」警告行）點名這個單位、
 輸出目錄的雜湊前後相同。被別的規則碰巧擋下的（回非 0 但沒點名這個單位）一律算「沒擋」。
@@ -114,14 +117,23 @@ def names(out, *needles):
 INJECT = '''import pathlib, runpy, sys
 target = sys.argv[1]
 lock = sys.argv[2] if len(sys.argv) > 2 else ''
+mode = sys.argv[3] if len(sys.argv) > 3 else 'write'
 _orig = pathlib.Path.write_text
 def _wt(self, *a, **k):
     rel = self.as_posix()
-    if rel.endswith('/data/' + target) or rel.endswith('/data/' + target + '.tmp'):
+    if mode == 'write' and (rel.endswith('/data/' + target) or rel.endswith('/data/' + target + '.tmp')):
         open('_injected.txt', 'w').write('yes')
+        _orig(self, 'PARTIAL', encoding='utf-8')   # 寫出半個檔才失敗（磁碟滿的樣子）：留下的半個檔要被清掉
         raise OSError(28, 'simulated write failure')
     return _orig(self, *a, **k)
 pathlib.Path.write_text = _wt
+_orp = pathlib.Path.replace
+def _rp(self, dst):
+    if mode == 'replace' and self.as_posix().endswith('/data/' + target + '.tmp'):
+        open('_injected.txt', 'w').write('yes')
+        raise PermissionError(13, 'simulated replace failure')
+    return _orp(self, dst)
+pathlib.Path.replace = _rp
 _ou = pathlib.Path.unlink
 def _ul(self, *a, **k):
     if lock and self.as_posix().endswith('/data/' + lock + '.tmp'):
@@ -176,6 +188,10 @@ def main():
         if not ok:
             bad = 1
         print(f'{"yes" if ok else "no ":4s} {name:34s} {detail}')
+
+    def not_applicable(name, why):
+        """被測的舊版根本不走這條路（例如還沒有暫存檔、沒有換上這一步），注入不會發生：不算洞，也不算過。"""
+        print(f'n/a  {name:34s} {why}')
 
     def fresh():
         w = os.path.join(tmp, 'w')
@@ -318,8 +334,10 @@ def main():
         if not os.path.exists(os.path.join(w, '_injected.txt')):
             print(f'ABORT：寫 data/{rel} 的失敗沒有注入到（情境沒造成）'); return 2
         same = data_digest(w) == before
-        report(rc != 0 and names(out, rel) and same, f'B-writefail {rel}',
-               f'rc={rc}' + ('' if names(out, rel) else '（錯誤訊息沒點名這個檔）') + ('' if same else '（data/ 被改動了：一半新一半舊或留下暫存檔）'))
+        tb = 'Traceback' in out
+        report(rc != 0 and names(out, rel) and not tb and same, f'B-writefail {rel}',
+               f'rc={rc}' + ('' if names(out, rel) else '（錯誤訊息沒點名這個檔）') + ('（輸出是錯誤堆疊）' if tb else '')
+               + ('' if same else f'（data/ 被改動了：一半新一半舊或留下暫存檔 {tmp_files(w)}）'))
 
     # ---- 清理那一步本身失敗（2026-09-24 統籌者驗收時抓到）：清理要逐個失敗不中斷、把清不掉的也報出來，
     # 最後仍要走到「點名是哪個檔」那句，不能變成錯誤堆疊。兩種：
@@ -344,8 +362,11 @@ def main():
         rc, out = run(w, 'build_data.py')
         same = data_digest(w) == before
         tb = 'Traceback' in out
-        report(rc != 0 and names(out, rel) and not tb and same, f'B-tmpdir {rel}',
+        # 那個資料夾不是建置建的：只清自己寫出來的暫存檔（MealMate 同一個錯的改法），不能去刪它、也不能把它報成「清不掉的暫存檔」
+        claimed = '清不掉' in out
+        report(rc != 0 and names(out, rel) and not tb and not claimed and same, f'B-tmpdir {rel}',
                f'rc={rc}' + ('' if names(out, rel) else '（錯誤訊息沒點名這個檔）') + ('（輸出是錯誤堆疊）' if tb else '')
+               + ('（把不是自己建的資料夾報成清不掉的暫存檔）' if claimed else '')
                + ('' if same else f'（data/ 被改動了，留下的 .tmp：{tmp_files(w)}）'))
 
     first = OUTPUTS[0]
@@ -365,9 +386,39 @@ def main():
                + ('（輸出是錯誤堆疊）' if tb else '') + ('' if same else '（正式輸出被改動了）')
                + ('' if left == [first + '.tmp'] else f'（留下的 .tmp：{left}）'))
 
+    # ---- 換上那一步失敗（2026-09-24，對照 MealMate「換上失敗＋清理失敗」那一格）----
+    # B-replacefail    換上某個檔時失敗 → 已換上的全部退回：回非 0、點名那個檔、沒有錯誤堆疊、data/ 雜湊不變（含沒留下 .tmp／.bak）
+    # B-replacecleanup 同上，而且那個檔自己的暫存檔刪不掉 → 另外點名清不掉的暫存檔、正式輸出不變、留下的 .tmp 剛好只有它
+    # 舊版若根本沒有「換上」這一步（還沒有暫存檔），注入不會發生 → 記成不適用，不算洞（只在 --ref 指舊版時允許）
+    for kind in ('B-replacefail', 'B-replacecleanup'):
+        for rel in OUTPUTS:
+            w = fresh(); stale_all(w)
+            lock = rel if kind == 'B-replacecleanup' else ''
+            before = data_digest(w, skip_tmp=bool(lock))
+            rc, out = run(w, '_inject.py', rel, lock, 'replace')
+            if not os.path.exists(os.path.join(w, '_injected.txt')):
+                if args.ref:
+                    not_applicable(f'{kind} {rel}', '（被測版本沒有「換上」這一步，注入沒有發生）'); continue
+                print(f'ABORT：{kind} {rel} 的換上失敗沒有注入到（情境沒造成）'); return 2
+            if lock and not os.path.exists(os.path.join(w, '_unlink_blocked.txt')):
+                # 換上失敗這個情境已經造成；鎖住的暫存檔沒被碰，表示被測版本根本沒去清暫存檔——這是洞，不是情境沒造成
+                report(False, f'{kind} {rel}', f'rc={rc}（換上失敗後沒有去清暫存檔，留下的 .tmp：{len(tmp_files(w))} 個）')
+                continue
+            same = data_digest(w, skip_tmp=bool(lock)) == before
+            tb = 'Traceback' in out
+            left = tmp_files(w)
+            want_left = [rel + '.tmp'] if lock else []
+            ok = (rc != 0 and names(out, rel) and not tb and same and left == want_left
+                  and (not lock or names(out, rel + '.tmp')))
+            report(ok, f'{kind} {rel}',
+                   f'rc={rc}' + ('' if names(out, rel) else '（錯誤訊息沒點名這個檔）') + ('（輸出是錯誤堆疊）' if tb else '')
+                   + ('' if (not lock or names(out, rel + '.tmp')) else '（沒點名清不掉的暫存檔）')
+                   + ('' if same else '（data/ 被改動了：沒有退回原狀）') + ('' if left == want_left else f'（留下的 .tmp：{left}）'))
+
     rmtree(tmp)
     print(f'共 {len(SETS)} 組 × 4 種情境＋基準＋J13（C-alldup 10 組、B-alldup 8 組＋成對對照 8 組）'
-          f'＋寫到一半失敗 {len(OUTPUTS)} 個輸出檔＋暫存檔位置被佔 {len(OUTPUTS)}＋清理失敗 {len(OUTPUTS) - 1}；' + ('全部符合' if not bad else '有不符合'))
+          f'＋寫到一半失敗 {len(OUTPUTS)} 個輸出檔＋暫存檔位置被佔 {len(OUTPUTS)}＋清理失敗 {len(OUTPUTS) - 1}'
+          f'＋換上失敗 {len(OUTPUTS)}＋換上失敗且清理失敗 {len(OUTPUTS)}；' + ('全部符合' if not bad else '有不符合'))
     return bad
 
 

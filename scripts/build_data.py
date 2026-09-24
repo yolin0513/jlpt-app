@@ -294,42 +294,91 @@ def apply_dedup(by_set):
     return hidden
 
 
+def _rel(p):
+    return p.relative_to(ROOT).as_posix()
+
+
+def _remove_each(paths):
+    """逐個刪、失敗不中斷，回傳刪不掉的（Windows 上防毒、索引程式鎖檔就會刪不掉）。"""
+    left = []
+    for t in paths:
+        try:
+            t.unlink()
+        except FileNotFoundError:
+            pass
+        except OSError as ce:
+            left.append(f"{_rel(t)}（{type(ce).__name__}）")
+    return left
+
+
+def _left_note(left, what="暫存檔"):
+    return "" if not left else f"；另有 {len(left)} 個{what}清不掉、留在原地（可以手動刪）：" + "、".join(left)
+
+
 def commit_outputs(pending):
-    """先把每個輸出寫成同目錄的 .tmp，全部寫成功才一個一個換上（2026-09-24，四家統一修法 F8）。
-    寫暫存檔時任何一個失敗：刪掉已寫的暫存檔、一個檔都不換、點名失敗的那個檔、回非 0——
-    data/ 維持上一次成功建置的狀態，不會一半新一半舊。上面「先檢查再寫」擋的是資料有問題；
-    這一道擋的是資料沒問題、寫到一半失敗（磁碟滿、檔案被鎖住）。"""
+    """先把每個輸出寫成同目錄的 .tmp，全部寫成功才換上（2026-09-24，四家統一修法 F8）。
+    上面「先檢查再寫」擋的是資料有問題；這一道擋的是資料沒問題、寫或換到一半失敗（磁碟滿、檔案被鎖住）。
+    - 寫暫存檔時任何一個失敗：一個都不換、點名那個檔、回非 0；
+    - 換上時任何一個失敗：已換上的全部退回原狀（換上前先把舊檔改名成 .bak），再點名那個檔、回非 0；
+    - 兩種情況都**只清這次自己寫出來的暫存檔**，清理本身失敗也不中斷、一起點名，最後一定走到點名那句
+      （2026-09-24 統籌者驗收時抓到：原本清理連失敗的那個位置也去刪，那裡被同名資料夾佔住就刪不掉、整個中斷成錯誤堆疊）。"""
+    mine = []   # 這次建置寫出來（或覆寫掉殘留）的暫存檔：失敗時只清這些
+
+    def fail_before_swap(path, why):
+        left = _remove_each(mine)
+        raise SystemExit(f"建置中止，一個檔都沒換上（data/ 的正式輸出維持上一次成功建置的狀態）：{why}——{_rel(path)}{_left_note(left)}")
+
     tmps = []
     for path, text in pending.items():
         tmp = path.with_name(path.name + ".tmp")
+        if tmp.exists() and not tmp.is_file():
+            fail_before_swap(path, f"暫存檔的位置 {_rel(tmp)} 被別的東西佔住（不是檔案、不是這次建置建的，沒有動它）")
+        mine.append(tmp)   # 從這裡起算是自己的：寫到一半失敗留下的半個檔、先前殘留的舊暫存檔，都要清
         try:
             tmp.write_text(text, encoding="utf-8", newline="\n")
         except OSError as e:
-            # 清理本身也可能失敗（Windows 上防毒、索引程式鎖檔）：逐個試、失敗不中斷，最後一起報出來，
-            # 一定要走到下面那句點名（2026-09-24 統籌者驗收時抓到：原本清理遇到刪不掉的就整個中斷、只剩錯誤堆疊）
-            leftover = []
-            for t in [tmp] + [t for t, _p in tmps]:   # 失敗的那個位置若被同名資料夾佔住，unlink 刪不掉，照樣報出來
-                try:
-                    t.unlink()
-                except FileNotFoundError:
-                    pass
-                except OSError as ce:
-                    leftover.append(f"{t.relative_to(ROOT).as_posix()}（{type(ce).__name__}）")
-            note = ("" if not leftover else
-                    f"；另有 {len(leftover)} 個暫存檔清不掉、留在原地（正式輸出沒有被換掉，可以手動刪）：" + "、".join(leftover))
-            raise SystemExit(f"建置中止，一個檔都沒換上（data/ 的正式輸出維持上一次成功建置的狀態）：寫暫存檔失敗——"
-                             f"{path.relative_to(ROOT).as_posix()}（{type(e).__name__}: {e}）{note}")
+            fail_before_swap(path, f"寫暫存檔失敗（{type(e).__name__}: {e}）")
         tmps.append((tmp, path))
-    done = []
+
+    moved = []   # 已換上的 (正式檔, 它的備份；原本不存在就是 None)
     for tmp, path in tmps:
+        bak = path.with_name(path.name + ".bak")
+        had = path.exists()
+        err, stuck = None, []
         try:
-            tmp.replace(path)
+            if had:
+                path.replace(bak)
         except OSError as e:
-            # 換上這一步很少失敗，但失敗時 data/ 已經有一部分是新的：照實講出哪些換了、哪些沒換
-            left = [p.relative_to(ROOT).as_posix() for _t, p in tmps if p not in done]
-            raise SystemExit(f"建置中止：換上 {path.relative_to(ROOT).as_posix()} 失敗（{type(e).__name__}: {e}）；"
-                             f"已換上 {len(done)} 個、沒換上 {len(left)} 個（暫存檔留在原地），data/ 現在是一半新一半舊，修好後重跑")
-        done.append(path)
+            err = e
+        if err is None:
+            try:
+                tmp.replace(path)
+            except OSError as e:
+                err = e
+                if had:
+                    try:
+                        bak.replace(path)
+                    except OSError as re_:
+                        stuck.append(f"{_rel(path)}（備份 {_rel(bak)} 放不回去：{type(re_).__name__}）")
+        if err is None:
+            moved.append((path, bak if had else None))
+            continue
+        for p, b in reversed(moved):   # 退回先前已換上的
+            try:
+                if b is None:
+                    p.unlink()
+                else:
+                    b.replace(p)
+            except OSError as re_:
+                stuck.append(f"{_rel(p)}（{type(re_).__name__}）")
+        left = _remove_each(mine)
+        state = ("data/ 的正式輸出已退回上一次成功建置的狀態" if not stuck else
+                 f"有 {len(stuck)} 個沒能退回、data/ 現在一半新一半舊，修好後重跑：" + "、".join(stuck))
+        raise SystemExit(f"建置中止，換上失敗——{_rel(path)}（{type(err).__name__}: {err}）；{state}{_left_note(left)}")
+
+    left = _remove_each([b for _p, b in moved if b])
+    if left:
+        print(f"  ! 全部換上了，但舊檔的備份清不掉、留在原地（可以手動刪）：{'、'.join(left)}", file=sys.stderr)
 
 
 def main():
