@@ -95,7 +95,8 @@
 推新版到 `main` 後，GitHub Pages 會自動重建；使用者端 Service Worker 會在下次連線時抓到新版
 （`sw.js` 的 `VERSION` 有變更時會清掉舊快取）。
 
-驗證線上版：`node scripts/verify-live.mjs`（檢查 SW 註冊、題庫載入、離線可用，並截一張線上首頁圖）。
+驗證線上版：`node scripts/verify-full.mjs https://yolin0513.github.io/jlpt-app/`（含 SW 註冊、題庫載入、離線可用的判定），
+另跑 `audit.mjs`、`regress.mjs` 帶線上網址（見 `CLAUDE.md`）。舊的 `verify-live.mjs` 沒有任何判定，2026-09-24 已停用。
 
 ## 本機啟動
 
@@ -203,7 +204,7 @@ JLPT_App/
     ├── audit.mjs           全面回歸測試（168 項）
     ├── verify-full.mjs     完整驗證：各分頁、深色、RWD、SW 更新、離線（30 項）
     ├── regress.mjs         路由與主要互動回歸（23 項）
-    ├── verify-live.mjs     線上部署驗證＋線上首頁截圖
+    ├── verify-live.mjs     已停用（2026-09-24，沒有判定；執行即回 1）
     ├── screenshots.mjs     用 puppeteer 產生各畫面截圖
     ├── make_icons.py       產生 PWA 圖示（需 Pillow）
     └── serve.py            開發用伺服器（多執行緒，Windows 必用）

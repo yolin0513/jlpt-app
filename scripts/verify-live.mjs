@@ -1,4 +1,10 @@
-/* 驗證線上部署（GitHub Pages）並截一張線上首頁圖
+/* 【已停用 2026-09-24】（SPEC_檢查器修補 J4）
+ * 原因：全檔沒有任何判定，只把數值印出來、跑完一律回 0。2026-09-24 實測：刪掉 sw.js 的複本
+ * （SW 沒註冊、快取 0 筆、離線是壞的）照樣回 0。它檢查的三件事（SW 註冊、題庫載入、離線可用）
+ * verify-full.mjs 都有真的判定，對線上跑：node scripts/verify-full.mjs https://yolin0513.github.io/jlpt-app/
+ * 執行本檔一律回 1，避免有人以為它驗過了。下面是原本的程式，留作紀錄，不會執行到。
+ *
+ * 原說明：驗證線上部署（GitHub Pages）並截一張線上首頁圖
  * 執行：node scripts/verify-live.mjs [url]
  */
 import { mkdirSync, copyFileSync } from 'node:fs';
@@ -6,6 +12,9 @@ import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import puppeteer from 'puppeteer';
+
+console.log('VERDICT: FAIL — verify-live.mjs 已停用（2026-09-24，沒有任何判定）；線上驗證改用 node scripts/verify-full.mjs <線上網址>');
+process.exit(1);
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'screenshots');
