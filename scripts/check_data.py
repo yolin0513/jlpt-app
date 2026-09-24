@@ -158,6 +158,7 @@ def main():
 
     all_items = []
     grand = 0
+    man_active = {}   # (typ, level) → 實際可練的筆數（扣掉跨級別重複）
     for level in LEVELS:
         for typ, folder, checker in (
             ("vocab", "vocab", check_vocab),
@@ -175,6 +176,10 @@ def main():
             active = sum(1 for it in items if not it.get("dup"))
             if d.get("activeCount") != active:
                 err(f"{fp.name}: activeCount={d.get('activeCount')} 但實際未隱藏 {active}")
+            # 有筆數但全被標成跨級別重複＝App 那一組一張都沒有（2026-09-24 J13：以前照總筆數判、照樣通過）
+            if items and active == 0:
+                err(f"data/{folder}/{level.lower()}.json: 有效 0 筆（{len(items)} 筆全被標成跨級別重複）——App 這一組會一張都沒有")
+            man_active[(typ, level)] = active
             for it in items:
                 if it.get("dup") and not it.get("dupOf"):
                     err(f"{fp.name}: {it['id']} 標記 dup 但缺 dupOf")
@@ -227,9 +232,11 @@ def main():
           f"（manifest JLPT totalItems={manifest.get('totalItems')}，"
           f"travel total={manifest.get('travel', {}).get('total')}）")
     for level in LEVELS:
-        v = man_counts.get(("vocab", level), 0)
-        g = man_counts.get(("grammar", level), 0)
-        print(f"  {level}: 單字 {v:4d}  文法 {g:3d}")
+        # 印有效筆數（App 真的會出的題）；括號裡是含跨級別重複的總筆數。讀不到的那一組印「?」，不印 0
+        def fmt(typ):
+            a = man_active.get((typ, level))
+            return "   ?" if a is None else f"{a:4d}（共 {man_counts.get((typ, level), 0)}）"
+        print(f"  {level}: 單字 有效 {fmt('vocab')}  文法 有效 {fmt('grammar')}")
     for cat in TRAVEL_CATS:
         print(f"  travel {cat:8s}: {tv_counts.get(cat, 0):4d}")
 

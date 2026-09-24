@@ -331,6 +331,18 @@ def main():
 
     hidden = apply_dedup(by_set)
 
+    # 去重之後每一組還要至少一筆有效資料（2026-09-24 J13：上面那道是在去重「之前」算的，
+    # dedup.txt 一條寫太寬的規則就能把一整組都標成重複，App 那一組會一張都沒有）。一樣在寫任何檔之前擋。
+    all_dup = []
+    for level in LEVELS:
+        for typ in ("vocab", "grammar"):
+            items = by_set[(typ, level)]
+            if not any(not it.get("dup") for it in items):
+                all_dup.append(f"{typ} {level}（{len(items)} 筆全被 dedup.txt 標成跨級別重複，有效 0 筆）")
+    if all_dup:
+        raise SystemExit("建置中止，一個檔都沒寫（data/ 維持上一次成功建置的狀態）：去重之後以下各組沒有任何有效資料——\n  "
+                         + "\n  ".join(all_dup))
+
     for level in LEVELS:
         for typ, folder in (("vocab", VOCAB_OUT), ("grammar", GRAMMAR_OUT)):
             items = by_set[(typ, level)]   # 上面已確認每一組都有資料

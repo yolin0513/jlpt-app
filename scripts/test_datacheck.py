@@ -173,8 +173,62 @@ def main():
         report(rc != 0 and names(out, sshort) and same, f'B-missing {sshort}',
                f'rc={rc}' + ('' if names(out, sshort) else '（輸出沒點名這個來源檔）') + ('' if same else '（data/ 被改動了）'))
 
+    # ---- J13：一組有筆數、但全被標成跨級別重複（有效 0 筆）----
+    # C-alldup：JLPT 10 組各一個——每一筆標 dup、dupOf 指到另一組真的存在的 id，json 與 manifest 的 activeCount 都改成 0（前後一致）。
+    #   旅行 3 組不適用：旅行的載入不看 dup（js/data.js loadTravel），標了也照樣出題，不存在「全被隱藏」。
+    # B-alldup：N4～N1 共 8 組各一個——那一組的來源換成從 N5 複製來的 3 行，dedup.txt 換成只有這 3 條規則。
+    #   成對對照 B-alldup-ok：同樣的造法只寫 2 條規則（留 1 筆有效）→ 必須放行。
+    #   N5 與旅行不適用：去重只會把「較高級別」標成重複，N5 沒有更低的級別；旅行不走去重。
+    for typ, key in [s for s in SETS if s[0] != 'travel']:
+        orel = out_rel(typ, key)
+        short = orel.split('data/', 1)[1]
+        w = fresh(); p = os.path.join(w, orel)
+        j = json.load(open(p, encoding='utf-8'))
+        other = 'data/vocab/n4.json' if short == 'vocab/n5.json' else 'data/vocab/n5.json'
+        keeper = json.load(open(os.path.join(w, other), encoding='utf-8'))['items'][0]['id']
+        for it in j['items']:
+            it['dup'] = True; it['dupOf'] = keeper
+        j['activeCount'] = 0
+        json.dump(j, open(p, 'w', encoding='utf-8'), ensure_ascii=False)
+        m = os.path.join(w, 'data/manifest.json'); mj = json.load(open(m, encoding='utf-8'))
+        for s in mj['sets']:
+            if s.get('type') == typ and s.get('level') == key:
+                s['activeCount'] = 0
+        json.dump(mj, open(m, 'w', encoding='utf-8'), ensure_ascii=False)
+        rc, out = run(w, 'check_data.py')
+        report(rc != 0 and names(out, short, '有效 0 筆'), f'C-alldup  {short}',
+               f'rc={rc}' + ('' if names(out, short, '有效 0 筆') else '（輸出沒點名「這一組有效 0 筆」）'))
+
+    for typ, key in [s for s in SETS if s[0] != 'travel' and s[1] != 'N5']:
+        srel = src_rel(typ, key)
+        sshort = f'{typ} {key}'
+        for keep_one in (False, True):
+            w = fresh()
+            n5 = open(os.path.join(w, src_rel(typ, 'N5')), encoding='utf-8').read().split('\n')
+            rows = [l for l in n5 if l.strip() and not l.startswith('#')][:3]
+            if len(rows) != 3:
+                print(f'ABORT：N5 {typ} 取不到 3 行'); return 2
+            open(os.path.join(w, srel), 'w', encoding='utf-8').write('\n'.join(rows) + '\n')
+            rules = []
+            for l in rows:
+                c = [x.strip() for x in l.split('|')]
+                rules.append(f'{key} | v | {c[0]} | {c[1]}' if typ == 'vocab' else f'{key} | g | {c[0]} |')
+            if keep_one:
+                rules = rules[:2]
+            open(os.path.join(w, 'data/src/dedup.txt'), 'w', encoding='utf-8').write('\n'.join(rules) + '\n')
+            before = data_digest(w)
+            rc, out = run(w, 'build_data.py')
+            same = data_digest(w) == before
+            if keep_one:
+                report(rc == 0, f'B-alldup-ok {sshort}（留 1 筆，要放行）', f'rc={rc}')
+            else:
+                ok = rc != 0 and names(out, sshort, '有效 0 筆') and same
+                report(ok, f'B-alldup  {sshort}',
+                       f'rc={rc}' + ('' if names(out, sshort, '有效 0 筆') else '（輸出沒點名「這一組有效 0 筆」）')
+                       + ('' if same else '（data/ 被改動了）'))
+
     rmtree(tmp)
-    print(f'共 {len(SETS)} 組 × 4 種情境＋基準；' + ('全部符合' if not bad else '有不符合'))
+    print(f'共 {len(SETS)} 組 × 4 種情境＋基準＋J13（C-alldup 10 組、B-alldup 8 組＋成對對照 8 組）；' + ('全部符合' if not bad else '有不符合'))
     return bad
 
 
