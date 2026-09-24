@@ -1,6 +1,7 @@
 /* 單字草稿過濾器（題庫增補用的開發工具，App 本身不需要）
  *
- * 用法：node scripts/filter_vocab_draft.mjs <草稿1.txt> [草稿2.txt ...]
+ * 用法：node scripts/filter_vocab_draft.mjs [--allow-empty] <草稿1.txt> [草稿2.txt ...]
+ *   空檔或全部被剔除都回 1；這一輪真的沒有新草稿、或全部剔除也沒關係時，加 --allow-empty 明講。
  *   草稿格式同 data/src/vocab.*.txt：漢字 | 假名 | 中文釋義 | 詞性 | 例句 | 例句假名 | 例句中譯
  *   每份草稿輸出一份 <草稿>.ok.txt（只留通過的行）；人工抽查後，再手動附加到 data/src/ 對應檔的**檔尾**。
  *
@@ -30,11 +31,15 @@ const HAN = /[\u4E00-\u9FFF]/;
 const LAT = /[A-Za-z]/;
 const BAD = /[\u0400-\u04FF\uAC00-\uD7A3]/; // 西里爾字母、韓文
 
-const files = process.argv.slice(2);
+// --allow-empty：明確表示「這一輪真的沒有新草稿／全部剔除也沒關係」。沒帶的話，空檔或全被剔除都回 1
+// （2026-09-24 J11：以前空檔回 0、印「草稿共 0 行」，取到空的被當成沒問題）。
+const ALLOW_EMPTY = process.argv.includes('--allow-empty');
+const files = process.argv.slice(2).filter((a) => a !== '--allow-empty');
 if (!files.length) {
-  console.error('用法：node scripts/filter_vocab_draft.mjs <草稿.txt> [...]（同一輪的草稿請一次全部傳入）');
+  console.error('用法：node scripts/filter_vocab_draft.mjs [--allow-empty] <草稿.txt> [...]（同一輪的草稿請一次全部傳入）');
   process.exit(1);
 }
+const emptyFiles = [];
 
 function problem(c, line) {
   if (c.length !== 7) return `欄位數 ${c.length}（應為 7）`;
@@ -52,10 +57,12 @@ let total = 0;
 let kept = 0;
 for (const f of files) {
   const out = [];
+  let rowsInFile = 0;
   for (const raw of fs.readFileSync(f, 'utf8').split(/\r?\n/)) {
     const line = raw.trim();
     if (!line || line.startsWith('#')) continue;
     total++;
+    rowsInFile++;
     const c = line.split('|').map((s) => s.trim());
     const why = problem(c, line);
     if (why) { console.log(`  x ${c[0] || line.slice(0, 20)} → ${why}`); continue; }
@@ -67,7 +74,17 @@ for (const f of files) {
     kept++;
   }
   const dst = f.replace(/\.txt$/, '') + '.ok.txt';
+  if (!rowsInFile) emptyFiles.push(path.basename(f));
   fs.writeFileSync(dst, out.join('\n') + (out.length ? '\n' : ''), 'utf8');
   console.log(`${path.basename(f)} → ${path.basename(dst)}：保留 ${out.length} 行`);
 }
 console.log(`\n草稿共 ${total} 行，保留 ${kept}，剔除 ${total - kept}`);
+if (!ALLOW_EMPTY) {
+  const why = [];
+  if (emptyFiles.length) why.push(`${emptyFiles.length} 份草稿沒有任何資料列（${emptyFiles.join('、')}）`);
+  if (total > 0 && kept === 0) why.push(`全部 ${total} 行都被剔除`);
+  if (why.length) {
+    console.error(`停：${why.join('；')}。取到空的不當成沒問題；若這一輪真的沒有新草稿，請加 --allow-empty 明講。`);
+    process.exit(1);
+  }
+}

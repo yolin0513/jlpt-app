@@ -103,6 +103,29 @@ def main():
     rc, out = run(f, ' | '.join(fields))
     report('保留 1' in out, f'{f}：中文意思用 A、B 代稱要保留', f'rc={rc}')
 
+    # J11（2026-09-24）：單字草稿過濾遇到空檔、或全部被剔除時要停，並講明是哪一種；--allow-empty 明講才放行
+    f = 'filter_vocab_draft.mjs'
+
+    def run_raw(fname, content, *extra):
+        nonlocal n
+        n += 1
+        draft = os.path.join(tmp, f'd{n}.txt')
+        open(draft, 'w', encoding='utf-8').write(content)
+        r = subprocess.run(['node', f'scripts/{fname}', *extra, draft], cwd=tmp, capture_output=True)
+        return r.returncode, (r.stdout + r.stderr).decode('utf-8', 'replace')
+
+    rc, out = run_raw(f, '')
+    report(rc != 0 and '沒有任何資料列' in out, f'{f}：空檔要停、講明是空的', f'rc={rc}')
+    rc, out = run_raw(f, '# 只有註解\n\n')
+    report(rc != 0 and '沒有任何資料列' in out, f'{f}：只有註解也算空、要停', f'rc={rc}')
+    bad_line = ' | '.join([CYR + x if i == 2 else x for i, x in enumerate(x.strip() for x in FILTERS[f][0].split('|'))])
+    rc, out = run_raw(f, bad_line + '\n')
+    report(rc != 0 and '全部 1 行都被剔除' in out, f'{f}：全部被剔除要停、講明', f'rc={rc}')
+    rc, out = run_raw(f, '', '--allow-empty')
+    report(rc == 0, f'{f}：空檔加 --allow-empty 要放行', f'rc={rc}')
+    rc, out = run_raw(f, bad_line + '\n', '--allow-empty')
+    report(rc == 0 and '保留 0' in out, f'{f}：全被剔除加 --allow-empty 要放行', f'rc={rc}')
+
     rmtree(tmp)
     print('全部符合' if not bad else '有不符合')
     return bad
