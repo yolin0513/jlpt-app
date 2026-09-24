@@ -141,9 +141,9 @@ case "$MUTATE" in
     pyedit $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' 'if false; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' || die "改壞閘門"
     confirm_mutated $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' ;;
   nometa2)   # 自查的第二道改成放行（取到空的、少一筆、欄位空白都當成 0 命中）——F10 第 5 點：讓那段邏輯放行
-    mutate $SC '    if len(records) != len(commits) or blank:'
-    pyedit $SC '    if len(records) != len(commits) or blank:' '    if False:' || die "改壞自查"
-    confirm_mutated $SC '    if len(records) != len(commits) or blank:' ;;
+    mutate $SC 'if len(records) != len(commits) or blank:'
+    pyedit $SC 'if len(records) != len(commits) or blank:' 'if False:' || die "改壞自查"
+    confirm_mutated $SC 'if len(records) != len(commits) or blank:' ;;
   f9nofile)   # F9：沒有登記檔時「讀不到當成一樣」（隱式的擋：讀不到＝空字串＝對不上）
     mutate $PS '    reg=""'
     pyedit $PS '    reg=""' '    reg="$now"' || die "改壞閘門"
@@ -163,7 +163,7 @@ case "$MUTATE" in
     confirm_mutated $PS "$A" ;;
   regwrongblob)   # 共用判斷寫進登記的不是 HEAD 的雜湊
     mutate scripts/lib/verified_reg.py '{f} {blob}'
-    pyedit scripts/lib/verified_reg.py '{f} {blob}' '{f} {blob}x' || die "改壞登記判斷"
+    pyedit scripts/lib/verified_reg.py '{f} {blob}' '{f} x{blob}' || die "改壞登記判斷"
     confirm_mutated scripts/lib/verified_reg.py '{f} {blob}' ;;
   regnever)   # 共用判斷條件都成立也不寫登記（所有「要登記」的情境共同依靠的一環）
     mutate scripts/lib/verified_reg.py '    os.makedirs(os.path.dirname(os.path.abspath(reg)), exist_ok=True)'
@@ -188,9 +188,9 @@ case "$MUTATE" in
     pyedit scripts/test_pushsafe.sh "$A" "exit 2" || die "改壞驗法"
     confirm_mutated scripts/test_pushsafe.sh "$A" ;;
   regclean)   # 登記的共用判斷把「工作區跟 HEAD 不一樣」一律當作沒改動（統籌者 2026-09-24 查出缺口用的突變）
-    mutate scripts/lib/verified_reg.py '        if rc == 1:'
-    pyedit scripts/lib/verified_reg.py '        if rc == 1:' '        if False:' || die "改壞登記判斷"
-    confirm_mutated scripts/lib/verified_reg.py '        if rc == 1:' ;;
+    mutate scripts/lib/verified_reg.py '        if st:'
+    pyedit scripts/lib/verified_reg.py '        if st:' '        if False:' || die "改壞登記判斷"
+    confirm_mutated scripts/lib/verified_reg.py '        if st:' ;;
   noselfhead)   # 拿掉「正在跑的驗法必須跟 HEAD 一樣」那道。改的是這支自己：錨點在執行時才組（|| 用 BAR 拼），
     # 否則這幾行也含同一段字面、錨點就不是恰好一處
     A="cmp -s \"\$SELF\" scripts/test_pushsafe.sh $BAR$BAR"
