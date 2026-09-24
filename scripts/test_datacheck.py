@@ -17,6 +17,8 @@ v9 盤點時發現：清空 N3 的來源檔會停，只是因為剛好有一條�
 另有 J13 的 C-alldup／B-alldup（見下方註解），以及：
   B-writefail  每一個輸出檔（13 組＋搜尋索引＋manifest）各當一次「寫它的時候失敗」（F8）
                → build_data 必須回非 0、錯誤訊息點名那個檔，而且 data/ 一個位元組都沒變、沒留下 .tmp
+  B-tmpdir     每一個輸出檔的暫存檔位置先放一個同名資料夾（寫不進去、也不該去刪）→ 同上，而且不能是錯誤堆疊
+  B-cleanupfail 寫某個檔失敗、而且已寫好的一個暫存檔刪不掉 → 點名兩者、不能是錯誤堆疊、正式輸出不變
 
 每一格三件事都要成立：回傳值非 0、**錯誤訊息區**（stderr 去掉「  ! 略過…」警告行）點名這個單位、
 輸出目錄的雜湊前後相同。被別的規則碰巧擋下的（回非 0 但沒點名這個單位）一律算「沒擋」。
@@ -57,8 +59,9 @@ class Abort(Exception):
     pass
 
 
-def data_digest(d):
+def data_digest(d, skip_tmp=False):
     """data/ 底下（不含 src）每一個檔的內容雜湊與檔數——用來確認建置失敗時一個檔都沒被寫、也沒留下暫存檔。
+    skip_tmp：不算 .tmp 結尾的檔（只比正式輸出）。
     「前後相同」在母體是空的時候恆真（data/ 不見了，前後都是空的雜湊），所以一個檔都沒掃到就中止。"""
     h = hashlib.sha1()
     n = 0
@@ -67,12 +70,24 @@ def data_digest(d):
         dirnames[:] = sorted(x for x in dirnames if x != 'src')
         for f in sorted(files):
             p = os.path.join(dirpath, f)
+            if skip_tmp and f.endswith('.tmp'):
+                continue
             h.update(os.path.relpath(p, base).replace('\\', '/').encode())
             h.update(open(p, 'rb').read())
             n += 1
     if n == 0:
         raise Abort(f'data/ 底下一個檔都沒掃到（{base}），「前後相同」會恆真')
     return h.hexdigest(), n
+
+
+def tmp_files(d):
+    """data/ 底下（不含 src）留著的 .tmp 檔（相對 data/ 的路徑）。"""
+    base = os.path.join(d, 'data')
+    out = []
+    for dirpath, dirnames, files in os.walk(base):
+        dirnames[:] = [x for x in dirnames if x != 'src']
+        out += [os.path.relpath(os.path.join(dirpath, f), base).replace('\\', '/') for f in files if f.endswith('.tmp')]
+    return sorted(out)
 
 
 def err_region(stderr):
@@ -98,6 +113,7 @@ def names(out, *needles):
 # 真的注入到了才寫 _injected.txt（在 data/ 外面），沒寫就表示情境沒造成。
 INJECT = '''import pathlib, runpy, sys
 target = sys.argv[1]
+lock = sys.argv[2] if len(sys.argv) > 2 else ''
 _orig = pathlib.Path.write_text
 def _wt(self, *a, **k):
     rel = self.as_posix()
@@ -106,6 +122,13 @@ def _wt(self, *a, **k):
         raise OSError(28, 'simulated write failure')
     return _orig(self, *a, **k)
 pathlib.Path.write_text = _wt
+_ou = pathlib.Path.unlink
+def _ul(self, *a, **k):
+    if lock and self.as_posix().endswith('/data/' + lock + '.tmp'):
+        open('_unlink_blocked.txt', 'w').write('yes')
+        raise PermissionError(13, 'simulated locked file')
+    return _ou(self, *a, **k)
+pathlib.Path.unlink = _ul
 sys.argv = ['scripts/build_data.py']
 runpy.run_path('scripts/build_data.py', run_name='__main__')
 '''
@@ -298,9 +321,53 @@ def main():
         report(rc != 0 and names(out, rel) and same, f'B-writefail {rel}',
                f'rc={rc}' + ('' if names(out, rel) else '（錯誤訊息沒點名這個檔）') + ('' if same else '（data/ 被改動了：一半新一半舊或留下暫存檔）'))
 
+    # ---- 清理那一步本身失敗（2026-09-24 統籌者驗收時抓到）：清理要逐個失敗不中斷、把清不掉的也報出來，
+    # 最後仍要走到「點名是哪個檔」那句，不能變成錯誤堆疊。兩種：
+    # B-tmpdir     暫存檔的位置先放一個同名資料夾（裡面有一個檔）→ 那個暫存檔寫不進去，也刪不掉（不是建置建的，不該去刪）
+    #              每一格：回非 0、點名那個檔、沒有錯誤堆疊、data/ 雜湊不變（資料夾還在、沒留下別的 .tmp）
+    # B-cleanupfail 寫某個檔失敗，而且第一個輸出的暫存檔刪不掉（模擬被鎖住）→ 要點名失敗的檔、也點名清不掉的暫存檔、
+    #              沒有錯誤堆疊、正式輸出不變、留下的 .tmp 剛好只有那一個。第一個輸出不適用（它前面沒有已寫好的暫存檔）。
+    def stale_all(w):
+        for r2 in OUTPUTS:
+            p2 = os.path.join(w, 'data', r2)
+            if not os.path.exists(p2):
+                raise Abort(f'data/{r2} 原本就不存在')
+            open(p2, 'w', encoding='utf-8').write(f'STALE {r2}\n')
+        open(os.path.join(w, 'scripts', '_inject.py'), 'w', encoding='utf-8').write(INJECT)
+
+    for rel in OUTPUTS:
+        w = fresh(); stale_all(w)
+        d = os.path.join(w, 'data', rel + '.tmp')
+        os.makedirs(d)
+        open(os.path.join(d, 'keep.txt'), 'w', encoding='utf-8').write('not ours\n')
+        before = data_digest(w)
+        rc, out = run(w, 'build_data.py')
+        same = data_digest(w) == before
+        tb = 'Traceback' in out
+        report(rc != 0 and names(out, rel) and not tb and same, f'B-tmpdir {rel}',
+               f'rc={rc}' + ('' if names(out, rel) else '（錯誤訊息沒點名這個檔）') + ('（輸出是錯誤堆疊）' if tb else '')
+               + ('' if same else f'（data/ 被改動了，留下的 .tmp：{tmp_files(w)}）'))
+
+    first = OUTPUTS[0]
+    for rel in OUTPUTS[1:]:
+        w = fresh(); stale_all(w)
+        before = data_digest(w, skip_tmp=True)
+        rc, out = run(w, '_inject.py', rel, first)
+        for mark in ('_injected.txt', '_unlink_blocked.txt'):
+            if not os.path.exists(os.path.join(w, mark)):
+                print(f'ABORT：B-cleanupfail {rel} 的 {mark} 沒有出現（情境沒造成）'); return 2
+        same = data_digest(w, skip_tmp=True) == before
+        left = tmp_files(w)
+        tb = 'Traceback' in out
+        ok = rc != 0 and names(out, rel, first + '.tmp') and not tb and same and left == [first + '.tmp']
+        report(ok, f'B-cleanupfail {rel}',
+               f'rc={rc}' + ('' if names(out, rel) else '（沒點名失敗的檔）') + ('' if names(out, first + '.tmp') else '（沒點名清不掉的暫存檔）')
+               + ('（輸出是錯誤堆疊）' if tb else '') + ('' if same else '（正式輸出被改動了）')
+               + ('' if left == [first + '.tmp'] else f'（留下的 .tmp：{left}）'))
+
     rmtree(tmp)
     print(f'共 {len(SETS)} 組 × 4 種情境＋基準＋J13（C-alldup 10 組、B-alldup 8 組＋成對對照 8 組）'
-          f'＋寫到一半失敗 {len(OUTPUTS)} 個輸出檔；' + ('全部符合' if not bad else '有不符合'))
+          f'＋寫到一半失敗 {len(OUTPUTS)} 個輸出檔＋暫存檔位置被佔 {len(OUTPUTS)}＋清理失敗 {len(OUTPUTS) - 1}；' + ('全部符合' if not bad else '有不符合'))
     return bad
 
 

@@ -305,13 +305,20 @@ def commit_outputs(pending):
         try:
             tmp.write_text(text, encoding="utf-8", newline="\n")
         except OSError as e:
-            for t in [tmp] + [t for t, _p in tmps]:
+            # 清理本身也可能失敗（Windows 上防毒、索引程式鎖檔）：逐個試、失敗不中斷，最後一起報出來，
+            # 一定要走到下面那句點名（2026-09-24 統籌者驗收時抓到：原本清理遇到刪不掉的就整個中斷、只剩錯誤堆疊）
+            leftover = []
+            for t in [tmp] + [t for t, _p in tmps]:   # 失敗的那個位置若被同名資料夾佔住，unlink 刪不掉，照樣報出來
                 try:
                     t.unlink()
                 except FileNotFoundError:
                     pass
-            raise SystemExit(f"建置中止，一個檔都沒換上（data/ 維持上一次成功建置的狀態）：寫暫存檔失敗——"
-                             f"{path.relative_to(ROOT).as_posix()}（{type(e).__name__}: {e}）")
+                except OSError as ce:
+                    leftover.append(f"{t.relative_to(ROOT).as_posix()}（{type(ce).__name__}）")
+            note = ("" if not leftover else
+                    f"；另有 {len(leftover)} 個暫存檔清不掉、留在原地（正式輸出沒有被換掉，可以手動刪）：" + "、".join(leftover))
+            raise SystemExit(f"建置中止，一個檔都沒換上（data/ 的正式輸出維持上一次成功建置的狀態）：寫暫存檔失敗——"
+                             f"{path.relative_to(ROOT).as_posix()}（{type(e).__name__}: {e}）{note}")
         tmps.append((tmp, path))
     done = []
     for tmp, path in tmps:
