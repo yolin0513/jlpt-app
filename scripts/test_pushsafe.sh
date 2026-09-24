@@ -4,7 +4,7 @@
 #   bash scripts/test_pushsafe.sh                              # 正常：全部符合回 0，並登記四支閘門檔案的雜湊
 #   （預設：正常順序跑一輪、反過來再跑一輪，逐個情境比對兩輪結果一樣才算全過——J8 的「換序結果不變」每次都驗）
 #   TEST_PUSHSAFE_ORDER=normal|reverse bash scripts/test_pushsafe.sh  # 只跑一個順序（除錯用；不會登記）
-#   TEST_PUSHSAFE_MUTATE=<突變> bash scripts/test_pushsafe.sh   # 突變：nofetch nometa oldparse nocheck oldparse+nocheck nolint noregistry nof9 f9always regnopass regnotested regclean dienorm noselfhead regrevparse regdiff reghash nometa2 f9nofile f9nohash f9neverok f9regexists regwrongblob regnever
+#   TEST_PUSHSAFE_MUTATE=<突變> bash scripts/test_pushsafe.sh   # 突變：nofetch nometa oldparse nocheck oldparse+nocheck nolint noregistry nof9 f9always regnopass regnotested regclean dienorm noselfhead regrevparse regdiff reghash nometa2 f9nofile f9nohash f9neverok f9regexists regwrongblob regnever noenvguard envguardall envtargetsempty
 # 完全不碰 GitHub：在暫存目錄建一個 bare repo 當假遠端，複製本 repo「已 commit 的內容」過去跑。
 # 所以改了閘門要先在本機 commit（先不推）再跑這支。
 # 登記（J7）：正常跑、全部符合時，把 pushsafe.sh、selfcheck_public.py、test_pushsafe.sh、lint_gate.py 被驗的那一版雜湊
@@ -140,6 +140,18 @@ case "$MUTATE" in
     mutate $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法'
     pyedit $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' 'if false; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' || die "改壞閘門"
     confirm_mutated $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' ;;
+  noenvguard)   # 閘門開頭不擋 GIT_ 變數
+    mutate $PS 'if [ -n "$badenv" ]; then'
+    pyedit $PS 'if [ -n "$badenv" ]; then' 'if [ -n "$badenv" ] && false; then' || die "改壞閘門"
+    confirm_mutated $PS 'if [ -n "$badenv" ]; then' ;;
+  envguardall)   # 閘門開頭連白名單也擋（GIT_EDITOR 這類無害的也不放行）
+    mutate $PS 'GIT_EDITOR|GIT_PAGER|GIT_TERMINAL_PROMPT) ;;'
+    pyedit $PS 'GIT_EDITOR|GIT_PAGER|GIT_TERMINAL_PROMPT) ;;' 'GIT_NONE_ALLOWED) ;;' || die "改壞閘門"
+    confirm_mutated $PS 'GIT_EDITOR|GIT_PAGER|GIT_TERMINAL_PROMPT) ;;' ;;
+  envtargetsempty)   # lint 的「讀未登記環境變數」規則還在、對照組也照跑，但不掃任何正式閘門
+    mutate scripts/lint_gate.py "ENV_TARGETS = ['scripts/pushsafe.sh'"
+    pyedit scripts/lint_gate.py "ENV_TARGETS = ['scripts/pushsafe.sh'" "ENV_TARGETS = [] and ['scripts/pushsafe.sh'" || die "改壞 lint"
+    confirm_mutated scripts/lint_gate.py "ENV_TARGETS = ['scripts/pushsafe.sh'" ;;
   nometa2)   # 自查的第二道改成放行（取到空的、少一筆、欄位空白都當成 0 命中）——F10 第 5 點：讓那段邏輯放行
     mutate $SC 'if len(records) != len(commits) or blank:'
     pyedit $SC 'if len(records) != len(commits) or blank:' 'if False:' || die "改壞自查"
@@ -250,7 +262,11 @@ check() {  # check 名稱 期望rc 實際rc 期望假遠端(same|local) must... 
   # 不符時印出閘門實際的擋下訊息，才看得出是被什麼擋的（或為什麼沒擋）
   [ "$ok" = yes ] || grep -E 'SELF-CHECK FAILED|PUSHSAFE:|LINT-GATE' "$T/out.txt" | sed 's/^/       實際：/'
 }
-run() { rm -f "$T/out.txt"; bash scripts/pushsafe.sh > "$T/out.txt" 2>&1; echo $?; }
+# 閘門開頭會擋 git 認得的 GIT_ 變數：跑閘門前先清掉從外面繼承來的（例如工作環境設的 GIT_EDITOR），
+# 各情境要的變數由 RUN_ENV 明確給——情境之間互不污染，白名單的對照組（30）也才驗得出「設了照樣放行」
+ENV_UNSET=""; for v in $(compgen -e); do case "$v" in GIT_*) ENV_UNSET="$ENV_UNSET -u $v" ;; esac; done
+RUN_ENV=""
+run() { rm -f "$T/out.txt"; env $ENV_UNSET $RUN_ENV bash scripts/pushsafe.sh > "$T/out.txt" 2>&1; echo $?; }
 hitfile() { printf '%s%s\n' 'path E' ':\foo' > "$1"; }   # 當場組出來的合成樣本（本機路徑的形狀）
 clean_commit() { echo "clean $1 $(date +%s%N)" > "clean_$1.txt"; git add "clean_$1.txt" && git commit -q -m "clean $1" || die "造乾淨的 commit（$1）"; }
 
@@ -405,8 +421,27 @@ s28() { at_start; clean_commit 28a; clean_commit 28b   # 自查「commit 訊息�
   [ "$(grep -c '^yes ' "$T/out.txt")" -eq 4 ] || { ok=no; why="$why 結果行不是 4 條 yes"; }
   check_plain "28 作者欄取到空的／少一筆／欄位空白（要停）" "$ok" "$why"; restore; }
 
-LIST="s01 s02 s03 s04 s05 s06 s07 s08 s09 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 s21 s22 s23 s24 s25 s26 s27 s28"
-N_SCEN=28
+s29() { at_start; clean_commit 29   # git 自己認得的 GIT_ 變數設在環境裡 → 閘門開頭就停（逐一試，含一個 git 目前沒有的名字，證明是照前綴擋）
+  local ok=yes why="" kv name rc
+  for kv in "GIT_DIR=$T/remote.git" "GIT_WORK_TREE=$PWD" "GIT_INDEX_FILE=$T/idx29" "GIT_OBJECT_DIRECTORY=$T/obj29" \
+            "GIT_CEILING_DIRECTORIES=$T" "GIT_COMMON_DIR=$T/remote.git" "GIT_CONFIG_COUNT=0" "GIT_SOMETHING_NEW_29=1"; do
+    name="${kv%%=*}"; RUN_ENV="$kv"; rc="$(run)"; RUN_ENV=""
+    [ "$rc" = 1 ] || { ok=no; why="$why $name 回傳 $rc"; }
+    reason_ok "$T/out.txt" 'PUSHSAFE: 環境裡設了 git 自己認得的變數' "$name" -- '推送成功' || { ok=no; why="$why $name 擋下理由不對"; }
+    [ "$(rhead)" = "$(git rev-parse --short "$BASE")" ] || { ok=no; why="$why $name 假遠端被動到"; }
+  done
+  check_plain "29 環境裡有 GIT_DIR 之類的變數（要停）" "$ok" "$why"; restore; }
+s30() { at_start; clean_commit 30; RUN_ENV="GIT_EDITOR=true GIT_PAGER=cat GIT_TERMINAL_PROMPT=0"
+  rc="$(run)"; RUN_ENV=""
+  check "30 環境裡只有白名單的 GIT_ 變數（要放行）" 0 "$rc" local 'SELF-CHECK OK' 'PUSHSAFE: 推送成功' -- '環境裡設了'; restore; }
+s31() { at_start
+  printf '%s\n' 'echo "$PUSHGATE_REMOTE"' >> $PS   # 正式閘門讀一個沒登記的環境變數（放在 exit 0 之後，不會被執行）
+  git commit -q -am "gate reads unregistered env" || die "造讀環境變數的 commit"
+  register_clone
+  rc="$(run)"; check "31 正式閘門讀了沒登記的環境變數（lint 要擋）" 1 "$rc" same 'PUSHSAFE: 閘門腳本有已知的壞寫法' '[envread]' -- 'SELF-CHECK'; restore; }
+
+LIST="s01 s02 s03 s04 s05 s06 s07 s08 s09 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 s21 s22 s23 s24 s25 s26 s27 s28 s29 s30 s31"
+N_SCEN=31
 run_list() {  # run_list normal|reverse
   local l="$LIST"; [ "$1" = reverse ] && l="$(printf '%s\n' $LIST | sort -r | tr '\n' ' ')"
   echo "順序：$1（$l）"; RESULT=(); for s in $l; do $s; done

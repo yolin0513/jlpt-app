@@ -5,12 +5,31 @@
 #   1  沒有驗法登記或閘門改過沒重跑驗法、閘門腳本有已知的壞寫法（lint_gate.py）、自查失敗（有命中、對照組沒命中、取不到使用者名稱、沒有要推的 commit），或取不到遠端的最新狀態——沒有推
 #   2  推送失敗
 #   3  推送回報成功，但遠端 main 不等於本機 HEAD
+#   1  （也包括）環境裡設了 git 自己認得的 GIT_ 變數（白名單以外）
 #   4  這次要推的 commit 動到題庫建置或它的驗法，卻沒有對得上的 F8 驗法登記（沒重跑 test_datacheck.py）——沒有推
 #   0  推上去了，而且遠端＝本機
 # 會決定成敗的指令一律不接管線（管線的回傳值是最後一個指令的，會吞掉失敗）；輸出導到檔案再印。
 # 改過這支或 selfcheck_public.py，就重跑 scripts/test_pushsafe.sh（分別製造每一關的失敗）。
 set -u
 set -o pipefail
+
+# 0000) git 自己認得的環境變數（2026-09-25）：GIT_DIR、GIT_WORK_TREE、GIT_INDEX_FILE、GIT_OBJECT_DIRECTORY、GIT_COMMON_DIR、
+#       GIT_CEILING_DIRECTORIES、GIT_CONFIG_COUNT／KEY／VALUE……不需要任何程式定義，只要剛好設在環境裡，整個閘門就會
+#       對著別的 repo、別的設定跑完全套檢查然後說通過——程式碼裡什麼都看不到。所以在第一個 git 指令之前擋：
+#       GIT_ 開頭的一律擋（不逐一列舉，git 以後新增的也擋得到），只放行不影響「看哪個 repo、哪些物件、哪份設定、推去哪」的
+#       白名單。【已知限制】git 也讀 HOME／XDG_CONFIG_HOME 底下的設定檔與系統設定（例如 url.<x>.insteadOf 可以改寫推送目標），
+#       那些不是 GIT_ 變數、這裡不擋；見證據檔。
+badenv=""
+for v in $(compgen -e); do
+  case "$v" in
+    GIT_EDITOR|GIT_PAGER|GIT_TERMINAL_PROMPT) ;;
+    GIT_*) badenv="$badenv $v" ;;
+  esac
+done
+if [ -n "$badenv" ]; then
+  echo "PUSHSAFE: 環境裡設了 git 自己認得的變數：$badenv——可能讓閘門對著別的 repo 或設定跑完再說通過；先 unset 再推，沒有推送"; exit 1
+fi
+
 cd "$(git rev-parse --show-toplevel)" || exit 1
 LOG="$(mktemp)"
 HELPER='!"$HOME/AppData/Local/Temp/gh-cli/bin/gh.exe" auth git-credential'   # gh 的位置見 STATUS §8

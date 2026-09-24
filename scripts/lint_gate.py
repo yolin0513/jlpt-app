@@ -159,7 +159,44 @@ def r_overescape(name, lines):
     return out
 
 
+# 正式閘門不讀未登記的環境變數（2026-09-25；MealMate 在正式閘門找到一個沒人用、設了就把檢查與推送改指到別的遠端的旋鈕，
+# StockDiary、TripQuest 也各有類似的）。只掃正式閘門這幾支（驗法本身讀 TEST_PUSHSAFE_* 是測試用，不在這裡）；
+# 白名單只放取使用者名稱與 gh 位置要用的。git 自己認得的 GIT_* 變數不是「讀取」，由 pushsafe.sh 開頭擋。
+ENV_TARGETS = ['scripts/pushsafe.sh', 'scripts/selfcheck_public.py', 'scripts/lib/verified_reg.py', 'scripts/lint_gate.py']
+ENV_ALLOW = {'HOME', 'USERNAME', 'USER'}
+_ENV_PY = re.compile(r'(?:os\.environ\.get|os\.getenv|environ\.get)\(\s*[\'"](\w+)|os\.environ\[\s*[\'"](\w+)')
+_SH_ASSIGN = re.compile(r'^\s*(?:export\s+|local\s+|readonly\s+)?([A-Za-z_]\w*)=|\bfor\s+([A-Za-z_]\w*)\s+in\b|\bread\s+(?:-\w+\s+)*([A-Za-z_]\w*)')
+_SH_USE = re.compile(r'\$\{?([A-Za-z_]\w*)')
+
+
+def r_envread(name, lines):
+    """正式閘門讀取了沒登記的環境變數：shell 裡用了腳本自己沒設過、也不在白名單的 $變數（或 printenv、${!…}）；
+    Python 裡 os.environ.get／os.getenv／os.environ[...] 取了白名單以外的名字。"""
+    out = []
+    if name.endswith('.sh'):
+        assigned = set()
+        for l in lines:
+            if not is_comment(l):
+                for m in _SH_ASSIGN.finditer(l):
+                    assigned.update(x for x in m.groups() if x)
+        for i, l in enumerate(lines, 1):
+            if is_comment(l):
+                continue
+            used = {u for u in _SH_USE.findall(l) if u not in assigned and u not in ENV_ALLOW}
+            if used or re.search(r'\bprintenv\s+\w|\$\{!', l):
+                out.append((i, l))
+    elif name.endswith('.py'):
+        for i, l in enumerate(lines, 1):
+            if is_comment(l):
+                continue
+            names = {a or b for a, b in _ENV_PY.findall(l)}
+            if names - ENV_ALLOW:
+                out.append((i, l))
+    return out
+
+
 RULES = {
+    'envread': r_envread,
     'overescape': r_overescape,
     'pipe': r_pipe,
     'swallow': r_swallow,
@@ -197,6 +234,12 @@ CONTROLS = {
         ('x.sh', "grep -q '\\.org' out.txt"),                                                                  # 合成
         ('x.sh', "sed -i \"s/+ '\\.org'/+ '.o'/\" scripts/selfcheck_public.py"),                                # 本 App 驗法裡真實的一行
     ],
+    'envread': [   # 全部當場組出來；Python 的樣本拆開寫，這支檔自己（也在 ENV_TARGETS 裡）才不會被自己掃到
+        ('x.sh', 'git push "$PUSHGATE' + '_REMOTE" main'),                      # 沒設過的變數決定推去哪（MealMate 那一種）
+        ('x.sh', 'printenv PRE' + 'CHECK'),                                       # printenv 讀
+        ('x.py', "scan = os.environ" + ".get('PII" + "SCAN') or 'on'"),           # Python 讀沒登記的名字
+        ('x.py', "t = os.environ" + "['PUSH" + "_TARGET']"),                      # Python 用 [] 讀
+    ],
     'overescape': [   # 全部當場組出來（每一種語言、每一個分支各一條）
         ('x.py', "PAT = re.compile(r'" + BS * 2 + "d+')"),                   # Python 原始字串多跳脫
         ('x.py', "PAT = re.compile('" + BS * 4 + "s+')"),                    # Python 一般字串多跳脫
@@ -214,6 +257,8 @@ NEGATIVES = [   # 合法寫法：任何一種都不該抓
     ('x.sh', 'git show HEAD:scripts/selfcheck_public.py ' + BAR + ' grep -q foo ' + BAR * 2 + ' die "x"'),   # 2026-09-24 第一版誤抓過：檔名在路徑裡不等於在跑自查
     ('x.py', "A = re.compile(r'" + BS + "d+')\nB = '" + BS * 2 + "d'\nC = r'[/" + BS * 2 + "]'"),   # 正確的跳脫；比對字面反斜線的 [/\\]
     ('x.mjs', 'const A = /' + BS + 'd+/; const B = new RegExp("' + BS * 2 + 'd");'),                  # 正確的跳脫
+    ('x.sh', 'X=1\necho "$X" "$HOME"\nfor f in a b; do echo "$f"; done'),                              # 自己設的、白名單裡的
+    ('x.py', "u = os.environ" + ".get('USER" + "NAME') or os.environ" + ".get('USER')"),              # 白名單裡的
 ]
 
 # ---- 登記的例外：(檔, 規則, 那一行裡的一段固定字串, 理由)。每一條都必須在這次掃描裡命中 ----
@@ -333,7 +378,10 @@ def main():
     total_lines = 0
     scan = list(TARGETS) + [f for f in ESCAPE_TARGETS if f not in TARGETS]
     for f in scan:
-        rules = RULES if f in TARGETS else {k: RULES[k] for k in ESCAPE_RULES}   # 閘門三支掃全部；其他腳本掃跳脫類
+        # 閘門三支掃全部（envread 另外算）；其他腳本掃跳脫類；正式閘門那幾支另外掃 envread
+        rules = ({k: v for k, v in RULES.items() if k != 'envread'} if f in TARGETS else {k: RULES[k] for k in ESCAPE_RULES})
+        if f in ENV_TARGETS:
+            rules = dict(rules, envread=RULES['envread'])
         path = os.path.join(ROOT, f)
         try:
             text = open(path, encoding='utf-8').read()
@@ -352,7 +400,7 @@ def main():
                     used.update(ex)
                 else:
                     unexpected.append((f, i, rule, line.strip()))
-    if set(scan) != set(TARGETS) | set(ESCAPE_TARGETS) or not set(TARGETS) <= set(ESCAPE_TARGETS):
+    if set(scan) != set(TARGETS) | set(ESCAPE_TARGETS) or not set(TARGETS) <= set(ESCAPE_TARGETS) or not set(ENV_TARGETS) <= set(scan):
         print(f'LINT-GATE FAILED: 實際掃到的檔（{len(set(scan))} 支）不等於登記的（閘門 {len(TARGETS)}＋跳脫 {len(ESCAPE_TARGETS)}），'
               f'或閘門有檔沒登記進跳脫掃描（檢查器壞了）')
         return 1
