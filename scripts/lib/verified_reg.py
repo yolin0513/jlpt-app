@@ -27,7 +27,8 @@ def drop(reg):
         pass
 
 
-def main(argv):
+def main(argv, git=git):
+    """git：執行 git 的函式（F10 1b 第 2 步：測試時可以換成讓某一個子指令失敗的版本；正式呼叫一律用預設的真 git）。"""
     if len(argv) < 4 or argv[2] not in ('yes', 'no'):
         if len(argv) >= 2:
             drop(argv[1])

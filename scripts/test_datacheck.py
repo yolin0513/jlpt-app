@@ -159,10 +159,11 @@ with open(os.path.abspath(__file__), 'rb') as _fh:
     open(os.path.join(TESTED_DIR, 'test_datacheck.py'), 'wb').write(_fh.read())
 
 
-def self_probe():
+def self_probe(want_msg, env_extra=None):
     """F10 第 3 點：拿一個故意改壞的版本跑這支驗法，跑完斷言登記已經不在（「驗法沒全過 → 刪登記」的呼叫端分支）。
     暫存 clone 裡把 build_data.py 改成一開始就失敗（第一步基準就中止，幾十秒跑完），先放一份舊登記。
-    子行程帶 --no-selfprobe：只是不再往下探測，不會讓任何東西故意失敗。"""
+    env_extra：F10 1b 第 1 步，讓真的 git 失敗（GIT_DIR 指向不存在的目錄）——登記時取不到 HEAD 的判斷那一支。
+    子行程帶 --no-selfprobe：只是不再往下探測，不會讓任何東西故意失敗。回傳（回傳值非 0、舊登記已刪、訊息對）。"""
     t = tempfile.mkdtemp()
     try:
         w = os.path.join(t, 'w')
@@ -182,9 +183,10 @@ def self_probe():
         reg = os.path.join(w, '.logs', 'datacheck-verified')
         os.makedirs(os.path.dirname(reg))
         open(reg, 'w', encoding='utf-8').write('舊登記\n')
-        r = subprocess.run([sys.executable, 'scripts/test_datacheck.py', '--no-selfprobe'], cwd=w, capture_output=True, timeout=900)
+        env = dict(os.environ, **{k: v.replace('<T>', t) for k, v in (env_extra or {}).items()})
+        r = subprocess.run([sys.executable, 'scripts/test_datacheck.py', '--no-selfprobe'], cwd=w, capture_output=True, timeout=900, env=env)
         out = r.stdout.decode('utf-8', 'replace')
-        return r.returncode != 0, not os.path.exists(reg), 'VERIFIED-REG: 驗法沒有全過' in out
+        return r.returncode != 0, not os.path.exists(reg), want_msg in out
     finally:
         rmtree(t)
 
@@ -234,10 +236,13 @@ def main():
         print(f'{"yes" if ok else "no ":4s} {name:34s} {detail}')
 
     if not args.ref and not args.no_selfprobe:
-        failed, dropped, said = self_probe()
-        report(failed and dropped and said, 'F10 自我探測：驗法沒全過 → 登記被刪',
-               ('' if failed else '（改壞的版本竟然全過）') + ('' if dropped else '（跑完舊登記還在）')
-               + ('' if said else '（判定訊息不是「驗法沒有全過」）'))
+        for label, want, env_extra in (('F10 自我探測：驗法沒全過 → 登記被刪', 'VERIFIED-REG: 驗法沒有全過', None),
+                                       ('F10 自我探測：git 失敗取不到判斷 → 登記被刪', 'F9：取不到 HEAD 的登記判斷',
+                                        {'GIT_DIR': '<T>/no-such-git-dir'})):
+            failed, dropped, said = self_probe(want, env_extra)
+            report(failed and dropped and said, label,
+                   ('' if failed else '（改壞的版本竟然全過）') + ('' if dropped else '（跑完舊登記還在）')
+                   + ('' if said else f'（判定訊息不是「{want}」）'))
 
     def not_applicable(name, why):
         """被測的舊版根本不走這條路（例如還沒有暫存檔、沒有換上這一步），注入不會發生：不算洞，也不算過。"""

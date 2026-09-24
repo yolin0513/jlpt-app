@@ -40,7 +40,7 @@ ESCAPE_TARGETS = [
     'scripts/filter_vocab_draft.mjs', 'scripts/lib/harness.mjs', 'scripts/lib/verified_reg.py', 'scripts/lint_gate.py', 'scripts/make_icons.py',
     'scripts/pushsafe.sh', 'scripts/regress.mjs', 'scripts/screenshots.mjs', 'scripts/selfcheck_public.py',
     'scripts/serve.py', 'scripts/test_datacheck.py', 'scripts/test_filters.py', 'scripts/test_harness.mjs',
-    'scripts/test_pushsafe.sh', 'scripts/verify-full.mjs', 'scripts/verify-live.mjs', 'sw.js',
+    'scripts/test_pushsafe.sh', 'scripts/test_verified_reg.py', 'scripts/verify-full.mjs', 'scripts/verify-live.mjs', 'sw.js',
 ]
 
 P3 = '+' * 3   # 拆開寫，這支檔的說明文字不必出現連續三個加號也能講清楚

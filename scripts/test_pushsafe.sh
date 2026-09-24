@@ -4,7 +4,7 @@
 #   bash scripts/test_pushsafe.sh                              # 正常：全部符合回 0，並登記四支閘門檔案的雜湊
 #   （預設：正常順序跑一輪、反過來再跑一輪，逐個情境比對兩輪結果一樣才算全過——J8 的「換序結果不變」每次都驗）
 #   TEST_PUSHSAFE_ORDER=normal|reverse bash scripts/test_pushsafe.sh  # 只跑一個順序（除錯用；不會登記）
-#   TEST_PUSHSAFE_MUTATE=<突變> bash scripts/test_pushsafe.sh   # 突變：nofetch nometa oldparse nocheck oldparse+nocheck nolint noregistry nof9 f9always
+#   TEST_PUSHSAFE_MUTATE=<突變> bash scripts/test_pushsafe.sh   # 突變：nofetch nometa oldparse nocheck oldparse+nocheck nolint noregistry nof9 f9always regnopass regnotested regclean dienorm noselfhead regrevparse regdiff reghash
 # 完全不碰 GitHub：在暫存目錄建一個 bare repo 當假遠端，複製本 repo「已 commit 的內容」過去跑。
 # 所以改了閘門要先在本機 commit（先不推）再跑這支。
 # 登記（J7）：正常跑、全部符合時，把 pushsafe.sh、selfcheck_public.py、test_pushsafe.sh、lint_gate.py 被驗的那一版雜湊
@@ -19,7 +19,7 @@ SRC_REG="$(cd "$SRC" && git rev-parse --path-format=absolute --git-path pushsafe
 T="$(mktemp -d)"
 cleanup() { chmod -R u+w "$T" 2>/dev/null; rm -r "$T" 2>/dev/null; }
 trap cleanup EXIT
-FILES="scripts/pushsafe.sh scripts/selfcheck_public.py scripts/test_pushsafe.sh scripts/lint_gate.py scripts/lib/verified_reg.py"
+FILES="scripts/pushsafe.sh scripts/selfcheck_public.py scripts/test_pushsafe.sh scripts/lint_gate.py scripts/lib/verified_reg.py scripts/test_verified_reg.py"
 die() { echo "ABORT: $*（造情境失敗，不帶著沒造成的情境往下驗）"; rm -f "$SRC_REG"; exit 2; }
 MUTATE="${TEST_PUSHSAFE_MUTATE:-}"
 ORDER="${TEST_PUSHSAFE_ORDER:-}"
@@ -140,6 +140,11 @@ case "$MUTATE" in
     mutate $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法'
     pyedit $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' 'if false; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' || die "改壞閘門"
     confirm_mutated $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' ;;
+  regrevparse|regdiff|reghash)   # 共用判斷拿掉某一個「git 失敗就停」
+    case "$MUTATE" in regrevparse) A='        if rc != 0 or not blob:' ;; regdiff) A='        if rc not in (0, 1):' ;; reghash) A='            if rc != 0 or not h:' ;; esac
+    mutate scripts/lib/verified_reg.py "$A"
+    pyedit scripts/lib/verified_reg.py "$A" "${A%%if*}if False:" || die "改壞登記判斷"
+    confirm_mutated scripts/lib/verified_reg.py "$A" ;;
   regnopass)   # 登記的共用判斷不看「驗法全過沒有」
     mutate scripts/lib/verified_reg.py "    if passed != 'yes':"
     pyedit scripts/lib/verified_reg.py "    if passed != 'yes':" '    if False:' || die "改壞登記判斷"
@@ -354,8 +359,18 @@ s25() { at_start; local reg="$T/reg25"; echo old > "$reg"
   grep -qF 'VERIFIED-REG: 跑的不是 HEAD 那一版' "$T/out.txt" && grep -qF 'scripts/pushsafe.sh' "$T/out.txt" || { ok=no; why="$why 判定訊息沒講明驗的不是 HEAD 那一版"; }
   check_plain "25 驗過的那一份不是 HEAD（開始時有改動又改回去）" "$ok" "$why"; restore; }
 
-LIST="s01 s02 s03 s04 s05 s06 s07 s08 s09 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 s21 s22 s23 s24 s25"
-N_SCEN=25
+s26() { at_start; clean_commit 26
+  [ -e .logs/datacheck-verified ] && die "複本裡有 F9 登記（前提沒造成：這一種要「沒有登記」）"
+  rc="$(run)"; check "26 沒動到題庫建置、也沒有 F9 登記（要放行，F9 第 5 條專用）" 0 "$rc" local 'SELF-CHECK OK' 'PUSHSAFE: 推送成功' -- '動到題庫建置'; restore; }
+s27() { at_start   # 共用判斷的 git 失敗分支（F10 1b）：跑複本裡的那一支測試、測複本裡的那一份判斷（突變時是改壞的）
+  python scripts/test_verified_reg.py $REGHELP "$PWD" > "$T/out.txt" 2>&1; local rc=$?
+  local ok=yes why=""
+  [ $rc -eq 0 ] || { ok=no; why="回傳 $rc：$(grep -E '^(no |ABORT)' "$T/out.txt" | paste -s -d ' ' | cut -c1-120)"; }
+  [ "$(grep -c '^yes ' "$T/out.txt")" -eq 5 ] || { ok=no; why="$why 結果行不是 5 條 yes"; }
+  check_plain "27 共用判斷的 git 失敗分支（取不到就停）" "$ok" "$why"; restore; }
+
+LIST="s01 s02 s03 s04 s05 s06 s07 s08 s09 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 s21 s22 s23 s24 s25 s26 s27"
+N_SCEN=27
 run_list() {  # run_list normal|reverse
   local l="$LIST"; [ "$1" = reverse ] && l="$(printf '%s\n' $LIST | sort -r | tr '\n' ' ')"
   echo "順序：$1（$l）"; RESULT=(); for s in $l; do $s; done
