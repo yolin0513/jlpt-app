@@ -2,7 +2,8 @@
 # 推送閘門的驗法（共用慣例 §2.5、§5.11、§5.15）：用實際推送的那一支 scripts/pushsafe.sh，分別製造每一關的失敗，
 # 而且每一種都比對「是哪一關、哪一類擋的」，不是只比回傳值。
 #   bash scripts/test_pushsafe.sh                              # 正常：全部符合回 0，並登記四支閘門檔案的雜湊
-#   TEST_PUSHSAFE_ORDER=reverse bash scripts/test_pushsafe.sh  # 情境反過來跑一次，結果必須一樣（J8）
+#   （預設：正常順序跑一輪、反過來再跑一輪，逐個情境比對兩輪結果一樣才算全過——J8 的「換序結果不變」每次都驗）
+#   TEST_PUSHSAFE_ORDER=normal|reverse bash scripts/test_pushsafe.sh  # 只跑一個順序（除錯用；不會登記）
 #   TEST_PUSHSAFE_MUTATE=<突變> bash scripts/test_pushsafe.sh   # 突變：nofetch nometa oldparse nocheck oldparse+nocheck nolint noregistry nof9 f9always
 # 完全不碰 GitHub：在暫存目錄建一個 bare repo 當假遠端，複製本 repo「已 commit 的內容」過去跑。
 # 所以改了閘門要先在本機 commit（先不推）再跑這支。
@@ -18,10 +19,11 @@ SRC_REG="$(cd "$SRC" && git rev-parse --path-format=absolute --git-path pushsafe
 T="$(mktemp -d)"
 cleanup() { chmod -R u+w "$T" 2>/dev/null; rm -r "$T" 2>/dev/null; }
 trap cleanup EXIT
-FILES="scripts/pushsafe.sh scripts/selfcheck_public.py scripts/test_pushsafe.sh scripts/lint_gate.py"
+FILES="scripts/pushsafe.sh scripts/selfcheck_public.py scripts/test_pushsafe.sh scripts/lint_gate.py scripts/lib/verified_reg.py"
 die() { echo "ABORT: $*（造情境失敗，不帶著沒造成的情境往下驗）"; rm -f "$SRC_REG"; exit 2; }
 MUTATE="${TEST_PUSHSAFE_MUTATE:-}"
-ORDER="${TEST_PUSHSAFE_ORDER:-normal}"
+ORDER="${TEST_PUSHSAFE_ORDER:-}"
+[ -z "$ORDER" ] && { [ -n "$MUTATE" ] && ORDER=normal || ORDER=both; }
 
 # ---- Python 小工具：改檔（錨點必須恰好一處）、查某段文字在不在 ----
 pyedit() {  # pyedit 檔案 錨點 取代成
@@ -96,12 +98,12 @@ cd "$T/work" || die "進工作複本"
 # 跑到的閘門就是舊的，新加的情境會對著舊閘門驗）；本機工作區的四支閘門檔也要跟 HEAD 一樣，登記才對得上實際的內容
 cmp -s "$SELF" scripts/test_pushsafe.sh || die "正在跑的驗法跟 HEAD 的不一樣（還沒 commit？），跑到的會是舊的閘門"
 TESTED_HEAD="$(git rev-parse HEAD)"
+# 情境 23 用：只跑到這裡（開頭的檢查）就結束，不跑情境、不登記
+if [ "${TEST_PUSHSAFE_STARTUP_ONLY:-}" = 1 ]; then echo "TEST-PUSHSAFE: STARTUP-ONLY OK（開頭的檢查都過了，沒跑情境、不登記）"; exit 0; fi
 git -C "$SRC" diff --quiet HEAD -- $FILES || echo "注意：本機工作區的閘門檔跟 HEAD 不一樣，這一輪跑完也不會登記"
 git remote set-url origin "$T/remote.git" || die "設遠端"
 git config user.name test
 git config user.email "test@users.noreply.github.com"
-TESTED=""   # 被驗的那一版四支檔案的雜湊（還沒套任何突變之前）
-for f in $FILES; do TESTED="$TESTED$f $(git rev-parse "HEAD:$f")"$'\n'; done
 register_clone() {  # 複本自己的登記：讓「登記」那一關放行，才驗得到後面幾關
   : > "$(git rev-parse --git-path pushsafe-verified)"
   for f in $FILES; do printf '%s %s\n' "$f" "$(git rev-parse "HEAD:$f")" >> "$(git rev-parse --git-path pushsafe-verified)"; done
@@ -136,6 +138,14 @@ case "$MUTATE" in
     mutate $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法'
     pyedit $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' 'if false; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' || die "改壞閘門"
     confirm_mutated $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' ;;
+  regclean)   # 登記的共用判斷把「工作區跟 HEAD 不一樣」一律當作沒改動（統籌者 2026-09-24 查出缺口用的突變）
+    mutate scripts/lib/verified_reg.py '        if rc == 1:'
+    pyedit scripts/lib/verified_reg.py '        if rc == 1:' '        if False:' || die "改壞登記判斷"
+    confirm_mutated scripts/lib/verified_reg.py '        if rc == 1:' ;;
+  noselfhead)   # 拿掉「正在跑的驗法必須跟 HEAD 一樣」那道
+    mutate scripts/test_pushsafe.sh 'cmp -s "$SELF" scripts/test_pushsafe.sh ||'
+    pyedit scripts/test_pushsafe.sh 'cmp -s "$SELF" scripts/test_pushsafe.sh ||' 'true ||' || die "改壞驗法"
+    confirm_mutated scripts/test_pushsafe.sh 'cmp -s "$SELF" scripts/test_pushsafe.sh ||' ;;
   nof9)   # F9 那一關看了登記、對不上也放行
     mutate $PS 'if [ -n "$dstale" ]; then'
     pyedit $PS 'if [ -n "$dstale" ]; then' 'if [ -n "$dstale" ] && false; then' || die "改壞閘門"
@@ -173,6 +183,7 @@ at_start() {  # 每個情境開始前確認起點真的一樣（互不污染）
     && [ -z "$(git status --porcelain)" ] || die "情境開始前起點不對（上一個情境沒還原乾淨）"
 }
 bad=0
+declare -A RESULT   # 情境編號 → yes／no（這一輪的）
 check() {  # check 名稱 期望rc 實際rc 期望假遠端(same|local) must... [-- mustnot...]
   local name="$1" want="$2" got="$3" expect="$4"; shift 4
   local after ok why=""
@@ -183,6 +194,7 @@ check() {  # check 名稱 期望rc 實際rc 期望假遠端(same|local) must... 
   else [ "$after" = "$(git rev-parse --short HEAD)" ] || { ok=no; why="$why 假遠端≠本機"; }; fi
   reason_ok "$T/out.txt" "$@" || { ok=no; why="$why 擋下理由不對"; }
   [ "$ok" = yes ] || bad=1
+  RESULT["${name%% *}"]="$ok"
   printf '%-4s %-40s rc=%s(期望 %s)  %s\n' "$ok" "$name" "$got" "$want" "${why:+（$why）}"
   # 不符時印出閘門實際的擋下訊息，才看得出是被什麼擋的（或為什麼沒擋）
   [ "$ok" = yes ] || grep -E 'SELF-CHECK FAILED|PUSHSAFE:|LINT-GATE' "$T/out.txt" | sed 's/^/       實際：/'
@@ -254,7 +266,7 @@ touch_build() { printf '%s\n' "# touch $1" >> scripts/build_data.py && git commi
 f9_register() {  # f9_register [stale]：寫複本自己的 F9 登記（stale＝登記成改之前那一版的雜湊）
   local ref=HEAD; [ "${1:-}" = stale ] && ref=HEAD~1
   mkdir -p .logs && : > .logs/datacheck-verified || die "建 .logs"
-  for f in scripts/build_data.py scripts/check_data.py scripts/test_datacheck.py; do
+  for f in scripts/build_data.py scripts/check_data.py scripts/test_datacheck.py scripts/lib/verified_reg.py; do
     printf '%s %s\n' "$f" "$(git rev-parse "$ref:$f")" >> .logs/datacheck-verified
   done
 }
@@ -265,21 +277,72 @@ s18() { at_start; touch_build 18; f9_register stale
 s19() { at_start; touch_build 19; f9_register
   rc="$(run)"; check "19 動到題庫建置、F9 登記對得上（要放行）" 0 "$rc" local 'SELF-CHECK OK' 'PUSHSAFE: 推送成功'; restore; }
 
-LIST="s01 s02 s03 s04 s05 s06 s07 s08 s09 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19"
-[ "$ORDER" = reverse ] && LIST="$(printf '%s\n' $LIST | sort -r | tr '\n' ' ')"
-echo "順序：$ORDER（$LIST）"
-for s in $LIST; do $s; done
+s22() { at_start; clean_commit 22
+  mkdir -p .logs && printf '%s\n' 'scripts/build_data.py 0000000' > .logs/datacheck-verified || die "放一份對不上的 F9 登記"
+  rc="$(run)"; check "22 沒動到題庫建置、F9 登記對不上也不看（要放行）" 0 "$rc" local 'SELF-CHECK OK' 'PUSHSAFE: 推送成功' -- '動到題庫建置'; restore; }
+
+# ---- 20、21、23 驗的不是推送，是驗法自己的「登記」與「開頭檢查」：直接呼叫被測的那一段，比對回傳值、判定訊息與結果 ----
+check_plain() {  # check_plain 名稱 條件成立(yes|no) 說明
+  local name="$1" ok="$2" why="$3"
+  [ "$ok" = yes ] || bad=1
+  RESULT["${name%% *}"]="$ok"
+  printf '%-4s %-40s %s\n' "$ok" "$name" "${why:+（$why）}"
+}
+REGHELP=scripts/lib/verified_reg.py   # 複本裡的＝HEAD 那一版（突變時是改壞的那一版）
+s20() { at_start; local reg="$T/reg20"; echo old > "$reg"
+  printf '%s\n' '# 改了還沒 commit' >> $PS || die "改工作區的閘門檔"
+  git diff --quiet HEAD -- $PS && die "工作區的閘門檔沒有改到（前提沒造成）"
+  python $REGHELP "$PWD" "$reg" "$(git rev-parse HEAD)" $FILES > "$T/out.txt" 2>&1; local rc=$?
+  local ok=yes why=""
+  [ $rc -eq 1 ] || { ok=no; why="回傳 $rc（期望 1）"; }
+  [ -e "$reg" ] && { ok=no; why="$why 舊登記還在"; }
+  grep -qF 'VERIFIED-REG: 工作區跟 HEAD 不一樣' "$T/out.txt" && grep -qF 'scripts/pushsafe.sh' "$T/out.txt" || { ok=no; why="$why 判定訊息沒講明是哪一支有改動"; }
+  check_plain "20 閘門檔工作區有改動（不能登記、舊登記要刪）" "$ok" "$why"; restore; }
+s21() { at_start; local reg="$T/reg21"; echo old > "$reg"
+  python $REGHELP "$PWD" "$reg" "$(git rev-parse HEAD)" $FILES > "$T/out.txt" 2>&1; local rc=$?
+  local ok=yes why="" want=""
+  for f in $FILES; do want="$want$f $(git rev-parse "HEAD:$f")"$'\n'; done
+  [ $rc -eq 0 ] || { ok=no; why="回傳 $rc（期望 0）"; }
+  [ -s "$reg" ] && [ "$(cat "$reg")"$'\n' = "$want" ] || { ok=no; why="$why 登記的不是 HEAD 那一版的雜湊"; }
+  grep -qF 'VERIFIED-REG: 已登記' "$T/out.txt" || { ok=no; why="$why 沒有「已登記」"; }
+  check_plain "21 工作區乾淨（要登記、內容是 HEAD 的雜湊）" "$ok" "$why"; restore; }
+s23() { at_start; local ok=yes why="" rc0 rc1
+  # 從複本拿（HEAD 那一版；突變時是改壞的那一版），不是拿正在跑的這支——否則突變改的那一份根本沒被執行到
+  cp scripts/test_pushsafe.sh "$T/copy0.sh" && cp scripts/test_pushsafe.sh "$T/copy1.sh" && printf '%s\n' '# 改了還沒 commit' >> "$T/copy1.sh" || die "複製驗法"
+  TEST_PUSHSAFE_STARTUP_ONLY=1 bash "$T/copy0.sh" > "$T/out0.txt" 2>&1; rc0=$?
+  TEST_PUSHSAFE_STARTUP_ONLY=1 bash "$T/copy1.sh" > "$T/out1.txt" 2>&1; rc1=$?
+  [ $rc0 -eq 0 ] && grep -qF 'STARTUP-ONLY OK' "$T/out0.txt" || { ok=no; why="原樣的驗法沒過開頭檢查（對照組）"; }
+  [ $rc1 -eq 2 ] && grep -qF '正在跑的驗法跟 HEAD 的不一樣' "$T/out1.txt" || { ok=no; why="$why 改過沒 commit 的驗法沒有被擋（回傳 $rc1）"; }
+  check_plain "23 正在跑的驗法跟 HEAD 不一樣（要中止）" "$ok" "$why"; restore; }
+
+LIST="s01 s02 s03 s04 s05 s06 s07 s08 s09 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 s21 s22 s23"
+N_SCEN=23
+run_list() {  # run_list normal|reverse
+  local l="$LIST"; [ "$1" = reverse ] && l="$(printf '%s\n' $LIST | sort -r | tr '\n' ' ')"
+  echo "順序：$1（$l）"; RESULT=(); for s in $l; do $s; done
+}
+if [ "$ORDER" = both ]; then
+  run_list normal; declare -A R1; for k in "${!RESULT[@]}"; do R1[$k]="${RESULT[$k]}"; done
+  run_list reverse
+  # 兩輪都要剛好 N_SCEN 個情境才比（「相同」在兩邊都是空的時候恆真）
+  [ "${#R1[@]}" -eq $N_SCEN ] && [ "${#RESULT[@]}" -eq $N_SCEN ] || die "兩輪的情境數不對（${#R1[@]}／${#RESULT[@]}，應各 $N_SCEN）"
+  diffk=""; for k in "${!R1[@]}"; do [ "${R1[$k]}" = "${RESULT[$k]:-}" ] || diffk="$diffk $k"; done
+  if [ -n "$diffk" ]; then bad=1; echo "兩種順序的結果不一樣：$diffk"; else echo "兩種順序的結果一樣（各 $N_SCEN 個情境）"; fi
+else
+  run_list "$ORDER"
+  [ "${#RESULT[@]}" -eq $N_SCEN ] || die "情境數不對（${#RESULT[@]}，應為 $N_SCEN）"
+fi
 
 [ -n "$MUTATE" ] && echo "（這一輪是突變 $MUTATE：預期至少有一種報不符）"
-if [ $bad -eq 0 ] && [ -z "$MUTATE" ]; then
-  # 登記前再確認一次：本機的 HEAD 還是被驗的那一個、四支閘門檔工作區跟 HEAD 一模一樣（登記的是已 commit 的版本）
-  if [ "$(git -C "$SRC" rev-parse HEAD)" != "$TESTED_HEAD" ] || ! git -C "$SRC" diff --quiet HEAD -- $FILES; then
-    rm -f "$SRC_REG"
-    echo "TEST-PUSHSAFE: 全部符合，但本機工作區的閘門檔跟 HEAD 不一樣、或跑的途中 HEAD 變了——沒有登記"
-    exit 1
-  fi
-  printf '%s' "$TESTED" > "$SRC_REG"
-  echo "TEST-PUSHSAFE: 全部符合預期；已登記被驗的四支檔案雜湊（$SRC_REG）"
+if [ $bad -eq 0 ] && [ -z "$MUTATE" ] && [ "$ORDER" = both ]; then
+  # 登記用 HEAD 那一版的共用判斷（複本裡的，情境 20、21 驗過的就是它）：本機 HEAD 還是被驗的那一個、
+  # 被守的檔工作區跟 HEAD 一模一樣，才登記 HEAD 那一版的雜湊
+  python $REGHELP "$SRC" "$SRC_REG" "$TESTED_HEAD" $FILES; rrc=$?
+  if [ $rrc -ne 0 ]; then echo "TEST-PUSHSAFE: 全部符合，但沒有登記（見上一行）"; exit 1; fi
+  echo "TEST-PUSHSAFE: 全部符合預期（兩種順序）；已登記被驗的 $(echo $FILES | wc -w) 支檔案雜湊"
+elif [ $bad -eq 0 ] && [ -z "$MUTATE" ]; then
+  rm -f "$SRC_REG"
+  echo "TEST-PUSHSAFE: 全部符合，但只跑了一個順序（$ORDER）；不登記、已刪掉驗法登記"
 else
   rm -f "$SRC_REG"
   echo "TEST-PUSHSAFE: $( [ $bad -eq 0 ] && echo '全部符合，但這一輪是突變' || echo '有不符合預期的情況' )；已刪掉驗法登記"

@@ -147,8 +147,8 @@ runpy.run_path('scripts/build_data.py', run_name='__main__')
 OUTPUTS = [out_rel(t, k).split('data/', 1)[1] for t, k in SETS] + ['search-index.json', 'manifest.json']
 
 
-# ---- F9（四家統一）：驗法全部符合時，把被守的三支「已 commit 版本」的雜湊登記進 .logs/（不進版控），推送閘比對 ----
-GUARDED = ['scripts/build_data.py', 'scripts/check_data.py', 'scripts/test_datacheck.py']
+# ---- F9（四家統一）：驗法全部符合時，把被守的檔（題庫建置三支＋登記的共用判斷）「已 commit 版本」的雜湊登記進 .logs/（不進版控），推送閘比對 ----
+GUARDED = ['scripts/build_data.py', 'scripts/check_data.py', 'scripts/test_datacheck.py', 'scripts/lib/verified_reg.py']
 REG = os.path.join(ROOT, '.logs', 'datacheck-verified')
 
 
@@ -230,10 +230,15 @@ def main():
 
     # 基準：原樣資料要放行
     w = fresh()
+    before_b = data_digest(w)
     rc_b, out_b = run(w, 'build_data.py')
     rc_c, out_c = run(w, 'check_data.py')
-    report(rc_b == 0 and rc_c == 0, '基準：原樣資料 build＋check', f'build rc={rc_b}、check rc={rc_c}')
-    if rc_b != 0 or rc_c != 0:
+    # 原樣資料重建之後 data/ 必須跟重建前逐位元組相同：輸出是決定性的、repo 裡的輸出跟來源對得上、沒留下 .tmp／.bak
+    # （原本是每次改 build_data 後手動核對一次，2026-09-24 改成每次都跑）
+    same_b = data_digest(w) == before_b
+    report(rc_b == 0 and rc_c == 0 and same_b, '基準：原樣資料 build＋check',
+           f'build rc={rc_b}、check rc={rc_c}' + ('' if same_b else '（重建之後 data/ 變了：輸出不是決定性的，或 repo 裡的輸出沒跟來源同步）'))
+    if rc_b != 0 or rc_c != 0 or not same_b:
         print('ABORT：原樣資料就不過，後面的情境沒有意義')
         return 2
 
@@ -449,20 +454,33 @@ def main():
           f'＋寫到一半失敗 {len(OUTPUTS)} 個輸出檔＋暫存檔位置被佔 {len(OUTPUTS)}＋清理失敗 {len(OUTPUTS) - 1}'
           f'＋換上失敗 {len(OUTPUTS)}＋換上失敗且清理失敗 {len(OUTPUTS)}；' + ('全部符合' if not bad else '有不符合'))
     if start:
-        end = head_state()
         if bad:
             if os.path.exists(REG):
                 os.remove(REG)
             print('F9：有不符合，已刪掉登記')
-        elif start[2] or end[2] or start[0] != end[0]:
-            print(f'F9：沒有登記——工作區跟 HEAD 不一樣或跑的途中 HEAD 變了（開始 {start[0][:7]}、結束 {end[0][:7]}；'
-                  f'不一樣的檔：{"、".join(sorted(set(start[2]) | set(end[2]))) or "無"}）')
+        elif start[2]:
+            if os.path.exists(REG):
+                os.remove(REG)
+            print(f'F9：沒有登記——開始時工作區就跟 HEAD 不一樣（{"、".join(start[2])}），跑的不是已 commit 的版本（舊登記已刪）')
             return 1
         else:
-            os.makedirs(os.path.dirname(REG), exist_ok=True)
-            open(REG, 'w', encoding='utf-8', newline='\n').write(''.join(f'{f} {end[1][f]}\n' for f in GUARDED))
-            print(f'F9：全部符合，已登記三支已 commit 版本的雜湊（HEAD {end[0][:7]}）到 .logs/datacheck-verified')
+            # 登記用 HEAD 那一版的共用判斷（跟推送閘門驗法同一支、情境 20、21 守著）：
+            # 結束時本機 HEAD 還是開始那一個、被守的檔工作區跟 HEAD 一模一樣，才登記 HEAD 那一版的雜湊
+            r = subprocess.run(['git', 'show', 'HEAD:scripts/lib/verified_reg.py'], cwd=ROOT, capture_output=True)
+            if r.returncode != 0 or not r.stdout:
+                raise Abort('取不到 HEAD:scripts/lib/verified_reg.py，沒辦法登記')
+            helper = os.path.join(tmp_root(), 'verified_reg.py')
+            open(helper, 'wb').write(r.stdout)
+            r = subprocess.run([sys.executable, helper, ROOT, REG, start[0], *GUARDED], capture_output=True)
+            print('F9：' + r.stdout.decode('utf-8', 'replace').strip())
+            if r.returncode != 0:
+                return 1
     return bad
+
+
+def tmp_root():
+    d = tempfile.mkdtemp()
+    return d
 
 
 if __name__ == '__main__':

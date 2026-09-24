@@ -24,7 +24,7 @@ if [ ! -f "$REG" ]; then
   echo "PUSHSAFE: 沒有驗法登記（沒跑過 bash scripts/test_pushsafe.sh，或上次沒全過），沒有推送"; rm -f "$LOG"; exit 1
 fi
 stale=""
-for f in scripts/pushsafe.sh scripts/selfcheck_public.py scripts/test_pushsafe.sh scripts/lint_gate.py; do
+for f in scripts/pushsafe.sh scripts/selfcheck_public.py scripts/test_pushsafe.sh scripts/lint_gate.py scripts/lib/verified_reg.py; do
   now="$(git rev-parse "HEAD:$f" 2>/dev/null)"
   reg="$(awk -v f="$f" '$1 == f { print $2 }' "$REG")"
   if [ -z "$now" ] || [ "$now" != "$reg" ]; then stale="$stale $f"; fi
@@ -44,10 +44,10 @@ timeout 90 git -c credential.helper="$HELPER" fetch -q origin main > "$LOG" 2>&1
 rc=$?
 if [ $rc -ne 0 ]; then cat "$LOG"; echo "PUSHSAFE: 取不到遠端的最新狀態（rc=$rc），沒有推送"; rm -f "$LOG"; exit 1; fi
 
-# 0.5) 題庫建置改過就要重跑它的驗法（F9，四家統一）：test_datacheck.py 全部符合時，把下面三支「已 commit 版本」
-#      的雜湊登記進 .logs/datacheck-verified（不進版控）。只在「這次要推的 commit 動到這三支」時才看登記——
+# 0.5) 題庫建置改過就要重跑它的驗法（F9，四家統一）：test_datacheck.py 全部符合時，把下面四支（題庫建置三支＋登記的共用判斷）「已 commit 版本」
+#      的雜湊登記進 .logs/datacheck-verified（不進版控）。只在「這次要推的 commit 動到這四支」時才看登記——
 #      範圍照遠端的實際狀態算（上一步剛 fetch）。閘門本身那幾支不在這裡，照 000) 一律要先驗（新 clone 也一樣）。
-DGUARD="scripts/build_data.py scripts/check_data.py scripts/test_datacheck.py"
+DGUARD="scripts/build_data.py scripts/check_data.py scripts/test_datacheck.py scripts/lib/verified_reg.py"
 touched="$(git log --pretty=tformat: --name-only origin/main..HEAD -- $DGUARD)"
 rc=$?
 if [ $rc -ne 0 ]; then echo "PUSHSAFE: 算不出這次要推的 commit 動到哪些檔（rc=$rc），沒有推送"; rm -f "$LOG"; exit 4; fi

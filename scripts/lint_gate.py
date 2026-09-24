@@ -37,7 +37,7 @@ ESCAPE_TARGETS = [
     'js/views/listening.js', 'js/views/mistakes.js', 'js/views/quiz.js', 'js/views/review.js',
     'js/views/search.js', 'js/views/stats.js', 'js/views/travel.js', 'js/views/weak.js',
     'scripts/audit.mjs', 'scripts/build_data.py', 'scripts/check_data.py', 'scripts/filter_grammar_draft.mjs',
-    'scripts/filter_vocab_draft.mjs', 'scripts/lib/harness.mjs', 'scripts/lint_gate.py', 'scripts/make_icons.py',
+    'scripts/filter_vocab_draft.mjs', 'scripts/lib/harness.mjs', 'scripts/lib/verified_reg.py', 'scripts/lint_gate.py', 'scripts/make_icons.py',
     'scripts/pushsafe.sh', 'scripts/regress.mjs', 'scripts/screenshots.mjs', 'scripts/selfcheck_public.py',
     'scripts/serve.py', 'scripts/test_datacheck.py', 'scripts/test_filters.py', 'scripts/test_harness.mjs',
     'scripts/test_pushsafe.sh', 'scripts/verify-full.mjs', 'scripts/verify-live.mjs', 'sw.js',
@@ -255,10 +255,10 @@ def push_scripts(files):
     return out
 
 
-def orphan_check():
+def orphan_check(root=ROOT):
     import subprocess
-    r1 = subprocess.run(['git', '-c', 'core.quotepath=false', 'ls-files'], cwd=ROOT, capture_output=True)
-    r2 = subprocess.run(['git', '-c', 'core.quotepath=false', 'ls-files', '--others', '--exclude-standard'], cwd=ROOT, capture_output=True)
+    r1 = subprocess.run(['git', '-c', 'core.quotepath=false', 'ls-files'], cwd=root, capture_output=True)
+    r2 = subprocess.run(['git', '-c', 'core.quotepath=false', 'ls-files', '--others', '--exclude-standard'], cwd=root, capture_output=True)
     if r1.returncode != 0 or r2.returncode != 0:
         return None, '取不到檔案清單（git ls-files 失敗）'
     names = [n for n in (r1.stdout + r2.stdout).decode('utf-8').split('\n') if n.strip()]
@@ -268,7 +268,7 @@ def orphan_check():
     for n in names:
         if n.endswith(SCRIPT_EXT):
             try:
-                files.append((n, open(os.path.join(ROOT, n), encoding='utf-8').read()))
+                files.append((n, open(os.path.join(root, n), encoding='utf-8').read()))
             except OSError:
                 pass   # 追蹤中但這次被刪掉的檔：沒有內容就沒有推送指令
     found = push_scripts(files)
@@ -309,6 +309,16 @@ def main():
     eo = escape_orphans(['scripts/new_tool.py', 'js/views/new_view.js', ESCAPE_TARGETS[0], 'docs/a.md'])
     if eo != ['js/views/new_view.js', 'scripts/new_tool.py']:
         bad.append(f'孤兒檢查的對照組不對：跳脫掃描抓到 {eo}，應該是兩支沒登記的新腳本（檢查器壞了）')
+    # 孤兒檢查取不到檔案清單時要判成「檢查器壞了」（MealMate 的做法）：拿一個不是 git repo 的空目錄當根，必須回報錯誤
+    # （原本是 2026-09-24 一次性實跑過，這裡改成每次都跑的對照組）
+    import tempfile
+    empty = tempfile.mkdtemp()
+    try:
+        _res, _err = orphan_check(empty)
+    finally:
+        os.rmdir(empty)
+    if not _err:
+        bad.append('孤兒檢查的對照組不對：在不是 git repo 的目錄取不到清單，卻沒有判成檢查器壞了（檢查器壞了）')
     n_controls = sum(len(v) for v in CONTROLS.values())
     print(f'對照組 {n_controls} 條、反例 {len(NEGATIVES)} 條：{"全部符合" if not bad else "有問題"}')
     if bad:
