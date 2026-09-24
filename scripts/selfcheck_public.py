@@ -69,6 +69,15 @@ rc, meta_raw = git('log', '--format=%an%n%ae%n%cn%n%ce%n%B%x00', f'{base}..HEAD'
 if rc != 0:
     print('SELF-CHECK FAILED: 取不到 commit 訊息與作者欄')
     sys.exit(1)
+# 第二道（2026-09-25，統籌者查四家時發現本 App 缺）：git 成功卻回傳空的、筆數跟 commit 數對不上、或作者／提交者欄是空的，
+# 一樣要停——這一道擋的是姓名與信箱不進 GitHub，取到空的就會變成「0 行、0 命中」默默放行，沒有人會知道。
+records = [r.lstrip('\n') for r in meta_raw.split('\x00')]
+records = [r for r in records if r.strip()]
+blank = [r for r in records if len(r.split('\n')) < 4 or not all(x.strip() for x in r.split('\n')[:4])]
+if len(records) != len(commits) or blank:
+    print(f'SELF-CHECK FAILED: commit 訊息與作者欄取到 {len(records)} 筆、要推的 commit 有 {len(commits)} 個'
+          f'（作者／提交者欄是空的：{len(blank)} 筆）——沒拿到該掃的東西，零命中不可信')
+    sys.exit(1)
 meta = [l for l in meta_raw.replace('\x00', '\n').split('\n') if l.strip()]
 
 user = os.environ.get('USERNAME') or os.environ.get('USER') or ''

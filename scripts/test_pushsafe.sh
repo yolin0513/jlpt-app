@@ -4,7 +4,7 @@
 #   bash scripts/test_pushsafe.sh                              # 正常：全部符合回 0，並登記四支閘門檔案的雜湊
 #   （預設：正常順序跑一輪、反過來再跑一輪，逐個情境比對兩輪結果一樣才算全過——J8 的「換序結果不變」每次都驗）
 #   TEST_PUSHSAFE_ORDER=normal|reverse bash scripts/test_pushsafe.sh  # 只跑一個順序（除錯用；不會登記）
-#   TEST_PUSHSAFE_MUTATE=<突變> bash scripts/test_pushsafe.sh   # 突變：nofetch nometa oldparse nocheck oldparse+nocheck nolint noregistry nof9 f9always regnopass regnotested regclean dienorm noselfhead regrevparse regdiff reghash
+#   TEST_PUSHSAFE_MUTATE=<突變> bash scripts/test_pushsafe.sh   # 突變：nofetch nometa oldparse nocheck oldparse+nocheck nolint noregistry nof9 f9always regnopass regnotested regclean dienorm noselfhead regrevparse regdiff reghash nometa2 f9nofile f9nohash f9neverok f9regexists regwrongblob regnever
 # 完全不碰 GitHub：在暫存目錄建一個 bare repo 當假遠端，複製本 repo「已 commit 的內容」過去跑。
 # 所以改了閘門要先在本機 commit（先不推）再跑這支。
 # 登記（J7）：正常跑、全部符合時，把 pushsafe.sh、selfcheck_public.py、test_pushsafe.sh、lint_gate.py 被驗的那一版雜湊
@@ -19,7 +19,7 @@ SRC_REG="$(cd "$SRC" && git rev-parse --path-format=absolute --git-path pushsafe
 T="$(mktemp -d)"
 cleanup() { chmod -R u+w "$T" 2>/dev/null; rm -r "$T" 2>/dev/null; }
 trap cleanup EXIT
-FILES="scripts/pushsafe.sh scripts/selfcheck_public.py scripts/test_pushsafe.sh scripts/lint_gate.py scripts/lib/verified_reg.py scripts/test_verified_reg.py"
+FILES="scripts/pushsafe.sh scripts/selfcheck_public.py scripts/test_pushsafe.sh scripts/lint_gate.py scripts/lib/verified_reg.py scripts/test_verified_reg.py scripts/test_selfcheck_meta.py"
 die() { echo "ABORT: $*（造情境失敗，不帶著沒造成的情境往下驗）"; rm -f "$SRC_REG"; exit 2; }
 MUTATE="${TEST_PUSHSAFE_MUTATE:-}"
 ORDER="${TEST_PUSHSAFE_ORDER:-}"
@@ -140,6 +140,35 @@ case "$MUTATE" in
     mutate $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法'
     pyedit $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' 'if false; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' || die "改壞閘門"
     confirm_mutated $PS 'if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法' ;;
+  nometa2)   # 自查的第二道改成放行（取到空的、少一筆、欄位空白都當成 0 命中）——F10 第 5 點：讓那段邏輯放行
+    mutate $SC '    if len(records) != len(commits) or blank:'
+    pyedit $SC '    if len(records) != len(commits) or blank:' '    if False:' || die "改壞自查"
+    confirm_mutated $SC '    if len(records) != len(commits) or blank:' ;;
+  f9nofile)   # F9：沒有登記檔時「讀不到當成一樣」（隱式的擋：讀不到＝空字串＝對不上）
+    mutate $PS '    reg=""'
+    pyedit $PS '    reg=""' '    reg="$now"' || die "改壞閘門"
+    confirm_mutated $PS '    reg=""' ;;
+  f9nohash)   # F9：只看登記裡有沒有這支，不比雜湊
+    mutate $PS '[ "$now" != "$reg" ]; then dstale='
+    pyedit $PS '[ "$now" != "$reg" ]; then dstale=' '[ -z "$reg" ]; then dstale=' || die "改壞閘門"
+    confirm_mutated $PS '[ "$now" != "$reg" ]; then dstale=' ;;
+  f9neverok)   # F9：登記永遠對不上（對得上的也當成對不上）
+    mutate $PS "' \"\$DREG\")\""
+    pyedit $PS "' \"\$DREG\")\"" "' \"\$DREG\")x\"" || die "改壞閘門"
+    confirm_mutated $PS "' \"\$DREG\")\"" ;;
+  f9regexists)   # F9：沒動到被守的檔，但有登記檔就去比（「沒動到就不看」只守一半）
+    A="if [ -n \"\$(printf '%s' \"\$touched\" $BAR tr -d '[:space:]')\" ]; then"
+    mutate $PS "$A"
+    pyedit $PS "$A" "if [ -n \"\$(printf '%s' \"\$touched\" $BAR tr -d '[:space:]')\" ] $BAR$BAR [ -f .logs/datacheck-verified ]; then" || die "改壞閘門"
+    confirm_mutated $PS "$A" ;;
+  regwrongblob)   # 共用判斷寫進登記的不是 HEAD 的雜湊
+    mutate scripts/lib/verified_reg.py '{f} {blob}'
+    pyedit scripts/lib/verified_reg.py '{f} {blob}' '{f} {blob}x' || die "改壞登記判斷"
+    confirm_mutated scripts/lib/verified_reg.py '{f} {blob}' ;;
+  regnever)   # 共用判斷條件都成立也不寫登記（所有「要登記」的情境共同依靠的一環）
+    mutate scripts/lib/verified_reg.py '    os.makedirs(os.path.dirname(os.path.abspath(reg)), exist_ok=True)'
+    pyedit scripts/lib/verified_reg.py '    os.makedirs(os.path.dirname(os.path.abspath(reg)), exist_ok=True)' '    drop(reg); return 1' || die "改壞登記判斷"
+    confirm_mutated scripts/lib/verified_reg.py '    os.makedirs(os.path.dirname(os.path.abspath(reg)), exist_ok=True)' ;;
   regrevparse|regdiff|reghash)   # 共用判斷拿掉某一個「git 失敗就停」
     case "$MUTATE" in regrevparse) A='        if rc != 0 or not blob:' ;; regdiff) A='        if rc != 0:' ;; reghash) A='            if rc != 0 or not h:' ;; esac
     mutate scripts/lib/verified_reg.py "$A"
@@ -369,8 +398,15 @@ s27() { at_start   # 共用判斷的 git 失敗分支（F10 1b）：跑複本裡
   [ "$(grep -c '^yes ' "$T/out.txt")" -eq 5 ] || { ok=no; why="$why 結果行不是 5 條 yes"; }
   check_plain "27 共用判斷的 git 失敗分支（取不到就停）" "$ok" "$why"; restore; }
 
-LIST="s01 s02 s03 s04 s05 s06 s07 s08 s09 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 s21 s22 s23 s24 s25 s26 s27"
-N_SCEN=27
+s28() { at_start; clean_commit 28a; clean_commit 28b   # 自查「commit 訊息與作者欄取到了卻不對」的第二道（2026-09-25）
+  python scripts/test_selfcheck_meta.py $SC origin/main > "$T/out.txt" 2>&1; local rc=$?
+  local ok=yes why=""
+  [ $rc -eq 0 ] || { ok=no; why="回傳 $rc：$(grep -E '^(no |ABORT)' "$T/out.txt" | paste -s -d ' ' | cut -c1-140)"; }
+  [ "$(grep -c '^yes ' "$T/out.txt")" -eq 4 ] || { ok=no; why="$why 結果行不是 4 條 yes"; }
+  check_plain "28 作者欄取到空的／少一筆／欄位空白（要停）" "$ok" "$why"; restore; }
+
+LIST="s01 s02 s03 s04 s05 s06 s07 s08 s09 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 s21 s22 s23 s24 s25 s26 s27 s28"
+N_SCEN=28
 run_list() {  # run_list normal|reverse
   local l="$LIST"; [ "$1" = reverse ] && l="$(printf '%s\n' $LIST | sort -r | tr '\n' ' ')"
   echo "順序：$1（$l）"; RESULT=(); for s in $l; do $s; done
