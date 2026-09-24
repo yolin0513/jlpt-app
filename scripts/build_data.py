@@ -294,6 +294,37 @@ def apply_dedup(by_set):
     return hidden
 
 
+def commit_outputs(pending):
+    """先把每個輸出寫成同目錄的 .tmp，全部寫成功才一個一個換上（2026-09-24，四家統一修法 F8）。
+    寫暫存檔時任何一個失敗：刪掉已寫的暫存檔、一個檔都不換、點名失敗的那個檔、回非 0——
+    data/ 維持上一次成功建置的狀態，不會一半新一半舊。上面「先檢查再寫」擋的是資料有問題；
+    這一道擋的是資料沒問題、寫到一半失敗（磁碟滿、檔案被鎖住）。"""
+    tmps = []
+    for path, text in pending.items():
+        tmp = path.with_name(path.name + ".tmp")
+        try:
+            tmp.write_text(text, encoding="utf-8", newline="\n")
+        except OSError as e:
+            for t in [tmp] + [t for t, _p in tmps]:
+                try:
+                    t.unlink()
+                except FileNotFoundError:
+                    pass
+            raise SystemExit(f"建置中止，一個檔都沒換上（data/ 維持上一次成功建置的狀態）：寫暫存檔失敗——"
+                             f"{path.relative_to(ROOT).as_posix()}（{type(e).__name__}: {e}）")
+        tmps.append((tmp, path))
+    done = []
+    for tmp, path in tmps:
+        try:
+            tmp.replace(path)
+        except OSError as e:
+            # 換上這一步很少失敗，但失敗時 data/ 已經有一部分是新的：照實講出哪些換了、哪些沒換
+            left = [p.relative_to(ROOT).as_posix() for _t, p in tmps if p not in done]
+            raise SystemExit(f"建置中止：換上 {path.relative_to(ROOT).as_posix()} 失敗（{type(e).__name__}: {e}）；"
+                             f"已換上 {len(done)} 個、沒換上 {len(left)} 個（暫存檔留在原地），data/ 現在是一半新一半舊，修好後重跑")
+        done.append(path)
+
+
 def main():
     VOCAB_OUT.mkdir(parents=True, exist_ok=True)
     GRAMMAR_OUT.mkdir(parents=True, exist_ok=True)
@@ -343,15 +374,16 @@ def main():
         raise SystemExit("建置中止，一個檔都沒寫（data/ 維持上一次成功建置的狀態）：去重之後以下各組沒有任何有效資料——\n  "
                          + "\n  ".join(all_dup))
 
+    pending = {}   # 輸出路徑 → 內容；全部算好之後才由 commit_outputs() 一起寫
     for level in LEVELS:
         for typ, folder in (("vocab", VOCAB_OUT), ("grammar", GRAMMAR_OUT)):
             items = by_set[(typ, level)]   # 上面已確認每一組都有資料
             active = sum(1 for it in items if not it.get("dup"))
             out = folder / f"{level.lower()}.json"
-            out.write_text(json.dumps(
+            pending[out] = json.dumps(
                 {"level": level, "type": typ, "count": len(items),
                  "activeCount": active, "items": items},
-                ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
+                ensure_ascii=False, indent=1)
             sets.append({"type": typ, "level": level,
                          "file": f"{typ}/{level.lower()}.json",
                          "count": len(items), "activeCount": active})
@@ -372,9 +404,9 @@ def main():
     for cat_key, id_abbr, label, icon in TRAVEL_CATS:
         items = travel_items[cat_key]
         out = TRAVEL_OUT / f"{cat_key}.json"
-        out.write_text(json.dumps(
+        pending[out] = json.dumps(
             {"cat": cat_key, "label": label, "count": len(items), "items": items},
-            ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
+            ensure_ascii=False, indent=1)
         travel_sets.append({
             "cat": cat_key, "label": label, "icon": icon,
             "file": f"travel/{cat_key}.json", "count": len(items),
@@ -403,20 +435,21 @@ def main():
             search_travel.append(slim)
     search_vocab.sort(key=lambda x: x["id"])
     search_grammar.sort(key=lambda x: x["id"])
-    SEARCH_INDEX.write_text(json.dumps(
+    pending[SEARCH_INDEX] = json.dumps(
         {"vocab": search_vocab, "grammar": search_grammar, "travel": search_travel},
-        ensure_ascii=False, separators=(",", ":")), encoding="utf-8", newline="\n")
-    idx_kb = SEARCH_INDEX.stat().st_size / 1024
+        ensure_ascii=False, separators=(",", ":"))
+    idx_kb = len(pending[SEARCH_INDEX].encode("utf-8")) / 1024
     print(f"  搜尋索引: {len(search_vocab) + len(search_grammar) + len(search_travel):4d} 條 "
           f"-> {SEARCH_INDEX.relative_to(ROOT)} ({idx_kb:.0f} KB)")
 
     # 題庫內容雜湊：只要任何題庫檔有變就會改變。
     # Service Worker 用它判斷要不要清掉舊的題庫快取重抓，
     # 不必再依賴人工 bump sw.js 的 VERSION。
+    # 檔案還沒寫：這次要寫的用算好的內容，目錄裡其他既有的 .json 照舊讀檔（跟以前「寫完再讀」算出來的一樣）
     hasher = hashlib.sha1()
-    for f in sorted([*VOCAB_OUT.glob("*.json"), *GRAMMAR_OUT.glob("*.json"),
-                     *TRAVEL_OUT.glob("*.json"), SEARCH_INDEX]):
-        hasher.update(f.read_bytes())
+    for f in sorted({*VOCAB_OUT.glob("*.json"), *GRAMMAR_OUT.glob("*.json"),
+                     *TRAVEL_OUT.glob("*.json"), SEARCH_INDEX, *pending}):
+        hasher.update(pending[f].encode("utf-8") if f in pending else f.read_bytes())
     data_version = hasher.hexdigest()[:12]
 
     manifest = {
@@ -431,7 +464,8 @@ def main():
         "sets": sets,
         "travel": {"total": travel_total, "sets": travel_sets},
     }
-    MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
+    pending[MANIFEST] = json.dumps(manifest, ensure_ascii=False, indent=1)
+    commit_outputs(pending)
     print(f"\n完成：JLPT {total} 條（可練 {active_total}）+ 生活旅行 {travel_total} 條 = {total + travel_total} 條，"
           f"寫入 {MANIFEST.relative_to(ROOT)}")
 

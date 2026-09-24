@@ -142,6 +142,7 @@ esac
 register_clone
 git push -q origin main || die "初始推送到假遠端"
 BASE="$(git --git-dir="$T/remote.git" rev-parse main)"
+[ -n "$BASE" ] || die "讀不到假遠端的起點（比對「假遠端沒動」時兩邊都是空的會恆真）"
 
 rhead() { git --git-dir="$T/remote.git" rev-parse --short main; }
 restore() {  # 還原到起點：假遠端＝本機＝BASE、工作區乾淨、沒有 hook、遠端網址正確、登記對得上
@@ -161,6 +162,7 @@ check() {  # check 名稱 期望rc 實際rc 期望假遠端(same|local) must... 
   local name="$1" want="$2" got="$3" expect="$4"; shift 4
   local after ok why=""
   after="$(rhead)"; ok=yes
+  [ -n "$after" ] || die "讀不到假遠端的 HEAD（兩邊都是空的，「假遠端沒動」會恆真）"
   [ "$got" = "$want" ] || { ok=no; why="回傳值"; }
   if [ "$expect" = same ]; then [ "$after" = "$(git rev-parse --short "$BASE")" ] || { ok=no; why="$why 假遠端被動到"; }
   else [ "$after" = "$(git rev-parse --short HEAD)" ] || { ok=no; why="$why 假遠端≠本機"; }; fi

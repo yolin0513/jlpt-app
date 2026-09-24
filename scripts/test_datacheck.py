@@ -14,6 +14,13 @@ v9 盤點時發現：清空 N3 的來源檔會停，只是因為剛好有一條�
   B-empty    來源檔只留註解                       → build_data 必須回非 0、點名那個來源檔，而且 data/ 底下一個位元組都沒變
   B-missing  來源檔刪掉                           → 同上
 另有基準：原樣資料 build 與 check 都必須回 0（正常情況要放行，§5.14）。
+另有 J13 的 C-alldup／B-alldup（見下方註解），以及：
+  B-writefail  每一個輸出檔（13 組＋搜尋索引＋manifest）各當一次「寫它的時候失敗」（F8）
+               → build_data 必須回非 0、錯誤訊息點名那個檔，而且 data/ 一個位元組都沒變、沒留下 .tmp
+
+每一格三件事都要成立：回傳值非 0、**錯誤訊息區**（stderr 去掉「  ! 略過…」警告行）點名這個單位、
+輸出目錄的雜湊前後相同。被別的規則碰巧擋下的（回非 0 但沒點名這個單位）一律算「沒擋」。
+「前後相同」在母體是空的時候恆真，所以雜湊一個檔都沒掃到就中止。
 """
 import argparse
 import hashlib
@@ -46,9 +53,15 @@ def src_rel(typ, key):
     return f'data/src/travel.{key}.txt' if typ == 'travel' else f'data/src/{typ}.{key.lower()}.txt'
 
 
+class Abort(Exception):
+    pass
+
+
 def data_digest(d):
-    """data/ 底下（不含 src）每一個檔的內容雜湊——用來確認建置失敗時一個檔都沒被寫。"""
+    """data/ 底下（不含 src）每一個檔的內容雜湊與檔數——用來確認建置失敗時一個檔都沒被寫、也沒留下暫存檔。
+    「前後相同」在母體是空的時候恆真（data/ 不見了，前後都是空的雜湊），所以一個檔都沒掃到就中止。"""
     h = hashlib.sha1()
+    n = 0
     base = os.path.join(d, 'data')
     for dirpath, dirnames, files in sorted(os.walk(base)):
         dirnames[:] = sorted(x for x in dirnames if x != 'src')
@@ -56,17 +69,47 @@ def data_digest(d):
             p = os.path.join(dirpath, f)
             h.update(os.path.relpath(p, base).replace('\\', '/').encode())
             h.update(open(p, 'rb').read())
-    return h.hexdigest()
+            n += 1
+    if n == 0:
+        raise Abort(f'data/ 底下一個檔都沒掃到（{base}），「前後相同」會恆真')
+    return h.hexdigest(), n
 
 
-def run(d, script):
-    r = subprocess.run([sys.executable, f'scripts/{script}'], cwd=d, capture_output=True)
-    return r.returncode, (r.stdout + r.stderr).decode('utf-8', 'replace')
+def err_region(stderr):
+    """錯誤訊息的位置：stderr 去掉「  ! 略過…」這類警告行。
+    正常輸出（stdout）會列出每一組的檔名，警告行也會出現組名——只數「整份輸出有沒有出現」，
+    被別的規則擋下、或根本沒擋，都可能被誤判成「點名了這一組」。"""
+    return '\n'.join(l for l in stderr.split('\n') if not l.startswith('  ! '))
+
+
+def run(d, script, *argv):
+    """回傳（回傳值, 錯誤訊息區）。"""
+    r = subprocess.run([sys.executable, f'scripts/{script}', *argv], cwd=d, capture_output=True)
+    return r.returncode, err_region(r.stderr.decode('utf-8', 'replace'))
 
 
 def names(out, *needles):
-    """擋下的理由有沒有點名那一組：每個 needle 都要出現在輸出裡。"""
+    """擋下的理由有沒有點名那一組：每個 needle 都要出現在錯誤訊息區（run() 回傳的第二個值）。"""
     return all(n in out for n in needles)
+
+
+# 「寫到一半失敗」的注入器：讓寫某一個輸出檔（或它的 .tmp）時丟 OSError，其他照常。
+# 新舊兩版都經過 Path.write_text，所以同一個注入對兩版都有效；錯誤訊息故意不帶檔名，點名只能靠 build_data 自己。
+# 真的注入到了才寫 _injected.txt（在 data/ 外面），沒寫就表示情境沒造成。
+INJECT = '''import pathlib, runpy, sys
+target = sys.argv[1]
+_orig = pathlib.Path.write_text
+def _wt(self, *a, **k):
+    rel = self.as_posix()
+    if rel.endswith('/data/' + target) or rel.endswith('/data/' + target + '.tmp'):
+        open('_injected.txt', 'w').write('yes')
+        raise OSError(28, 'simulated write failure')
+    return _orig(self, *a, **k)
+pathlib.Path.write_text = _wt
+sys.argv = ['scripts/build_data.py']
+runpy.run_path('scripts/build_data.py', run_name='__main__')
+'''
+OUTPUTS = [out_rel(t, k).split('data/', 1)[1] for t, k in SETS] + ['search-index.json', 'manifest.json']
 
 
 def main():
@@ -77,9 +120,18 @@ def main():
     # §5.11 第二層：比對函式自己的對照組
     assert names('缺檔：data/vocab/n5.json', 'vocab/n5.json'), '比對函式抓不到已知的句子'
     assert not names('缺檔：data/vocab/n4.json', 'vocab/n5.json'), '比對函式把 n4 當成 n5'
-    print('比對函式的對照組：2/2 符合')
+    sample = '  ! 略過格式不足的行 (vocab N4): x\n建置中止：以下各組沒有任何有效資料——\n  vocab N3（有效 0 筆）'
+    assert names(err_region(sample), 'vocab N3'), '錯誤訊息區抓不到錯誤訊息裡的組名'
+    assert not names(err_region(sample), 'vocab N4'), '錯誤訊息區把警告行裡的組名當成擋下理由'
+    print('比對函式的對照組：4/4 符合')
 
     tmp = tempfile.mkdtemp()
+    os.makedirs(os.path.join(tmp, 'empty', 'data', 'src'))   # 只有 src、沒有任何輸出檔
+    try:
+        data_digest(os.path.join(tmp, 'empty'))
+        print('ABORT：雜湊函式在一個檔都沒有時沒有中止（「前後相同」會恆真）'); return 2
+    except Abort:
+        print('雜湊函式的對照組：空的 data/ 會中止')
     base = os.path.join(tmp, 'base')
     os.makedirs(os.path.join(base, 'scripts'))
     shutil.copytree(os.path.join(ROOT, 'data'), os.path.join(base, 'data'))
@@ -227,10 +279,34 @@ def main():
                        f'rc={rc}' + ('' if names(out, sshort, '有效 0 筆') else '（輸出沒點名「這一組有效 0 筆」）')
                        + ('' if same else '（data/ 被改動了）'))
 
+    # ---- B-writefail：資料沒問題、寫到一半失敗（F8「先寫暫存檔，全部成功才一起換上」）----
+    # 母體：每一個輸出檔（13 組＋搜尋索引＋manifest）都當一次「寫它的時候失敗」。
+    # 先把每個輸出檔改成過期的內容：只要有任何一個檔被寫成新的，data/ 的雜湊就會變（否則新舊內容一樣、看不出半新半舊）。
+    for rel in OUTPUTS:
+        w = fresh()
+        for r2 in OUTPUTS:
+            p2 = os.path.join(w, 'data', r2)
+            if not os.path.exists(p2):
+                print(f'ABORT：data/{r2} 原本就不存在'); return 2
+            open(p2, 'w', encoding='utf-8').write(f'STALE {r2}\n')
+        open(os.path.join(w, 'scripts', '_inject.py'), 'w', encoding='utf-8').write(INJECT)
+        before = data_digest(w)
+        rc, out = run(w, '_inject.py', rel)
+        if not os.path.exists(os.path.join(w, '_injected.txt')):
+            print(f'ABORT：寫 data/{rel} 的失敗沒有注入到（情境沒造成）'); return 2
+        same = data_digest(w) == before
+        report(rc != 0 and names(out, rel) and same, f'B-writefail {rel}',
+               f'rc={rc}' + ('' if names(out, rel) else '（錯誤訊息沒點名這個檔）') + ('' if same else '（data/ 被改動了：一半新一半舊或留下暫存檔）'))
+
     rmtree(tmp)
-    print(f'共 {len(SETS)} 組 × 4 種情境＋基準＋J13（C-alldup 10 組、B-alldup 8 組＋成對對照 8 組）；' + ('全部符合' if not bad else '有不符合'))
+    print(f'共 {len(SETS)} 組 × 4 種情境＋基準＋J13（C-alldup 10 組、B-alldup 8 組＋成對對照 8 組）'
+          f'＋寫到一半失敗 {len(OUTPUTS)} 個輸出檔；' + ('全部符合' if not bad else '有不符合'))
     return bad
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except Abort as e:
+        print(f'ABORT：{e}')
+        sys.exit(2)
