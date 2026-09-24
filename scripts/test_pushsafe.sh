@@ -142,10 +142,12 @@ case "$MUTATE" in
     mutate scripts/lib/verified_reg.py '        if rc == 1:'
     pyedit scripts/lib/verified_reg.py '        if rc == 1:' '        if False:' || die "改壞登記判斷"
     confirm_mutated scripts/lib/verified_reg.py '        if rc == 1:' ;;
-  noselfhead)   # 拿掉「正在跑的驗法必須跟 HEAD 一樣」那道
-    mutate scripts/test_pushsafe.sh 'cmp -s "$SELF" scripts/test_pushsafe.sh ||'
-    pyedit scripts/test_pushsafe.sh 'cmp -s "$SELF" scripts/test_pushsafe.sh ||' 'true ||' || die "改壞驗法"
-    confirm_mutated scripts/test_pushsafe.sh 'cmp -s "$SELF" scripts/test_pushsafe.sh ||' ;;
+  noselfhead)   # 拿掉「正在跑的驗法必須跟 HEAD 一樣」那道。改的是這支自己：錨點在執行時才組（|| 用 BAR 拼），
+    # 否則這幾行也含同一段字面、錨點就不是恰好一處
+    A="cmp -s \"\$SELF\" scripts/test_pushsafe.sh $BAR$BAR"
+    mutate scripts/test_pushsafe.sh "$A"
+    pyedit scripts/test_pushsafe.sh "$A" "true $BAR$BAR" || die "改壞驗法"
+    confirm_mutated scripts/test_pushsafe.sh "$A" ;;
   nof9)   # F9 那一關看了登記、對不上也放行
     mutate $PS 'if [ -n "$dstale" ]; then'
     pyedit $PS 'if [ -n "$dstale" ]; then' 'if [ -n "$dstale" ] && false; then' || die "改壞閘門"
