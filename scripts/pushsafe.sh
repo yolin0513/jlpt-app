@@ -5,6 +5,7 @@
 #   1  沒有驗法登記或閘門改過沒重跑驗法、閘門腳本有已知的壞寫法（lint_gate.py）、自查失敗（有命中、對照組沒命中、取不到使用者名稱、沒有要推的 commit），或取不到遠端的最新狀態——沒有推
 #   2  推送失敗
 #   3  推送回報成功，但遠端 main 不等於本機 HEAD
+#   4  這次要推的 commit 動到題庫建置或它的驗法，卻沒有對得上的 F8 驗法登記（沒重跑 test_datacheck.py）——沒有推
 #   0  推上去了，而且遠端＝本機
 # 會決定成敗的指令一律不接管線（管線的回傳值是最後一個指令的，會吞掉失敗）；輸出導到檔案再印。
 # 改過這支或 selfcheck_public.py，就重跑 scripts/test_pushsafe.sh（分別製造每一關的失敗）。
@@ -42,6 +43,28 @@ if [ $rc -ne 0 ]; then echo "PUSHSAFE: 閘門腳本有已知的壞寫法或檢�
 timeout 90 git -c credential.helper="$HELPER" fetch -q origin main > "$LOG" 2>&1
 rc=$?
 if [ $rc -ne 0 ]; then cat "$LOG"; echo "PUSHSAFE: 取不到遠端的最新狀態（rc=$rc），沒有推送"; rm -f "$LOG"; exit 1; fi
+
+# 0.5) 題庫建置改過就要重跑它的驗法（F9，四家統一）：test_datacheck.py 全部符合時，把下面三支「已 commit 版本」
+#      的雜湊登記進 .logs/datacheck-verified（不進版控）。只在「這次要推的 commit 動到這三支」時才看登記——
+#      範圍照遠端的實際狀態算（上一步剛 fetch）。閘門本身那幾支不在這裡，照 000) 一律要先驗（新 clone 也一樣）。
+DGUARD="scripts/build_data.py scripts/check_data.py scripts/test_datacheck.py"
+touched="$(git log --pretty=tformat: --name-only origin/main..HEAD -- $DGUARD)"
+rc=$?
+if [ $rc -ne 0 ]; then echo "PUSHSAFE: 算不出這次要推的 commit 動到哪些檔（rc=$rc），沒有推送"; rm -f "$LOG"; exit 4; fi
+if [ -n "$(printf '%s' "$touched" | tr -d '[:space:]')" ]; then
+  DREG=.logs/datacheck-verified
+  dstale=""
+  for f in $DGUARD; do
+    now="$(git rev-parse "HEAD:$f" 2>/dev/null)"
+    reg=""
+    [ -f "$DREG" ] && reg="$(awk -v f="$f" '$1 == f { print $2 }' "$DREG")"
+    if [ -z "$now" ] || [ "$now" != "$reg" ]; then dstale="$dstale $f"; fi
+  done
+  if [ -n "$dstale" ]; then
+    echo "PUSHSAFE: 這次要推的 commit 動到題庫建置或它的驗法，F8 驗法登記對不上（$([ -f "$DREG" ] && echo "改過沒重跑：$dstale" || echo '沒有登記')）；先跑 python scripts/test_datacheck.py，沒有推送"
+    rm -f "$LOG"; exit 4
+  fi
+fi
 
 # 1) 自查
 python scripts/selfcheck_public.py origin/main > "$LOG" 2>&1

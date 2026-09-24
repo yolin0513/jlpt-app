@@ -147,10 +147,39 @@ runpy.run_path('scripts/build_data.py', run_name='__main__')
 OUTPUTS = [out_rel(t, k).split('data/', 1)[1] for t, k in SETS] + ['search-index.json', 'manifest.json']
 
 
+# ---- F9（四家統一）：驗法全部符合時，把被守的三支「已 commit 版本」的雜湊登記進 .logs/（不進版控），推送閘比對 ----
+GUARDED = ['scripts/build_data.py', 'scripts/check_data.py', 'scripts/test_datacheck.py']
+REG = os.path.join(ROOT, '.logs', 'datacheck-verified')
+
+
+def head_state():
+    """（HEAD 的 commit, {檔: HEAD 的 blob}, 工作區跟 HEAD 不一樣的檔）。取不到就中止。"""
+    def git(*a):
+        r = subprocess.run(['git', *a], cwd=ROOT, capture_output=True)
+        return r.returncode, r.stdout.decode('utf-8', 'replace').strip()
+    rc, head = git('rev-parse', 'HEAD')
+    if rc != 0 or not head:
+        raise Abort('取不到 HEAD，沒辦法確認跑的是已 commit 的版本')
+    blobs = {}
+    for f in GUARDED:
+        rc, b = git('rev-parse', f'HEAD:{f}')
+        if rc != 0 or not b:
+            raise Abort(f'取不到 HEAD:{f}')
+        blobs[f] = b
+    rc, _ = git('diff', '--quiet', 'HEAD', '--', *GUARDED)
+    if rc not in (0, 1):
+        raise Abort('git diff 失敗，沒辦法確認工作區跟 HEAD 一樣')
+    dirty = [] if rc == 0 else [f for f in GUARDED if git('diff', '--quiet', 'HEAD', '--', f)[0] == 1]
+    return head, blobs, dirty
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--ref', help='用這個 commit 的 build_data.py 與 check_data.py')
+    ap.add_argument('--ref', help='用這個 commit 的 build_data.py 與 check_data.py（不碰 F9 登記）')
     args = ap.parse_args()
+    start = None if args.ref else head_state()
+    if start and start[2]:
+        print(f'注意：工作區跟 HEAD 不一樣（{"、".join(start[2])}），這一輪跑完也不會登記（F9：登記的是已 commit 的版本）')
 
     # §5.11 第二層：比對函式自己的對照組
     assert names('缺檔：data/vocab/n5.json', 'vocab/n5.json'), '比對函式抓不到已知的句子'
@@ -419,12 +448,30 @@ def main():
     print(f'共 {len(SETS)} 組 × 4 種情境＋基準＋J13（C-alldup 10 組、B-alldup 8 組＋成對對照 8 組）'
           f'＋寫到一半失敗 {len(OUTPUTS)} 個輸出檔＋暫存檔位置被佔 {len(OUTPUTS)}＋清理失敗 {len(OUTPUTS) - 1}'
           f'＋換上失敗 {len(OUTPUTS)}＋換上失敗且清理失敗 {len(OUTPUTS)}；' + ('全部符合' if not bad else '有不符合'))
+    if start:
+        end = head_state()
+        if bad:
+            if os.path.exists(REG):
+                os.remove(REG)
+            print('F9：有不符合，已刪掉登記')
+        elif start[2] or end[2] or start[0] != end[0]:
+            print(f'F9：沒有登記——工作區跟 HEAD 不一樣或跑的途中 HEAD 變了（開始 {start[0][:7]}、結束 {end[0][:7]}；'
+                  f'不一樣的檔：{"、".join(sorted(set(start[2]) | set(end[2]))) or "無"}）')
+            return 1
+        else:
+            os.makedirs(os.path.dirname(REG), exist_ok=True)
+            open(REG, 'w', encoding='utf-8', newline='\n').write(''.join(f'{f} {end[1][f]}\n' for f in GUARDED))
+            print(f'F9：全部符合，已登記三支已 commit 版本的雜湊（HEAD {end[0][:7]}）到 .logs/datacheck-verified')
     return bad
 
 
 if __name__ == '__main__':
     try:
-        sys.exit(main())
+        code = main()
     except Abort as e:
         print(f'ABORT：{e}')
-        sys.exit(2)
+        code = 2
+    if code and '--ref' not in sys.argv and os.path.exists(REG):
+        os.remove(REG)   # 沒全過、中止、或沒辦法登記：舊的登記也不能留著放行
+        print('F9：這一輪沒有全過，已刪掉登記')
+    sys.exit(code)

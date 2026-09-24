@@ -20,3 +20,6 @@ scripts/_*.mjs
 
 # 本機開發設定（不影響部署）
 .claude/settings.local.json
+
+# F9 驗法登記（test_datacheck.py 寫、pushsafe.sh 讀）與整套測試的完整 log，不進版控
+.logs/
