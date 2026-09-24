@@ -48,6 +48,23 @@ def warn(msg):
     warnings.append(msg)
 
 
+def load_set(fp):
+    """讀一組題庫。缺檔、解析不了、0 筆都算問題（2026-09-24：以前缺檔是 continue、0 筆照樣通過，
+    題庫檔不見或被清空時這支會說「全部檢查通過」）。回傳 None 表示這一組不能再往下查。"""
+    rel = fp.relative_to(DATA).as_posix()
+    if not fp.exists():
+        err(f"缺檔：data/{rel}（檢查器讀不到這一組，不是 0 個問題）")
+        return None
+    try:
+        d = json.loads(fp.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        err(f"解析不了：data/{rel}（{type(e).__name__}: {e}）")
+        return None
+    if not d.get("items"):
+        err(f"data/{rel}: 0 筆——空的題庫不算通過")
+    return d
+
+
 def check_vocab(level, items):
     seen = {}
     for it in items:
@@ -131,7 +148,11 @@ def main():
     ap.add_argument("--sample", type=int, default=0, help="隨機抽樣列出 N 條")
     args = ap.parse_args()
 
-    manifest = json.loads((DATA / "manifest.json").read_text(encoding="utf-8"))
+    try:
+        manifest = json.loads((DATA / "manifest.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        print(f"檢查器讀不到 data/manifest.json（{type(e).__name__}: {e}）——不是「0 個問題」", file=sys.stderr)
+        return 1
     man_counts = {(s["type"], s["level"]): s["count"] for s in manifest["sets"]}
     tv_counts = {s["cat"]: s["count"] for s in manifest.get("travel", {}).get("sets", [])}
 
@@ -143,9 +164,9 @@ def main():
             ("grammar", "grammar", check_grammar),
         ):
             fp = DATA / folder / f"{level.lower()}.json"
-            if not fp.exists():
+            d = load_set(fp)
+            if d is None:
                 continue
-            d = json.loads(fp.read_text(encoding="utf-8"))
             items = d.get("items", [])
             if d.get("count") != len(items):
                 err(f"{fp.name}: count={d.get('count')} 但 items={len(items)}")
@@ -166,9 +187,9 @@ def main():
     travel_grand = 0
     for cat in TRAVEL_CATS:
         fp = DATA / "travel" / f"{cat}.json"
-        if not fp.exists():
+        d = load_set(fp)
+        if d is None:
             continue
-        d = json.loads(fp.read_text(encoding="utf-8"))
         items = d.get("items", [])
         if d.get("count") != len(items):
             err(f"travel/{cat}.json: count={d.get('count')} 但 items={len(items)}")

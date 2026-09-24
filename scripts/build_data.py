@@ -310,14 +310,30 @@ def main():
             by_set[("vocab", level)] = v
         if g:
             by_set[("grammar", level)] = g
+    travel_items = {cat_key: build_travel(cat_key, id_abbr) for cat_key, id_abbr, _l, _i in TRAVEL_CATS}
+
+    # 寫任何檔之前：每一組都要有來源檔、而且至少一筆有效資料。缺一組就全部不寫、回非 0。
+    # 以前空的那一組會被默默跳過（不寫檔也不報錯），舊的輸出檔留在原地、manifest 卻少了那一組——
+    # App 讀得到、看起來是好的。現在失敗時 data/ 維持上一次成功建置的完整狀態（2026-09-24）。
+    empty = []
+    for level in LEVELS:
+        for typ in ("vocab", "grammar"):
+            if not by_set.get((typ, level)):
+                src = SRC / f"{typ}.{level.lower()}.txt"
+                empty.append(f"{src.name}（{'來源檔不存在' if not src.exists() else '沒有任何有效資料列'}）")
+    for cat_key, _abbr, _label, _icon in TRAVEL_CATS:
+        if not travel_items[cat_key]:
+            src = SRC / f"travel.{cat_key}.txt"
+            empty.append(f"{src.name}（{'來源檔不存在' if not src.exists() else '沒有任何有效資料列'}）")
+    if empty:
+        raise SystemExit("建置中止，一個檔都沒寫（data/ 維持上一次成功建置的狀態）：以下來源是空的或不存在——\n  "
+                         + "\n  ".join(empty))
 
     hidden = apply_dedup(by_set)
 
     for level in LEVELS:
         for typ, folder in (("vocab", VOCAB_OUT), ("grammar", GRAMMAR_OUT)):
-            items = by_set.get((typ, level))
-            if not items:
-                continue
+            items = by_set[(typ, level)]   # 上面已確認每一組都有資料
             active = sum(1 for it in items if not it.get("dup"))
             out = folder / f"{level.lower()}.json"
             out.write_text(json.dumps(
@@ -342,9 +358,7 @@ def main():
     travel_sets = []
     travel_total = 0
     for cat_key, id_abbr, label, icon in TRAVEL_CATS:
-        items = build_travel(cat_key, id_abbr)
-        if not items:
-            continue
+        items = travel_items[cat_key]
         out = TRAVEL_OUT / f"{cat_key}.json"
         out.write_text(json.dumps(
             {"cat": cat_key, "label": label, "count": len(items), "items": items},
@@ -372,7 +386,7 @@ def main():
             slim["level"] = level
             bucket.append(slim)
     for cat_key, _abbr, _label, _icon in TRAVEL_CATS:
-        for it in build_travel(cat_key, _abbr):
+        for it in travel_items[cat_key]:
             slim = {k: v for k, v in it.items() if k not in EXAMPLE_FIELDS and v != ""}
             search_travel.append(slim)
     search_vocab.sort(key=lambda x: x["id"])
