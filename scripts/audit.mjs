@@ -2173,3 +2173,5 @@ if (issues.length) {
   issues.forEach((i, n) => console.log(`${n + 1}. ${i}`));
 }
 await b.close();
+// 有任何斷言失敗就回傳非 0：只看結束碼的自動化才抓得到（原本全部跑完一律回 0）
+process.exit(fail > 0 ? 1 : 0);
