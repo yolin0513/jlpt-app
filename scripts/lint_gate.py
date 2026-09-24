@@ -25,6 +25,24 @@ TARGETS = [
     'scripts/test_pushsafe.sh',
 ]
 
+# 跳脫類的兩種（backslash、overescape）掃 repo 裡「所有」腳本（2026-09-24，統籌者補充說明（四））：
+# heredoc 把 \\ 變成 \ 的那種寫的當下攔不到；真正會空轉的是語法正確、但 regex 被多跳脫了一次——只有掃描抓得到，
+# 所以掃描的母體要大到「新寫的腳本下一次跑就會被掃到」。登記制：這裡列的才掃；專案裡有腳本沒列進來（孤兒）就擋。
+ESCAPE_RULES = ('backslash', 'overescape')
+ESCAPE_TARGETS = [
+    'js/app.js', 'js/backup.js', 'js/data.js', 'js/db.js', 'js/itemview.js', 'js/kana.js', 'js/keys.js',
+    'js/pos.js', 'js/qtypes.js', 'js/router.js', 'js/session.js', 'js/speech.js', 'js/srs.js', 'js/store.js',
+    'js/ui.js', 'js/weak.js',
+    'js/views/exam.js', 'js/views/favorites.js', 'js/views/flashcards.js', 'js/views/home.js', 'js/views/learn.js',
+    'js/views/listening.js', 'js/views/mistakes.js', 'js/views/quiz.js', 'js/views/review.js',
+    'js/views/search.js', 'js/views/stats.js', 'js/views/travel.js', 'js/views/weak.js',
+    'scripts/audit.mjs', 'scripts/build_data.py', 'scripts/check_data.py', 'scripts/filter_grammar_draft.mjs',
+    'scripts/filter_vocab_draft.mjs', 'scripts/lib/harness.mjs', 'scripts/lint_gate.py', 'scripts/make_icons.py',
+    'scripts/pushsafe.sh', 'scripts/regress.mjs', 'scripts/screenshots.mjs', 'scripts/selfcheck_public.py',
+    'scripts/serve.py', 'scripts/test_datacheck.py', 'scripts/test_filters.py', 'scripts/test_harness.mjs',
+    'scripts/test_pushsafe.sh', 'scripts/verify-full.mjs', 'scripts/verify-live.mjs', 'sw.js',
+]
+
 P3 = '+' * 3   # 拆開寫，這支檔的說明文字不必出現連續三個加號也能講清楚
 
 # ---- 六種壞寫法：每種一個函式，輸入 (檔名, 整份內容的行)，回傳命中的 (行號, 原文) ----
@@ -102,7 +120,47 @@ def r_backslash(name, lines):
             if not is_comment(l) and re.search(r'\b(grep|sed)\b', l) and '\\' in l.split('grep', 1)[-1].split('sed', 1)[-1]]
 
 
+BS = chr(92)   # 反斜線；樣式與樣本都用它組出來，這支檔自己的原始碼才不會出現多跳脫的字面、被自己掃到
+_CLS = '[dswbDSWB]'
+OVER2 = re.compile(re.escape(BS * 2) + _CLS)   # 原始字串／regex 字面裡兩個反斜線＋d：比對的是「反斜線＋d」，不是數字
+OVER4 = re.compile(re.escape(BS * 4) + _CLS)   # 一般字串裡四個反斜線＋d：執行時是兩個反斜線＋d，同上
+JS_RE_LIT = re.compile(r'(?:^|[=(,:!&|?{};\[]|\breturn\b)\s*/((?:' + re.escape(BS) + r'.|\[(?:' + re.escape(BS)
+                       + r'.|[^\]' + re.escape(BS) + r'])*\]|[^/' + re.escape(BS) + r'\[\n])+)/[dgimsuyv]*')
+
+
+def r_overescape(name, lines):
+    """regex 多跳脫了一次（語法正確、但永遠不命中）：原始字串或 regex 字面裡「兩個反斜線＋d/s/w/b」、
+    一般字串裡「四個反斜線＋d/s/w/b」、shell 的 grep／sed 那一行裡「兩個反斜線＋d/s/w/b」。
+    Python 用 tokenize 找字串；JS 找 regex 字面是用樣式近似（對照組守著）。說明文字不寫出反斜線，免得被自己掃到。"""
+    import tokenize
+    text = '\n'.join(lines)
+    out = []
+    if name.endswith('.py'):
+        try:
+            toks = list(tokenize.generate_tokens(io.StringIO(text).readline))
+        except (tokenize.TokenError, SyntaxError) as e:
+            return [(0, f'（解析不了，檢查器沒辦法掃：{e}）')]
+        for t in toks:
+            if t.type != tokenize.STRING:
+                continue
+            prefix = re.match(r'[rRbBuUfF]*', t.string).group(0).lower()
+            body = t.string[len(prefix):]
+            if (OVER2 if 'r' in prefix else OVER4).search(body):
+                out.append((t.start[0], lines[t.start[0] - 1]))
+    elif name.endswith('.sh'):
+        out = [(i, l) for i, l in enumerate(lines, 1)
+               if not is_comment(l) and re.search(r'\b(grep|sed)\b', l) and OVER2.search(l)]
+    else:
+        for i, l in enumerate(lines, 1):
+            if l.lstrip().startswith(('//', '*')):
+                continue
+            if OVER4.search(l) or any(OVER2.search(m.group(1)) for m in JS_RE_LIT.finditer(l)):
+                out.append((i, l))
+    return out
+
+
 RULES = {
+    'overescape': r_overescape,
     'pipe': r_pipe,
     'swallow': r_swallow,
     'plushdr': r_plushdr,
@@ -139,6 +197,13 @@ CONTROLS = {
         ('x.sh', "grep -q '\\.org' out.txt"),                                                                  # 合成
         ('x.sh', "sed -i \"s/+ '\\.org'/+ '.o'/\" scripts/selfcheck_public.py"),                                # 本 App 驗法裡真實的一行
     ],
+    'overescape': [   # 全部當場組出來（每一種語言、每一個分支各一條）
+        ('x.py', "PAT = re.compile(r'" + BS * 2 + "d+')"),                   # Python 原始字串多跳脫
+        ('x.py', "PAT = re.compile('" + BS * 4 + "s+')"),                    # Python 一般字串多跳脫
+        ('x.mjs', 'const RE = /^' + BS * 2 + 'w+$/;'),                       # JS regex 字面多跳脫
+        ('x.mjs', "const RE = new RegExp('" + BS * 4 + "d');"),              # JS 字串多跳脫
+        ('x.sh', "grep -E '" + BS * 2 + "s+' out.txt"),                      # shell 樣式多跳脫
+    ],
 }
 NEGATIVES = [   # 合法寫法：任何一種都不該抓
     ('x.sh', 'git push -q origin main && git fetch -q origin main ' + BAR * 2 + ' die "推送失敗"'),
@@ -147,6 +212,8 @@ NEGATIVES = [   # 合法寫法：任何一種都不該抓
     ('x.py', "rc, meta_raw = git('log', '--format=%an%n%ae%n%cn%n%ce%n%B%x00', f'{base}..HEAD')\nrc, patch = git('log', '--format=', '-p')"),
     ('x.sh', 'grep -E "SELF-CHECK FAILED" out.txt'),
     ('x.sh', 'git show HEAD:scripts/selfcheck_public.py ' + BAR + ' grep -q foo ' + BAR * 2 + ' die "x"'),   # 2026-09-24 第一版誤抓過：檔名在路徑裡不等於在跑自查
+    ('x.py', "A = re.compile(r'" + BS + "d+')\nB = '" + BS * 2 + "d'\nC = r'[/" + BS * 2 + "]'"),   # 正確的跳脫；比對字面反斜線的 [/\\]
+    ('x.mjs', 'const A = /' + BS + 'd+/; const B = new RegExp("' + BS * 2 + 'd");'),                  # 正確的跳脫
 ]
 
 # ---- 登記的例外：(檔, 規則, 那一行裡的一段固定字串, 理由)。每一條都必須在這次掃描裡命中 ----
@@ -207,7 +274,12 @@ def orphan_check():
     found = push_scripts(files)
     orphans = sorted(found - set(TARGETS) - set(ORPHAN_EXEMPT))
     stale = sorted(set(ORPHAN_EXEMPT) - found)
-    return (orphans, stale, len(files)), None
+    return (orphans, stale, len(files), [n for n, _t in files]), None
+
+
+def escape_orphans(script_names):
+    """專案裡的腳本（追蹤中＋沒被 gitignore 的新檔）沒登記進 ESCAPE_TARGETS 的。"""
+    return sorted(n for n in script_names if n.endswith(SCRIPT_EXT) and n not in ESCAPE_TARGETS)
 
 
 def run_rule(rule, name, text):
@@ -233,6 +305,10 @@ def main():
     got = push_scripts(fake)
     if got != {'scripts/x_new.sh'}:
         bad.append(f'孤兒檢查的對照組不對：抓到 {sorted(got)}，應該只有 scripts/x_new.sh（檢查器壞了）')
+    # 跳脫掃描的孤兒檢查對照組：一支沒登記的新腳本必須被報出來；登記過的、不是腳本的不能報
+    eo = escape_orphans(['scripts/new_tool.py', 'js/views/new_view.js', ESCAPE_TARGETS[0], 'docs/a.md'])
+    if eo != ['js/views/new_view.js', 'scripts/new_tool.py']:
+        bad.append(f'孤兒檢查的對照組不對：跳脫掃描抓到 {eo}，應該是兩支沒登記的新腳本（檢查器壞了）')
     n_controls = sum(len(v) for v in CONTROLS.values())
     print(f'對照組 {n_controls} 條、反例 {len(NEGATIVES)} 條：{"全部符合" if not bad else "有問題"}')
     if bad:
@@ -245,7 +321,9 @@ def main():
     used = set()
     unexpected = []
     total_lines = 0
-    for f in TARGETS:
+    scan = list(TARGETS) + [f for f in ESCAPE_TARGETS if f not in TARGETS]
+    for f in scan:
+        rules = RULES if f in TARGETS else {k: RULES[k] for k in ESCAPE_RULES}   # 閘門三支掃全部；其他腳本掃跳脫類
         path = os.path.join(ROOT, f)
         try:
             text = open(path, encoding='utf-8').read()
@@ -257,23 +335,31 @@ def main():
             print(f'LINT-GATE FAILED: 登記的檔 {f} 是空的')
             return 1
         total_lines += len(lines)
-        for rule, fn in RULES.items():
+        for rule, fn in rules.items():
             for i, line in fn(f, lines):
                 ex = [k for k, e in enumerate(EXCEPTIONS) if e[0] == f and e[1] == rule and e[2] in line]
                 if ex:
                     used.update(ex)
                 else:
                     unexpected.append((f, i, rule, line.strip()))
-    print(f'掃了 {len(TARGETS)} 支檔、共 {total_lines} 行；登記的例外命中 {len(used)}／{len(EXCEPTIONS)} 條')
+    if set(scan) != set(TARGETS) | set(ESCAPE_TARGETS) or not set(TARGETS) <= set(ESCAPE_TARGETS):
+        print(f'LINT-GATE FAILED: 實際掃到的檔（{len(set(scan))} 支）不等於登記的（閘門 {len(TARGETS)}＋跳脫 {len(ESCAPE_TARGETS)}），'
+              f'或閘門有檔沒登記進跳脫掃描（檢查器壞了）')
+        return 1
+    print(f'掃了 {len(scan)} 支檔（閘門 {len(TARGETS)} 支掃全部規則、其餘 {len(scan) - len(TARGETS)} 支掃跳脫類）、共 {total_lines} 行；'
+          f'登記的例外命中 {len(used)}／{len(EXCEPTIONS)} 條')
     stale = [e for k, e in enumerate(EXCEPTIONS) if k not in used]
     res, err = orphan_check()
     if err:
         print(f'LINT-GATE FAILED: 孤兒檢查{err}（檢查器壞了）')
         return 1
-    orphans, orphan_stale, n_scripts = res
-    print(f'孤兒檢查：看了 {n_scripts} 支腳本，有推送指令卻沒登記的 {len(orphans)} 支')
+    orphans, orphan_stale, n_scripts, script_names = res
+    eorph = escape_orphans(script_names)
+    print(f'孤兒檢查：看了 {n_scripts} 支腳本，有推送指令卻沒登記的 {len(orphans)} 支、沒登記進跳脫掃描的 {len(eorph)} 支')
     for o in orphans:
         unexpected.append((o, 0, 'orphan', '有推送指令，卻沒登記進 TARGETS（也沒登記成「不是目標」）'))
+    for o in eorph:
+        unexpected.append((o, 0, 'escape-orphan', '新腳本沒登記進 ESCAPE_TARGETS（跳脫類的掃描掃不到它）'))
     stale = stale + [(o, 'orphan', '登記成「不是目標」但這次沒有推送指令', '') for o in orphan_stale]
     for f, i, rule, line in unexpected:
         print(f'  命中（沒登記）：{f}:{i} [{rule}] {line[:140]}')
