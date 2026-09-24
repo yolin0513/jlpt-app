@@ -42,6 +42,12 @@ def rejected_for_noise(out):
     return '保留 0' in out and any(('→' in l and any(w in l for w in NOISE_WORDS)) for l in out.splitlines() if l.strip().startswith('x '))
 
 
+def stop_says(out, phrase):
+    """停下的理由：要出現在過濾器「停：」開頭的那一行（錯誤訊息的位置），不是輸出裡任何地方。
+    草稿的檔名、被剔除的行都會印出來，只數「有沒有出現」會把它們誤當成停下的理由。"""
+    return any(l.startswith('停：') and phrase in l for l in out.splitlines())
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--ref')
@@ -51,7 +57,9 @@ def main():
     assert rejected_for_noise('  x 字 → 含西里爾字母或韓文（生成雜訊）\n草稿共 1 行，保留 0，剔除 1'), '該判剔除的沒判到'
     assert not rejected_for_noise('  x 字 → 欄位數 6（應為 7）\n草稿共 1 行，保留 0，剔除 1'), '被別的規則擋掉也算成雜訊'
     assert not rejected_for_noise('草稿共 1 行，保留 1，剔除 0'), '保留了也算成剔除'
-    print('比對函式的對照組：3/3 符合')
+    assert stop_says('停：1 份草稿沒有任何資料列（d1.txt）。', '沒有任何資料列'), '抓不到「停：」那一行的理由'
+    assert not stop_says('  x 沒有任何資料列 → 欄位數 1\n草稿共 1 行，保留 1，剔除 0', '沒有任何資料列'), '把被剔除的行當成停下的理由'
+    print('比對函式的對照組：5/5 符合')
 
     tmp = tempfile.mkdtemp()
     os.makedirs(os.path.join(tmp, 'scripts'))
@@ -115,12 +123,12 @@ def main():
         return r.returncode, (r.stdout + r.stderr).decode('utf-8', 'replace')
 
     rc, out = run_raw(f, '')
-    report(rc != 0 and '沒有任何資料列' in out, f'{f}：空檔要停、講明是空的', f'rc={rc}')
+    report(rc != 0 and stop_says(out, '沒有任何資料列'), f'{f}：空檔要停、講明是空的', f'rc={rc}')
     rc, out = run_raw(f, '# 只有註解\n\n')
-    report(rc != 0 and '沒有任何資料列' in out, f'{f}：只有註解也算空、要停', f'rc={rc}')
+    report(rc != 0 and stop_says(out, '沒有任何資料列'), f'{f}：只有註解也算空、要停', f'rc={rc}')
     bad_line = ' | '.join([CYR + x if i == 2 else x for i, x in enumerate(x.strip() for x in FILTERS[f][0].split('|'))])
     rc, out = run_raw(f, bad_line + '\n')
-    report(rc != 0 and '全部 1 行都被剔除' in out, f'{f}：全部被剔除要停、講明', f'rc={rc}')
+    report(rc != 0 and stop_says(out, '全部 1 行都被剔除'), f'{f}：全部被剔除要停、講明', f'rc={rc}')
     rc, out = run_raw(f, '', '--allow-empty')
     report(rc == 0, f'{f}：空檔加 --allow-empty 要放行', f'rc={rc}')
     rc, out = run_raw(f, bad_line + '\n', '--allow-empty')
