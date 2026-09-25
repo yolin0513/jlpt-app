@@ -50,7 +50,8 @@ node scripts/regress.mjs https://yolin0513.github.io/jlpt-app/index.html
 推送一律用閘門，**不要直接下 `git push`**（共用慣例 §2.5；閘門裡已帶 gh credential helper，一般的 `git push` 會卡在看不到的 GUI 登入視窗，gh 放在使用者 Temp 目錄，見 STATUS §8）：
 
 ```bash
-bash scripts/pushsafe.sh   # 自查→推送→比對遠端；回傳 1 自查擋下／2 推送失敗／3 遠端≠本機／0 成功。改過閘門就跑 bash scripts/test_pushsafe.sh
+bash scripts/pushsafe.sh   # 自查→推送→比對遠端；0 成功、1 前段任一關擋下、2 推送失敗、3 遠端≠本機、4 題庫驗法沒登記（完整說明見 scripts/pushsafe.sh 檔頭）
+# 改過閘門、自查、lint 或 scripts/lib/ 的共用模組就跑 bash scripts/test_pushsafe.sh；改過題庫建置（build_data／check_data／test_datacheck）就跑 python scripts/test_datacheck.py——沒重跑，閘門會擋
 ```
 
 線上版：https://yolin0513.github.io/jlpt-app/ （repo：github.com/yolin0513/jlpt-app，main 分支根目錄部署）
