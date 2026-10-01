@@ -352,6 +352,63 @@ def run_rule(rule, name, text):
     return RULES[rule](name, text.split('\n'))
 
 
+def rules_for(f):
+    """這支登記的檔要掃哪些規則：閘門三支掃全部（envread 另外算）；其他腳本掃跳脫類；正式閘門那幾支另外掃 envread。"""
+    rules = ({k: v for k, v in RULES.items() if k != 'envread'} if f in TARGETS else {k: RULES[k] for k in ESCAPE_RULES})
+    if f in ENV_TARGETS:
+        rules = dict(rules, envread=RULES['envread'])
+    return rules
+
+
+def scan_one(f, text):
+    """掃一支登記的檔：回傳 (沒登記的命中 [(行號, 規則, 原文)], 用到的例外編號)。正式掃描與真實檔對照組走同一段。"""
+    lines = text.split('\n')
+    hits, used = [], set()
+    for rule, fn in rules_for(f).items():
+        for i, line in fn(f, lines):
+            ex = [k for k, e in enumerate(EXCEPTIONS) if e[0] == f and e[1] == rule and e[2] in line]
+            if ex:
+                used.update(ex)
+            else:
+                hits.append((i, rule, line.strip()))
+    return hits, used
+
+
+# ---- 分類報數（2026-10-02，Dispatch：只報總數時，「0 命中」跟「某一類根本沒掃到」長得一樣）----
+# 每一類對應 r_overescape 的一個分支；登記的檔副檔名不在這裡就停——那一類沒有分支專門處理，也沒有真實檔對照組。
+CATEGORIES = ('.py', '.sh', '.js', '.mjs')
+
+
+def category(f):
+    return os.path.splitext(f)[1]
+
+
+# 真實檔對照組：每一類拿一支「真的登記在掃描裡」的檔，在它的真實內容後面接一行已知的多跳脫樣本（當場組出來），
+# 走正式掃描同一段（scan_one），比對「多出來的命中」恰好是那一行、規則是 overescape——不是只有規則語法對，
+# 而是在那一類真實檔的內容上抓得到，而且點名的是那一筆、不是碰巧被別條規則擋下。
+PROBE_LINES = {
+    '.py': "PROBE = re.compile(r'" + BS * 2 + "d+')",
+    '.sh': "grep -E '" + BS * 2 + "s+' probe.txt",
+    '.js': 'const PROBE = /^' + BS * 2 + 'w+$/;',
+    '.mjs': 'const PROBE = /^' + BS * 2 + 'w+$/;',
+}
+
+
+def real_file_probe(f, text):
+    """回傳 None 表示對照組符合；否則回傳哪裡不符。"""
+    base, _u = scan_one(f, text)
+    body = text if text.endswith('\n') else text + '\n'
+    n = body.count('\n') + 1   # 接上去那一行的行號
+    got, _u = scan_one(f, body + PROBE_LINES[category(f)] + '\n')
+    extra = [h for h in got if h not in base]
+    # .sh 的樣本是一行含反斜線的 grep，初篩規則 backslash 照定義也會點名同一行（它對任何含反斜線的 grep 行都報）——
+    # 明列為預期，不放寬比對：其他規則、其他行號一律不准多出來
+    want = sorted([(n, 'overescape')] + ([(n, 'backslash')] if category(f) == '.sh' and 'backslash' in rules_for(f) else []))
+    if sorted((i, r) for i, r, _l in extra) != want:
+        return f'{f}（{category(f)}）接上已知樣本後多出的命中是 {[(i, r) for i, r, _l in extra]}，應該恰好是 {want}'
+    return None
+
+
 def main():
     # 入口拒絕（Python 這一層，2026-09-25）：孤兒檢查會叫 git，git 自己認得的 GIT_ 變數設著時會對著別的 repo 取清單
     sys.path.insert(0, os.path.join(ROOT, 'scripts', 'lib'))
@@ -409,11 +466,9 @@ def main():
     unexpected = []
     total_lines = 0
     scan = list(TARGETS) + [f for f in ESCAPE_TARGETS if f not in TARGETS]
+    scanned = []    # 這一次真的讀到、掃過的檔（分類報數用這個數，不用登記清單數）
+    probes = {}     # 類別 → 拿來做真實檔對照組的那一支
     for f in scan:
-        # 閘門三支掃全部（envread 另外算）；其他腳本掃跳脫類；正式閘門那幾支另外掃 envread
-        rules = ({k: v for k, v in RULES.items() if k != 'envread'} if f in TARGETS else {k: RULES[k] for k in ESCAPE_RULES})
-        if f in ENV_TARGETS:
-            rules = dict(rules, envread=RULES['envread'])
         path = os.path.join(ROOT, f)
         try:
             text = open(path, encoding='utf-8').read()
@@ -424,17 +479,37 @@ def main():
         if not text.strip():
             print(f'LINT-GATE FAILED: 登記的檔 {f} 是空的')
             return 1
+        if category(f) not in CATEGORIES:
+            print(f'LINT-GATE FAILED: 登記的檔 {f} 的副檔名 {category(f)!r} 不在分類 {CATEGORIES} 裡——沒有分支專門處理、也沒有真實檔對照組')
+            return 1
         total_lines += len(lines)
-        for rule, fn in rules.items():
-            for i, line in fn(f, lines):
-                ex = [k for k, e in enumerate(EXCEPTIONS) if e[0] == f and e[1] == rule and e[2] in line]
-                if ex:
-                    used.update(ex)
-                else:
-                    unexpected.append((f, i, rule, line.strip()))
+        hits, u = scan_one(f, text)
+        used.update(u)
+        unexpected += [(f, i, rule, line) for i, rule, line in hits]
+        scanned.append(f)
+        if category(f) not in probes:
+            probes[category(f)] = (f, text)
     if set(scan) != set(TARGETS) | set(ESCAPE_TARGETS) or not set(TARGETS) <= set(ESCAPE_TARGETS) or not set(ENV_TARGETS) <= set(scan):
         print(f'LINT-GATE FAILED: 實際掃到的檔（{len(set(scan))} 支）不等於登記的（閘門 {len(TARGETS)}＋跳脫 {len(ESCAPE_TARGETS)}），'
               f'或閘門有檔沒登記進跳脫掃描（檢查器壞了）')
+        return 1
+    # 分類報數：每一類各幾支，加總必須等於母體（登記的檔數）；某一類 0 支也要停——那一類的分支這次沒掃到任何真實檔
+    counts = {c: sum(1 for f in scanned if category(f) == c) for c in CATEGORIES}
+    population = len(set(TARGETS) | set(ESCAPE_TARGETS))
+    print('分類：' + '、'.join(f'{c} {counts[c]} 支' for c in CATEGORIES) + f'，合計 {sum(counts.values())}／母體 {population}')
+    empty_cats = [c for c in CATEGORIES if counts[c] == 0]
+    if sum(counts.values()) != population or len(scanned) != len(set(scanned)) or empty_cats:
+        missing = sorted((set(TARGETS) | set(ESCAPE_TARGETS)) - set(scanned))
+        print(f'LINT-GATE FAILED: 分類加總 {sum(counts.values())} 不等於母體 {population}（沒掃到：{missing}）、'
+              f'有檔掃了兩次、或這幾類一支都沒掃到：{empty_cats}（檢查器壞了）')
+        return 1
+    # 真實檔對照組：每一類一支，接上已知樣本必須被 overescape 點名在那一行
+    probe_bad = [m for m in (real_file_probe(f, t) for f, t in probes.values()) if m]
+    print('真實檔對照組：' + '、'.join(f'{c} 用 {probes[c][0]}' for c in CATEGORIES) + f'：{"全部抓到" if not probe_bad else "有問題"}')
+    if probe_bad:
+        for m in probe_bad:
+            print('  ', m)
+        print('LINT-GATE FAILED: 真實檔對照組不過，這一類的「0 命中」不可信（檢查器壞了）')
         return 1
     print(f'掃了 {len(scan)} 支檔（閘門 {len(TARGETS)} 支掃全部規則、其餘 {len(scan) - len(TARGETS)} 支掃跳脫類）、共 {total_lines} 行；'
           f'登記的例外命中 {len(used)}／{len(EXCEPTIONS)} 條')
