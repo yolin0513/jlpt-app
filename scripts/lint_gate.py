@@ -39,7 +39,7 @@ ESCAPE_TARGETS = [
     'scripts/audit.mjs', 'scripts/build_data.py', 'scripts/check_data.py', 'scripts/filter_grammar_draft.mjs',
     'scripts/filter_vocab_draft.mjs', 'scripts/lib/harness.mjs', 'scripts/lib/gitenv.py', 'scripts/lib/verified_reg.py', 'scripts/lint_gate.py', 'scripts/make_icons.py',
     'scripts/pushsafe.sh', 'scripts/regress.mjs', 'scripts/screenshots.mjs', 'scripts/selfcheck_public.py',
-    'scripts/serve.py', 'scripts/test_datacheck.py', 'scripts/test_filters.py', 'scripts/test_harness.mjs',
+    'scripts/serve.py', 'scripts/test_datacheck.py', 'scripts/test_filters.py', 'scripts/test_harness.mjs', 'scripts/test_cli_probes.py',
     'scripts/test_pushsafe.sh', 'scripts/test_selfcheck_meta.py', 'scripts/test_verified_reg.py', 'scripts/verify-full.mjs', 'scripts/verify-live.mjs', 'sw.js',
 ]
 
