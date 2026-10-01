@@ -1,20 +1,28 @@
 """閘門驗法被強制終止時，主 repo 的原始碼會不會被改壞（共用慣例 v11.3 §5.20；Dispatch 2026-10-02）。
 
 用法：python scripts/test_pushsafe_kill.py
-回傳值：0＝全部符合；1＝有不符；2＝造情境失敗（沒驗到，不是通過）。
+回傳值：0＝全部符合；1＝有不符；2＝造情境失敗（git 之類的步驟壞了，沒驗到）；
+        4＝情境未成立（重試 3 次都沒在「壞檔在磁碟上、情境在跑」的時候殺到——這次什麼都沒量到，不是通過也不是紅）。
 什麼時候跑：改過 test_pushsafe.sh 的「複製、cd、改檔、清理、登記」那幾段就跑。重負載（含一次完整的閘門驗法，約 6～7 分鐘）。
+每一次嘗試的完整輸出寫在 .logs/kill-<日期時間>-<第幾次>.log（證據不留在暫存區）。
 
 「突變只改暫存 clone、主工作區不會被改壞」原本只是讀程式得出的（test_pushsafe.sh 先 clone 到 mktemp -d、cd 進去才改檔）。
 這支用真的強制終止驗它：
   前置：檢查器自己的對照組——在一個暫存 clone 裡改一個檔，「工作區等於 HEAD」的判斷必須判不等；不改必須判相等。
-  K 強制終止：以突變 nofetch 開跑閘門驗法，等它印出「MUTATION ACTIVE」（複本裡的檔已改壞並 commit）而且第一個情境已有結果，
-    取下這一棵程序樹，用 taskkill /T /F 整棵殺掉；確認殺掉之前的每一個程序都不在了、輸出沒有結尾那一行（真的是中途被殺）、
-    暫存複本裡的 pushsafe.sh 真的是改壞的樣子（改壞的檔確實在磁碟上），然後：
-    - 主 repo 每一個追蹤中的檔：原始位元組的 sha256 與開跑前相同，而且 git 算出的內容雜湊等於 HEAD；git status 乾淨。
-    - 主 repo 的驗法登記（.git/pushsafe-verified）中斷前後的狀態照實記錄（第 23 項）。
-    - 留下的暫存目錄（被殺時 trap 不會跑）照實記錄，然後清掉、確認清掉了。
+  三種結果分開判（照 MealMate docs/HOWTO_範圍化突變與帳本.md「情境未成立」）：
+    情境是否成立，只看情境自己留下的痕跡，五項都要有——
+      (a) 殺之前輸出裡已有「MUTATION ACTIVE」（複本裡的檔已改壞並 commit）與第 1 個情境的結果；
+      (b) 殺的那一刻被測程序還在跑；(c) 殺之前量到這一棵程序樹 ≥ 2 個程序；
+      (d) 殺之後輸出沒有結尾那一行（真的是中途）；(e) 殺之後暫存複本裡的 pushsafe.sh 是改壞的樣子
+          （被殺之後檔案不會自己變壞，所以殺的當下壞檔就在磁碟上）。
+    任一項沒有＝情境未成立：不算紅、不算通過、不算數；換一次新的開跑重試，最多 3 次；都沒成立就印行首「⊘ 情境未成立」、回傳 4。
+    成立了才判主 repo：每一個追蹤中的檔原始位元組與開跑前相同、git 算出的內容雜湊等於 HEAD、git status 乾淨。
+    驗法登記（.git/pushsafe-verified）中斷前後的狀態、留下的暫存目錄照實記錄（第 23 項），暫存目錄清掉並確認。
+    每一次嘗試（含沒成立的）之後都檢查主 repo 等於 HEAD。
+  C 對照組「一定不成立」：開跑後馬上殺（突變還沒生效），必須判成情境未成立——不能判成紅、也不能判成綠。
   R 反向：不殺、正常跑完一次完整的閘門驗法（兩種順序），之後主 repo 同樣要等於 HEAD——否則上面只是驗到一個永遠相等的東西。
 """
+import datetime
 import glob
 import hashlib
 import io
@@ -32,6 +40,10 @@ sys.path.insert(0, os.path.join(ROOT, 'scripts'))
 import reslog  # noqa: E402
 
 ENV = {k: v for k, v in os.environ.items() if not k.startswith('GIT_')}
+LOGDIR = os.path.join(ROOT, '.logs')
+STAMP = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+MAX_TRIES = 3
+NOT_ESTABLISHED = '⊘ 情境未成立'
 results = []
 
 
@@ -111,6 +123,83 @@ def tmpdirs():
     return set(glob.glob(os.path.join(tempfile.gettempdir(), 'tmp.*')))
 
 
+def ours(dirs):
+    """只認本 repo 驗法開的暫存目錄：裡面有複本，或有它一開跑就寫的 sample1.txt（被殺得太早、clone 還沒完成時靠這個認）。
+    別的專案同時在暫存區開 tmp.* 不會被誤認。"""
+    def mine(d):
+        if os.path.isfile(os.path.join(d, 'work', 'scripts', 'test_pushsafe.sh')):
+            return True
+        s1 = os.path.join(d, 'sample1.txt')
+        return os.path.isfile(s1) and 'path 命中' in open(s1, encoding='utf-8', errors='replace').read()
+    return sorted(d for d in dirs if mine(d))
+
+
+def attempt(bash, mode, label):
+    """跑一次「開跑→殺」。mode='real'：等到改壞並開始跑情境才殺；mode='early'：開跑後 1 秒就殺（對照組，一定不成立）。
+    回傳 (成立與否, 痕跡說明, 暫存目錄或 None)。每一次都把完整輸出留在 .logs/。"""
+    os.makedirs(LOGDIR, exist_ok=True)
+    out = os.path.join(LOGDIR, f'kill-{STAMP}-{label}.log')
+    t_before = tmpdirs()
+    env = dict(ENV, TEST_PUSHSAFE_MUTATE='nofetch')
+    fh = open(out, 'wb')
+    child = subprocess.Popen([bash, 'scripts/test_pushsafe.sh'], cwd=ROOT, stdout=fh, stderr=subprocess.STDOUT, env=env)
+    t0, text = time.time(), ''
+    if mode == 'early':
+        time.sleep(1)
+        text = open(out, encoding='utf-8', errors='replace').read()
+    else:
+        while time.time() - t0 < 300:
+            time.sleep(1)
+            text = open(out, encoding='utf-8', errors='replace').read()
+            if ('MUTATION ACTIVE' in text and ('yes  01' in text or 'no   01' in text)) or child.poll() is not None:
+                break
+    a = 'MUTATION ACTIVE' in text and ('yes  01' in text or 'no   01' in text)
+    b = child.poll() is None
+    m = reslog.measure(child.pid) if b else None
+    c = m is not None and m[0] >= 2
+    pids = m[3] if m else set()
+    k = subprocess.run(['taskkill', '/PID', str(child.pid), '/T', '/F'], capture_output=True) if b else None
+    try:
+        child.wait(timeout=60)
+    except subprocess.TimeoutExpired:
+        pass
+    fh.close()
+    time.sleep(2)
+    snap = reslog.snapshot()
+    if snap is None:
+        raise SetupError('殺掉之後取不到程序表')
+    alive = sorted(p for p in pids if p in snap[0])
+    if alive:
+        raise SetupError(f'殺掉之後還有程序活著：{alive}')
+    final = open(out, encoding='utf-8', errors='replace').read()
+    d = 'TEST-PUSHSAFE:' not in final
+    ts = ours(tmpdirs() - t_before)
+    T = ts[0] if len(ts) == 1 else None
+    ps = os.path.join(T, 'work', 'scripts', 'pushsafe.sh') if T else ''
+    e = bool(T) and os.path.exists(ps) and 'fetch -q origin main' not in open(ps, encoding='utf-8').read()
+    traces = (f'(a) 已改壞且情境開跑 {a}、(b) 殺時還在跑 {b}、(c) 程序樹 {m[0] if m else "?"} 個、'
+              f'(d) 沒有結尾 {d}、(e) 複本裡是壞檔 {e}；開跑後 {time.time() - t0:.0f} 秒；'
+              f'taskkill rc={k.returncode if k else "沒殺（已結束）"}；log {os.path.relpath(out, ROOT)}')
+    for extra in ts[1:] if len(ts) > 1 else []:
+        rmtree(extra)
+    return a and b and c and d and e, traces, T
+
+
+def run_k(bash, mode, before_raw, tag):
+    """最多 MAX_TRIES 次；回傳 (成立與否, 最後一次的痕跡, 暫存目錄, 嘗試次數)。每一次之後都檢查主 repo。"""
+    for i in range(1, MAX_TRIES + 1):
+        ok, traces, T = attempt(bash, mode, f'{tag}{i}')
+        raw, diff, status = tree_state(ROOT)
+        if raw != before_raw or diff or status.strip():
+            record(False, f'{tag} 第 {i} 次嘗試之後主 repo 不等於開跑前', f'與 HEAD 不同 {diff}；status {status.strip()}')
+        print(f'  {tag} 第 {i} 次：{"成立" if ok else "沒成立"}——{traces}')
+        if ok:
+            return True, traces, T, i
+        if T and os.path.isdir(T):
+            rmtree(T)
+    return False, traces, None, MAX_TRIES
+
+
 def main():
     bash = shutil.which('bash')
     if not bash or 'system32' in bash.lower():
@@ -124,54 +213,19 @@ def main():
         checker_control()
         reg0 = reg_state()
 
+        # ---- C：對照組「一定不成立」——開跑後 1 秒就殺，突變還沒生效 ----
+        ok, traces, T, n = run_k(bash, 'early', before_raw, 'C')
+        record(not ok and T is None, f'C 對照組「一定不成立」：{n} 次都判成情境未成立（不是紅、不是綠）',
+               '判成未成立' if not ok else f'竟然判成成立：{traces}')
+
         # ---- K：強制終止 ----
-        out = os.path.join(tempfile.gettempdir(), f'jlpt-kill-{os.getpid()}.log')
-        t_before = tmpdirs()
-        env = dict(ENV, TEST_PUSHSAFE_MUTATE='nofetch')
-        fh = open(out, 'wb')
-        child = subprocess.Popen([bash, 'scripts/test_pushsafe.sh'], cwd=ROOT, stdout=fh, stderr=subprocess.STDOUT, env=env)
-        t0, text = time.time(), ''
-        while time.time() - t0 < 300:
-            time.sleep(1)
-            text = open(out, encoding='utf-8', errors='replace').read()
-            if 'MUTATION ACTIVE' in text and ('yes  01' in text or 'no   01' in text):
-                break
-            if child.poll() is not None:
-                break
-        if child.poll() is not None or 'MUTATION ACTIVE' not in text:
-            fh.close()
-            raise SetupError(f'沒等到「改壞並開始跑情境」就結束了（rc={child.returncode}）')
-        m = reslog.measure(child.pid)
-        if m is None or m[0] < 2:
-            raise SetupError(f'取不到這一棵程序樹（{m and m[0]}）')
-        pids = m[3]
-        # 只認這一次的：新出現、而且裡面有本 repo 的複本（別的專案同時在暫存區開 tmp.* 不會被誤認）
-        new_t = sorted(d for d in tmpdirs() - t_before if os.path.isfile(os.path.join(d, 'work', 'scripts', 'test_pushsafe.sh')))
-        k = subprocess.run(['taskkill', '/PID', str(child.pid), '/T', '/F'], capture_output=True)
-        child.wait(timeout=60)
-        fh.close()
-        time.sleep(2)
-        el = time.time() - t0
-        snap = reslog.snapshot()
-        if snap is None:
-            raise SetupError('殺掉之後取不到程序表')
-        alive = sorted(p for p in pids if p in snap[0])
-        text = open(out, encoding='utf-8', errors='replace').read()
-        os.remove(out)
-        mid = 'TEST-PUSHSAFE:' not in text
-        record(k.returncode == 0 and not alive and mid,
-               'K 強制終止：taskkill /T /F 整棵殺掉、殺掉前的程序都不在了、輸出沒有結尾（真的是中途）',
-               f'跑了 {el:.0f} 秒、殺掉 {len(pids)} 個程序、還活著 {alive}、taskkill rc={k.returncode}、有結尾那一行：{not mid}')
-        if len(new_t) != 1:
-            raise SetupError(f'找不到這一次的暫存目錄（新出現 {new_t}）')
-        T = new_t[0]
-        ps = os.path.join(T, 'work', 'scripts', 'pushsafe.sh')
-        broken = os.path.exists(ps) and 'fetch -q origin main' not in open(ps, encoding='utf-8').read()
-        record(broken, 'K 中斷當下，改壞的檔確實在磁碟上（在暫存複本裡：pushsafe.sh 的 fetch 那段已拿掉）', f'{broken}')
+        ok, traces, T, n = run_k(bash, 'real', before_raw, 'K')
+        if not ok:
+            print(f'{NOT_ESTABLISHED}：K 重試 {n} 次都沒在「壞檔在磁碟上、情境在跑」的時候殺到——這次什麼都沒量到（最後一次：{traces}）')
+            return 4
         after_raw, after_diff, after_status = tree_state(ROOT)
-        same = after_raw == before_raw
-        record(same and not after_diff and not after_status.strip(),
-               'K 主 repo：每個追蹤中的檔原始位元組與開跑前相同、內容雜湊等於 HEAD、git status 乾淨',
+        record(after_raw == before_raw and not after_diff and not after_status.strip(),
+               f'K 情境成立（第 {n} 次）：主 repo 每個追蹤中的檔原始位元組與開跑前相同、內容雜湊等於 HEAD、git status 乾淨',
                f'{len(after_raw)} 支檔；位元組有變的 {[f for f in after_raw if after_raw[f] != before_raw.get(f)]}；'
                f'與 HEAD 不同的 {after_diff}；status {after_status.strip() or "乾淨"}')
         reg1 = reg_state()
@@ -183,11 +237,13 @@ def main():
         # ---- R：反向，正常跑完 ----
         rr = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'reslog.py'), '--label', 'test_pushsafe-reverse',
                              '--estimate', '363', '--', bash, 'scripts/test_pushsafe.sh'], cwd=ROOT, capture_output=True, env=ENV)
+        rlog = os.path.join(LOGDIR, f'kill-{STAMP}-R.log')
+        open(rlog, 'wb').write(rr.stdout + rr.stderr)
         tail = rr.stdout.decode('utf-8', 'replace').strip().splitlines()[-3:]
         r_raw, r_diff, r_status = tree_state(ROOT)
         record(rr.returncode == 0 and r_raw == before_raw and not r_diff and not r_status.strip(),
                'R 反向：正常跑完閘門驗法（全符合）後，主 repo 同樣等於 HEAD',
-               f'rc={rr.returncode}；{" ／ ".join(tail)}；與 HEAD 不同的 {r_diff}')
+               f'rc={rr.returncode}；{" ／ ".join(tail)}；與 HEAD 不同的 {r_diff}；log {os.path.relpath(rlog, ROOT)}')
         print(f'[紀錄] R 之後主 repo 的驗法登記：{reg_state()}')
     except SetupError as e:
         print(f'TEST-KILL ABORT: 造情境失敗：{e}（沒驗到，不是通過）')

@@ -68,6 +68,24 @@
 >   - **主 repo 142 支追蹤中的檔：位元組與開跑前完全相同、內容雜湊等於 HEAD、`git status` 乾淨——第 22 項「被強制終止時主工作區原始碼不受影響」由推論變成實測。**
 >   - **第 23 項：驗法登記檔中斷前後一樣**（8 行、雜湊沒變），沒有半完成的紀錄——登記只在驗法結尾（全過寫入、沒全過或突變刪掉）與造情境失敗時才動，被殺時兩者都沒發生，留下的是上一次全過的登記，內容仍對應 HEAD 的閘門檔。被殺時 `trap` 不跑，**暫存目錄會留在系統暫存區**（實測確認，已清掉）。
 >   - 反向：不殺、正常跑完一次完整閘門驗法（兩種順序，全符合，349 秒、峰值 4 個程序、38 MB），主 repo 同樣等於 HEAD。
+> - **證據 log 一律寫進 `.logs/`（Dispatch 2026-10-02，先照做、之後收進共用慣例）**：凡是要當證據的輸出，不留在 session 暫存區或系統暫存目錄——那 29 條突變降級、TripQuest 的 148 份突變、先前的 `ev2.sh`，根因都是證據放在暫存區、跟著 session 一起過期。驗法內部用的暫存目錄（clone、樣本）照舊放系統暫存區，但它們印出來、要拿來下結論的那份輸出要落在 `.logs/`。
+> - **工單 3a 盤點：本 repo 會開工作程序的地方**（2026-10-02；數法照 MealMate：node／python 各算一個、瀏覽器實例算一個、git／shell／PowerShell 不算個數）。搜的樣式：`Promise.all`、`Popen`、`subprocess.run`、`child_process`、`spawn(`、`execSync`、`execFile`、`puppeteer.launch`、`ThreadPool`、`ProcessPool`、`multiprocessing`、`concurrent.futures`、`threading`、`ThreadingHTTPServer`、`Worker(`、shell 的背景 `&`、`wait`、`xargs`；範圍 `scripts/**`、`js/**`、`sw.js`。**在這些樣式範圍內未見平行開多個工作程序**（shell 沒有背景工作；Python 都是 `subprocess.run` 依序、一次一個）。
+>
+>   | 檔 | 開什麼 | 同時最多幾個工作程序 | 證據 |
+>   |---|---|---|---|
+>   | `audit.mjs`、`verify-full.mjs`、`regress.mjs`、`verify-live.mjs`、`screenshots.mjs` | node＋1 個 Chromium（`audit` 最多同時 3 頁：主頁＋p9＋p10 重疊） | 2（讀程式） | **未實測**；Chromium 的子程序不另算個數，但記憶體要量 |
+>   | `test_pushsafe.sh` | bash→python（lint／自查）→git，依序 | 實測峰值全部 4 個程序（當時的計數含 bash／git）；工作程序數**待用新數法重量** | `.logs/reslog-index.tsv`（2026-10-02，349 秒） |
+>   | `test_datacheck.py` | python→（自我探測）python→python build／check，巢狀依序 | 3（讀程式） | 未實測 |
+>   | `test_filters.py` | python→node（過濾器），依序 | 2（讀程式） | 未實測 |
+>   | `lib/harness.mjs`（`test_harness.mjs`） | node→node `spawnSync`，同步 | 2（讀程式） | 未實測 |
+>   | `test_cli_probes.py`、`test_pushsafe_kill.py`、`test_reslog.py` | python→python／bash，依序；`test_reslog` 的假工作 3 個 python | 3（`test_reslog` 實測 3） | `test_reslog` 情境 A |
+>   | `serve.py` | 一個 python，`ThreadingHTTPServer` 開執行緒（不是程序） | 1 | 讀程式 |
+>   | `reslog.py` | 被包住的指令＋每次取樣一個 PowerShell（不算個數） | 不增加工作程序 | 讀程式 |
+>
+> - **工單 3b（上限寫成程式裡的 4）：目前不適用（§0.5）**——上表沒有任何一處會平行開工作程序，最多的是巢狀依序的 3 個；沒有平行度可以設上限。**什麼時候要回頭做**：將來任何一支改成平行跑（例：突變執行器想一次跑兩條、瀏覽器測試想同時開多個瀏覽器），那時把上限寫成數字 4，並照工單造 10 個假工作驗峰值 ≤ 4、把上限改成 10 的突變必須紅。上表「讀程式」那幾列要用 `reslog.py` 實測確認（瀏覽器測試屬常規套件，下一次部署前跑時順便包住）。
+> - **資源紀錄的數法對齊 MealMate**（2026-10-02）：`reslog.py` 多一欄「工作程序數」（node／python 各一、瀏覽器實例一、git／shell／PowerShell 不算），原本的總程序數保留。`test_reslog.py` 補合成程序表的對照（答案 3）與兩條突變（瀏覽器子程序各算一個→6、git 也算→4，都紅），6 項全符合、24 秒。改壞的那一版（`tree()` 還照舊格式拆欄位）被驗法以「造情境失敗」擋下，沒有判成通過。
+> - **強制終止實測補完（`test_pushsafe_kill.py`，2026-10-02 改寫，尚未跑過）**：每一次嘗試由五項痕跡判定情境是否成立（已改壞且情境開跑、殺時還在跑、程序樹 ≥ 2、沒有結尾、複本裡是壞檔），沒成立不算數、換一次重試最多 3 次，都沒成立就印行首「⊘ 情境未成立」、回傳 4；新增對照組 C「一定不成立」（開跑 1 秒就殺，必須判成未成立）；每次嘗試的輸出寫進 `.logs/kill-*.log`。**這一版還沒實跑過，等 Dispatch 放行第 1 場。**
+> - **突變挑選範圍與帳本：設計寫在 `docs/DESIGN_突變範圍與帳本.md`，等 Dispatch 看過再實作**（要決定的：依賴範圍選 A／B／C，建議 B——結構上把 `docs/`、`data/` 排除）。
 > - **回頭查「情境未成立」（Dispatch 2026-10-02；「紅錯地方」＝情境成立、被別條規則擋下；「情境未成立」＝要測的狀況沒發生、這次什麼都沒量到，兩者不能混）**：
 >   - **閘門驗法本身分得出來**：造情境的每一步失敗都 `die`，整輪回 2、印「ABORT … 造情境失敗」，不印「全部符合／有不符」；突變要先確認「改壞之前那段在、改壞之後不在、HEAD 與工作區一致」才印「MUTATION ACTIVE」；每個情境比對回傳值＋擋下理由（紅錯地方會標「擋下理由不對」）。所以**有完整 log 的那一輪**，看得出是「情境成立且紅在預期」「紅錯地方」還是「沒成立（回 2）」。
 >   - **2026-10-02 重跑的 5 條：分得出來**。log 留在 `.logs/mut5-*`：`nocheck`、`oldparse+nocheck` 在 a90f4c3 第一次是回 2、「ABORT … 突變沒生效」——**那兩次就是「情境未成立」，當時已判成沒驗到、沒算進平均**，改字後重跑才算數。

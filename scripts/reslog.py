@@ -23,12 +23,12 @@ import time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOGDIR = os.path.join(ROOT, '.logs')
 
-PS_CMD = ('$p = Get-CimInstance Win32_Process | ForEach-Object { "P`t$($_.ProcessId)`t$($_.ParentProcessId)`t$($_.WorkingSetSize)" }; '
+PS_CMD = ('$p = Get-CimInstance Win32_Process | ForEach-Object { "P`t$($_.ProcessId)`t$($_.ParentProcessId)`t$($_.WorkingSetSize)`t$($_.Name)" }; '
           '$p; "M`t$((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory)"')
 
 
 def snapshot():
-    """回傳 ({pid: (ppid, 記憶體位元組)}, 系統可用記憶體位元組)；取不到回傳 None。"""
+    """回傳 ({pid: (ppid, 記憶體位元組, 程序名稱)}, 系統可用記憶體位元組)；取不到回傳 None。"""
     try:
         if os.name == 'nt':
             r = subprocess.run(['powershell', '-NoProfile', '-NonInteractive', '-Command', PS_CMD],
@@ -38,21 +38,21 @@ def snapshot():
             procs, free = {}, None
             for line in r.stdout.decode('utf-8', 'replace').splitlines():
                 f = line.strip().split('\t')
-                if f[0] == 'P' and len(f) == 4:
-                    procs[int(f[1])] = (int(f[2]), int(f[3] or 0))
+                if f[0] == 'P' and len(f) == 5:
+                    procs[int(f[1])] = (int(f[2]), int(f[3] or 0), f[4])
                 elif f[0] == 'M' and len(f) == 2:
                     free = int(f[1]) * 1024
             if not procs or free is None:
                 return None
             return procs, free
-        r = subprocess.run(['ps', '-eo', 'pid=,ppid=,rss='], capture_output=True, timeout=60)
+        r = subprocess.run(['ps', '-eo', 'pid=,ppid=,rss=,comm='], capture_output=True, timeout=60)
         if r.returncode != 0:
             return None
         procs = {}
         for line in r.stdout.decode().splitlines():
             a = line.split()
-            if len(a) == 3:
-                procs[int(a[0])] = (int(a[1]), int(a[2]) * 1024)
+            if len(a) >= 4:
+                procs[int(a[0])] = (int(a[1]), int(a[2]) * 1024, a[3])
         free = None
         with open('/proc/meminfo') as fh:
             for line in fh:
@@ -66,7 +66,7 @@ def snapshot():
 def tree(procs, root):
     """root 與它所有後代的 pid。root 已經不在時，仍會找出 ppid 指向它的孤兒（Windows 不會改掉孤兒的 ppid）。"""
     kids = {}
-    for pid, (ppid, _m) in procs.items():
+    for pid, (ppid, *_rest) in procs.items():
         kids.setdefault(ppid, []).append(pid)
     out, stack = set(), [root]
     while stack:
@@ -80,14 +80,44 @@ def tree(procs, root):
     return out
 
 
+# ---- 工作程序怎麼數（照 MealMate scripts/reslog.mjs，四個 App 的數字才比得起來）----
+# node／python 各算一個；瀏覽器實例算一個（瀏覽器程序的父程序不是瀏覽器才算，它的子程序不另算個數、記憶體照算）；
+# git、shell、PowerShell 之類不算個數、記憶體照算。總程序數另外記一欄。
+WORKERS = ('python', 'pythonw', 'node')
+BROWSERS = ('chrome', 'chromium', 'msedge', 'headless_shell', 'chrome-headless-shell')
+
+
+def base_name(n):
+    n = (n or '').lower()
+    return n[:-4] if n.endswith('.exe') else n
+
+
+def is_python(n):
+    return n in WORKERS or n.startswith('python3')
+
+
+def count_workers(procs, pids):
+    """pids 這一群裡有幾個工作程序。procs：{pid: (ppid, 記憶體, 名稱)}。"""
+    n = 0
+    for p in pids:
+        name = base_name(procs[p][2])
+        if is_python(name):
+            n += 1
+        elif name in BROWSERS:
+            parent = procs.get(procs[p][0])
+            if not (parent and base_name(parent[2]) in BROWSERS):
+                n += 1
+    return n
+
+
 def measure(root):
-    """回傳 (程序數, 這棵樹的記憶體, 系統可用記憶體, 這棵樹的 pid 集合)；取不到回傳 None。"""
+    """回傳 (程序數, 這棵樹的記憶體, 系統可用記憶體, 這棵樹的 pid 集合, 工作程序數)；取不到回傳 None。"""
     s = snapshot()
     if s is None:
         return None
     procs, free = s
     t = tree(procs, root)
-    return len(t), sum(procs[p][1] for p in t), free, t
+    return len(t), sum(procs[p][1] for p in t), free, t, count_workers(procs, t)
 
 
 def main(argv=None):
@@ -108,26 +138,26 @@ def main(argv=None):
     path = os.path.join(a.logdir, f'reslog-{day}-{a.label}.tsv')
     fh = open(path, 'a', encoding='utf-8')
     fh.write('# ' + ' '.join(cmd) + f'\t預估 {a.estimate}\n')
-    fh.write('時間\t經過秒數\t程序數\t樹的記憶體MB\t系統可用MB\t備註\n')
+    fh.write('時間\t經過秒數\t程序數\t工作程序數\t樹的記憶體MB\t系統可用MB\t備註\n')
     MB = 1024 * 1024
     t0 = time.time()
     child = subprocess.Popen(cmd)
-    peak_n, peak_m, fails, last_line = 0, 0, 0, -1e9
+    peak_n, peak_w, peak_m, fails, last_line = 0, 0, 0, 0, -1e9
 
     def line(note, m):
         now = datetime.datetime.now().strftime('%H:%M:%S')
         el = f'{time.time() - t0:.0f}'
         if m is None:
-            fh.write(f'{now}\t{el}\t?\t?\t?\t{note}（取樣失敗）\n')
+            fh.write(f'{now}\t{el}\t?\t?\t?\t?\t{note}（取樣失敗）\n')
         else:
-            fh.write(f'{now}\t{el}\t{m[0]}\t{m[1] / MB:.0f}\t{m[2] / MB:.0f}\t{note}\n')
+            fh.write(f'{now}\t{el}\t{m[0]}\t{m[4]}\t{m[1] / MB:.0f}\t{m[2] / MB:.0f}\t{note}\n')
         fh.flush()
 
     first = measure(child.pid)
     if first is None:
         fails += 1
     else:
-        peak_n, peak_m = max(peak_n, first[0]), max(peak_m, first[1])
+        peak_n, peak_w, peak_m = max(peak_n, first[0]), max(peak_w, first[4]), max(peak_m, first[1])
     line('開始', first)
     last_line = time.time()
     while child.poll() is None:
@@ -138,7 +168,7 @@ def main(argv=None):
         if m is None:
             fails += 1
         else:
-            peak_n, peak_m = max(peak_n, m[0]), max(peak_m, m[1])
+            peak_n, peak_w, peak_m = max(peak_n, m[0]), max(peak_w, m[4]), max(peak_m, m[1])
         if time.time() - last_line >= a.interval:
             line('', m)
             last_line = time.time()
@@ -153,11 +183,11 @@ def main(argv=None):
     new = not os.path.exists(idx)
     with open(idx, 'a', encoding='utf-8') as ih:
         if new:
-            ih.write('日期時間\tlabel\t預估秒\t實際秒\t峰值程序數\t峰值記憶體MB\t回傳值\t取樣失敗\n')
+            ih.write('日期時間\tlabel\t預估秒\t實際秒\t峰值程序數\t峰值記憶體MB\t回傳值\t取樣失敗\t峰值工作程序數\n')
         ih.write(f'{datetime.datetime.now().isoformat(timespec="seconds")}\t{a.label}\t{a.estimate}\t{el:.0f}\t'
-                 f'{peak_n}\t{peak_m / MB:.0f}\t{rc}\t{fails}\n')
+                 f'{peak_n}\t{peak_m / MB:.0f}\t{rc}\t{fails}\t{peak_w}\n')
     warn = f'；取樣失敗 {fails} 次（峰值可能偏低）' if fails else ''
-    print(f'RESLOG: {a.label} 預估 {a.estimate} 秒、實際 {el:.0f} 秒；峰值 {peak_n} 個程序、{peak_m / MB:.0f} MB；rc={rc}{warn}')
+    print(f'RESLOG: {a.label} 預估 {a.estimate} 秒、實際 {el:.0f} 秒；峰值 {peak_w} 個工作程序（全部 {peak_n} 個程序）、{peak_m / MB:.0f} MB；rc={rc}{warn}')
     return rc
 
 
