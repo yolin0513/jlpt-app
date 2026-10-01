@@ -238,7 +238,7 @@ def real_file_probe(text):
         n_git = sum(int(x.split('\t')[0]) for x in ns.stdout.decode('utf-8', 'replace').splitlines() if x.split('\t')[0].isdigit())
         if got != [s for _k, s in samples] or n_git != len(samples):
             same_n = '行數對、內容不對' if len(got) == len(samples) else '行數不對'
-            bad.append(f'{cat}（{src}）：抽出 {len(got)} 行、git 算 {n_git} 行，應該恰好是插入的 {len(samples)} 行、內容一字不差（{same_n}）')
+            bad.append(f'{cat}（{src}）：抽出 {len(got)} 行、numstat 算 {n_git} 行，應該恰好是插入的 {len(samples)} 行、內容一字不差（{same_n}）')
             continue
         for k, rx in checks.items():
             who = [samples[i][0] for i, line in enumerate(got) if hit(k, rx, line)]   # 掃的是抽出來的行，不是樣本字串
