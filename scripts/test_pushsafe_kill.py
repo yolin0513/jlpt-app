@@ -256,7 +256,7 @@ def run_r(bash, before_raw, timeout):
         clean = raw == before_raw and not diff and not status.strip()
         record(not alive and not any(os.path.exists(d) for d in left) and clean and snap is not None,
                f'R 逾時（{timeout} 秒）的收尾：整棵殺掉、留下的暫存目錄清掉、主 repo 等於 HEAD',
-               f'殺掉前量到 {len(pids)} 個程序、還活著 {alive}、清掉暫存目錄 {len(left)} 個、主 repo {"等於" if clean else "不等於"} HEAD')
+               f'殺掉前量到 {len(pids)} 個程序、還活著 {alive}、找到留下的暫存目錄 {len(left)} 個、清完還在 {sum(os.path.exists(d) for d in left)} 個、主 repo {"等於" if clean else "不等於"} HEAD')
         print(f'{NOT_ESTABLISHED}：R 閘門驗法 {timeout} 秒沒跑完（逾時）——「正常跑完之後主 repo 等於 HEAD」這次沒量到'
               f'（log {os.path.relpath(rlog, ROOT)}）')
         if not results[-1]:   # 收尾本身不符（還有程序活著、目錄沒清掉、主 repo 被動到）是真的不符，不能被「未成立」的 4 蓋掉
