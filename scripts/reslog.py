@@ -23,12 +23,13 @@ import time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOGDIR = os.path.join(ROOT, '.logs')
 
-PS_CMD = ('$p = Get-CimInstance Win32_Process | ForEach-Object { "P`t$($_.ProcessId)`t$($_.ParentProcessId)`t$($_.WorkingSetSize)`t$($_.Name)" }; '
+PS_CMD = ('$p = Get-CimInstance Win32_Process | ForEach-Object { "P`t$($_.ProcessId)`t$($_.ParentProcessId)`t$($_.WorkingSetSize)`t$($_.Name)`t$(if ($_.CreationDate) { $_.CreationDate.ToFileTimeUtc() } else { 0 })" }; '
           '$p; "M`t$((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory)"')
 
 
 def snapshot():
-    """回傳 ({pid: (ppid, 記憶體位元組, 程序名稱)}, 系統可用記憶體位元組)；取不到回傳 None。"""
+    """回傳 ({pid: (ppid, 記憶體位元組, 程序名稱, 建立時間)}, 系統可用記憶體位元組)；取不到回傳 None。
+    建立時間：Windows 是 FILETIME（100 奈秒）、其他系統是秒；取不到記 0（認子程序時當成「不知道」）。"""
     try:
         if os.name == 'nt':
             r = subprocess.run(['powershell', '-NoProfile', '-NonInteractive', '-Command', PS_CMD],
@@ -38,21 +39,22 @@ def snapshot():
             procs, free = {}, None
             for line in r.stdout.decode('utf-8', 'replace').splitlines():
                 f = line.strip().split('\t')
-                if f[0] == 'P' and len(f) == 5:
-                    procs[int(f[1])] = (int(f[2]), int(f[3] or 0), f[4])
+                if f[0] == 'P' and len(f) == 6:
+                    procs[int(f[1])] = (int(f[2]), int(f[3] or 0), f[4], int(f[5] or 0))
                 elif f[0] == 'M' and len(f) == 2:
                     free = int(f[1]) * 1024
             if not procs or free is None:
                 return None
             return procs, free
-        r = subprocess.run(['ps', '-eo', 'pid=,ppid=,rss=,comm='], capture_output=True, timeout=60)
+        r = subprocess.run(['ps', '-eo', 'pid=,ppid=,rss=,etimes=,comm='], capture_output=True, timeout=60)
+        now = time.time()
         if r.returncode != 0:
             return None
         procs = {}
         for line in r.stdout.decode().splitlines():
             a = line.split()
-            if len(a) >= 4:
-                procs[int(a[0])] = (int(a[1]), int(a[2]) * 1024, a[3])
+            if len(a) >= 5:
+                procs[int(a[0])] = (int(a[1]), int(a[2]) * 1024, a[4], int(now - int(a[3])))
         free = None
         with open('/proc/meminfo') as fh:
             for line in fh:
@@ -63,10 +65,20 @@ def snapshot():
         return None
 
 
+def ctime(procs, pid):
+    v = procs.get(pid)
+    return v[3] if v is not None and len(v) > 3 else 0
+
+
 def tree(procs, root):
-    """root 與它所有後代的 pid。root 已經不在時，仍會找出 ppid 指向它的孤兒（Windows 不會改掉孤兒的 ppid）。"""
+    """root 與它所有後代的 pid。root 已經不在時，仍會找出 ppid 指向它的孤兒（Windows 不會改掉孤兒的 ppid）。
+    子程序必須比父程序晚建立才算（2026-10-02 實測踩到：Windows 會重用 PID，一個 04:57 開的 OneDrive 記著的父 PID
+    剛好等於這次開跑的 bash，就被當成它的子程序；兩邊建立時間都知道、子比父早，就不是它的子程序）。"""
     kids = {}
     for pid, (ppid, *_rest) in procs.items():
+        pc, cc = ctime(procs, ppid), ctime(procs, pid)
+        if pc and cc and cc < pc:
+            continue
         kids.setdefault(ppid, []).append(pid)
     out, stack = set(), [root]
     while stack:

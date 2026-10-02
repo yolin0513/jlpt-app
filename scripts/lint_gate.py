@@ -40,6 +40,7 @@ ESCAPE_TARGETS = [
     'scripts/filter_vocab_draft.mjs', 'scripts/lib/harness.mjs', 'scripts/lib/gitenv.py', 'scripts/lib/verified_reg.py', 'scripts/lint_gate.py', 'scripts/make_icons.py',
     'scripts/pushsafe.sh', 'scripts/regress.mjs', 'scripts/screenshots.mjs', 'scripts/selfcheck_public.py',
     'scripts/serve.py', 'scripts/test_datacheck.py', 'scripts/test_filters.py', 'scripts/test_harness.mjs', 'scripts/test_cli_probes.py', 'scripts/reslog.py', 'scripts/test_reslog.py', 'scripts/test_pushsafe_kill.py',
+    'scripts/fixtures/probe.py', 'scripts/fixtures/probe.sh', 'scripts/fixtures/probe.js', 'scripts/fixtures/probe.mjs',
     'scripts/test_pushsafe.sh', 'scripts/test_selfcheck_meta.py', 'scripts/test_verified_reg.py', 'scripts/verify-full.mjs', 'scripts/verify-live.mjs', 'sw.js',
 ]
 
@@ -412,6 +413,10 @@ def category(f):
     return os.path.splitext(f)[1]
 
 
+# 每一類的樣本宿主用專屬的 fixture（2026-10-02，Dispatch：原本拿各類第一支登記檔——selfcheck_public.py、pushsafe.sh、
+# js/app.js、audit.mjs——它們一直在改，樣本的性質會跟著變；fixture 內容固定、可複核，而且照樣登記在掃描裡、走同一段讀檔）。
+PROBE_FIXTURES = {'.py': 'scripts/fixtures/probe.py', '.sh': 'scripts/fixtures/probe.sh',
+                  '.js': 'scripts/fixtures/probe.js', '.mjs': 'scripts/fixtures/probe.mjs'}
 # 真實檔對照組：每一類拿一支「真的登記在掃描裡」的檔，在它的真實內容後面接一行已知的多跳脫樣本（當場組出來），
 # 走正式掃描同一段（scan_one），比對「多出來的命中」恰好是那一行、規則是 overescape——不是只有規則語法對，
 # 而是在那一類真實檔的內容上抓得到，而且點名的是那一筆、不是碰巧被別條規則擋下。
@@ -544,7 +549,7 @@ def main():
         used.update(u)
         unexpected += [(f, i, rule, line) for i, rule, line in hits]
         scanned.append(f)
-        if category(f) not in probes:
+        if PROBE_FIXTURES.get(category(f)) == f:
             probes[category(f)] = (f, text)
     if set(scan) != set(TARGETS) | set(ESCAPE_TARGETS) or not set(TARGETS) <= set(ESCAPE_TARGETS) or not set(ENV_TARGETS) <= set(scan):
         print(f'LINT-GATE FAILED: 實際掃到的檔（{len(set(scan))} 支）不等於登記的（閘門 {len(TARGETS)}＋跳脫 {len(ESCAPE_TARGETS)}），'
@@ -560,7 +565,10 @@ def main():
         print(f'LINT-GATE FAILED: 分類加總 {sum(counts.values())} 不等於母體 {population}（沒掃到：{missing}）、'
               f'有檔掃了兩次、或這幾類一支都沒掃到：{empty_cats}（檢查器壞了）')
         return 1
-    # 真實檔對照組：每一類一支，接上已知樣本必須被 overescape 點名在那一行
+    # 真實檔對照組：每一類一支（專屬 fixture），接上已知樣本必須被 overescape 點名在那一行；fixture 沒登記、沒掃到就停
+    if set(probes) != set(CATEGORIES):
+        print(f'LINT-GATE FAILED: 這幾類的 fixture 沒登記或沒掃到：{sorted(set(CATEGORIES) - set(probes))}（檢查器壞了）')
+        return 1
     probe_bad = [m for m in (real_file_probe(f, t) for f, t in probes.values()) if m]
     print('真實檔對照組：' + '、'.join(f'{c} 用 {probes[c][0]}' for c in CATEGORIES) + f'：{"全部抓到" if not probe_bad else "有問題"}')
     if probe_bad:

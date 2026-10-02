@@ -207,13 +207,15 @@ def probe_lint(W, tag=''):
     if not tag:
         record(base_ok, 'lint 原樣（該綠）', f'rc={rc}')
     for cat, sample in LINT_SAMPLES.items():
-        f = next(x for x in scan if os.path.splitext(x)[1] == cat)
+        f = LINT_FIXTURES[cat]
+        if f not in scan:
+            raise SetupError(f'lint 的 {cat} fixture {f} 沒登記在掃描裡')
         if (BS * 2) not in sample:
             raise SetupError(f'lint {cat} 樣本裡沒有兩個反斜線')
         n = append_line(os.path.join(W, f), sample)
         rc, out = run_checker([sys.executable, 'scripts/lint_gate.py'], W, 'fail')
         restore(W, f)
-        want = [f'{f}:{n} [overescape]'] + ([f'{f}:{n} [backslash]'] if cat == '.sh' and f in m.TARGETS else [])
+        want = [f'{f}:{n} [overescape]'] + ([f'{f}:{n} [backslash]'] if cat == '.sh' else [])   # .sh 照樣掃 backslash（跳脫類）
         got = lint_hits(out)
         ok = rc == 1 and got == sorted(want)
         out_ok.append(ok)
@@ -236,13 +238,16 @@ def sc_samples():
     }
 
 
-SC_FILES = ['docs/STATUS.md', 'scripts/check_data.py', 'js/app.js', 'data/src/vocab.n5.txt']
+# 樣本宿主用專屬 fixture（2026-10-02，Dispatch：原本拿 docs/STATUS.md 等會一直變的檔，樣本性質會跟著變）
+SC_FILES = ['scripts/fixtures/probe.md', 'scripts/fixtures/probe.py', 'scripts/fixtures/probe.js', 'scripts/fixtures/probe.txt']
+LINT_FIXTURES = {'.py': 'scripts/fixtures/probe.py', '.sh': 'scripts/fixtures/probe.sh',
+                 '.js': 'scripts/fixtures/probe.js', '.mjs': 'scripts/fixtures/probe.mjs'}
 
 
 def probe_selfcheck(W, base, tag=''):
     oks = []
     # 原樣：一個乾淨的 commit 要放行
-    append_line(os.path.join(W, 'docs/STATUS.md'), '對照用的乾淨一行')
+    append_line(os.path.join(W, 'scripts/fixtures/probe.md'), '對照用的乾淨一行')
     sh(['git', *ID, 'commit', '-qam', 'clean line'], W)
     rc, out = run_checker([sys.executable, 'scripts/selfcheck_public.py', base], W, 'pass')
     sh(['git', 'reset', '-q', '--hard', base], W)
@@ -269,7 +274,7 @@ def probe_selfcheck(W, base, tag=''):
                 record(ok, f'自查 {f}（{os.path.splitext(f)[1]}）加一行 {k} 樣本', f'rc={rc}，' +
                        '、'.join(f'{kk}={cnt.get(kk, {}).get("added_hits", "?")}' for kk in samples))
     # commit 訊息帶 email
-    append_line(os.path.join(W, 'docs/STATUS.md'), '訊息對照用')
+    append_line(os.path.join(W, 'scripts/fixtures/probe.md'), '訊息對照用')
     sh(['git', *ID, 'commit', '-qam', 'msg ' + samples['email']], W)
     rc, out = run_checker([sys.executable, 'scripts/selfcheck_public.py', base], W, 'fail')
     sh(['git', 'reset', '-q', '--hard', base], W)

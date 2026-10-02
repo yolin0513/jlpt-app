@@ -40,7 +40,9 @@ SYN = {
     4: (3, 10, 'chrome.exe'), 5: (3, 10, 'chrome.exe'), 6: (3, 10, 'chrome.exe'),
     7: (1, 10, 'python.exe'), 8: (7, 10, 'git.exe'), 9: (1, 10, 'powershell.exe'),
     50: (0, 10, 'node.exe'),   # 別的樹：不在這一棵裡，不能算到
+    60: (1, 10, 'python.exe', 1),   # PID 重用：記著的父 PID 是 1，但比 1 早建立——不是它的子程序，不能算到
 }
+SYN = {k: (v + (100 + k,)) if len(v) == 3 else v for k, v in SYN.items()}   # 其餘的建立時間都晚於根
 SYN_WANT = 3
 
 results = []
@@ -115,9 +117,8 @@ def main():
         record(not ok and zero, 'B 突變「取程序數回 0」：A 的對照必須紅，而且紅的理由是記成 0',
                ('紅了、理由對：' if not ok and zero else '不能算抓到：') + d)
 
-        p = mutated(td, '    """回傳 ({pid: (ppid, 記憶體位元組, 程序名稱)}, 系統可用記憶體位元組)；取不到回傳 None。"""\n',
-                    '    """回傳 ({pid: (ppid, 記憶體位元組, 程序名稱)}, 系統可用記憶體位元組)；取不到回傳 None。"""\n    return None\n',
-                    'reslog_fail.py')
+        p = mutated(td, "    try:\n        if os.name == 'nt':\n            r = subprocess.run(['powershell'",
+                    "    return None\n    try:\n        if os.name == 'nt':\n            r = subprocess.run(['powershell'", 'reslog_fail.py')
         rc, out, rows, idx = run_reslog(p, td, 'C')
         q = all(r[2] == '?' and r[3] == '?' for r in rows)
         summary = [l for l in out.splitlines() if l.startswith('RESLOG: ')]   # 只認 reslog 的摘要那一行
@@ -127,11 +128,12 @@ def main():
                f'rc={rc}、各行程序數 {[r[2] for r in rows]}、取樣失敗 {idx[7]}、摘要那一行有寫同樣的次數：{said}')
 
         n, t = syn_count(load(SRC, 'reslog_src'))
-        record(n == SYN_WANT and 50 not in t, f'D 工作程序的數法（合成程序表）：應該 {SYN_WANT}', f'算出 {n}；這一棵 {t}')
+        record(n == SYN_WANT and 50 not in t and 60 not in t, f'D 工作程序的數法（合成程序表）：應該 {SYN_WANT}，PID 重用的 60 不在樹裡', f'算出 {n}；這一棵 {t}')
         for a, b, label in (
             ("            if not (parent and base_name(parent[2]) in BROWSERS):\n                n += 1",
              "            n += 1", '瀏覽器子程序各算一個'),
             ("        if is_python(name):", "        if is_python(name) or name == 'git':", 'git 也算'),
+            ("        if pc and cc and cc < pc:\n            continue\n", "", '不看建立時間（PID 重用的也算進來）'),
         ):
             n2, _t = syn_count(load(mutated(td, a, b, 'reslog_d.py'), 'reslog_d_' + str(len(results))))
             record(n2 != SYN_WANT, f'D 突變「{label}」：數法必須跟答案不同', f'算出 {n2}')

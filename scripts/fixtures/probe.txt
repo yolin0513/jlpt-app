@@ -1,0 +1,4 @@
+# 對照組專用的純文字樣本（fixture）：由 scripts/test_cli_probes.py 使用（自查的 .txt 類真實檔對照組）。
+# 格式仿題庫來源檔，但不在 data/src/，不會被 build_data.py 讀到。內容固定（2026-10-02：原本拿 data/src/vocab.n5.txt 當樣本）。
+私|わたし|我|代名詞
+本|ほん|書|名詞

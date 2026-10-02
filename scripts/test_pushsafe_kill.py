@@ -195,6 +195,8 @@ def attempt(bash, mode, label):
         raise SetupError('殺掉之後取不到程序表')
     alive = sorted(p for p in pids if p in snap[0])
     if alive:
+        for d in ours(tmpdirs() - t_before):   # 丟出之前先清掉自己留下的暫存目錄（2026-10-02 這裡中止時留下一個）
+            rmtree(d)
         raise SetupError(f'殺掉之後還有程序活著：{alive}')
     final = open(out, encoding='utf-8', errors='replace').read()
     d = not finished(final)
