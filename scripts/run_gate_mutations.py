@@ -107,7 +107,7 @@ def main(argv=None):
             try:
                 prc = p.wait(timeout=a.timeout)
             except subprocess.TimeoutExpired:
-                left = job.kill(124)
+                left = job.kill(124)   # 刻意的冗餘：job.close() 時 KILL_ON_JOB_CLOSE 也會收（見 lib/jobkill.py 檔頭，單獨拿掉任一道不會紅）
                 prc = 124
                 fh.write(f'RUNNER: 逾時 {a.timeout:g} 秒，已結束整個 job（殺完還活著 {left} 個）\n'.encode('utf-8'))
                 if left:

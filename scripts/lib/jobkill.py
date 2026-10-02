@@ -5,6 +5,9 @@
 kill_tree 殺完，兩個 sleep 還活著）。Job Object 是 Windows 自己記的：放進 job 的程序之後開的所有子孫都自動屬於它，
 不管父 PID 接不接得上；結束 job 只會結束 job 裡的程序（不會因為 PID 重用殺到別的程序）。
 建 job 時設 KILL_ON_JOB_CLOSE：連開它的程式自己被強制結束，job 關閉、裡面的程序也一起收掉。
+刻意的冗餘（2026-10-02，§5.12）：逾時時主動 kill() 與 KILL_ON_JOB_CLOSE 守的是同一件事——單獨拿掉任何一道都不會有測試紅
+（另一道會補上，等價突變）；兩道一起拿掉，test_run_gate_mutations 的殘留檢查才會紅（實測殘留 2）。兩道都留著：主動 kill() 讓
+逾時當下就收掉、而且查得到「殺完還活著幾個」；KILL_ON_JOB_CLOSE 管開它的程式自己被強制結束的那種情況。
 """
 import ctypes
 import os
