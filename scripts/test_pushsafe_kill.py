@@ -159,6 +159,122 @@ def parser_controls():
     record(ok, '擷取函式的對照組：別一行裡提到「MUTATION ACTIVE」「yes  01」「TEST-PUSHSAFE:」不算；行首的才算')
 
 
+# ---- 殺程序樹：不用 taskkill /T（2026-10-02，Dispatch 轉 TripQuest 的發現）----
+# Windows 會重用 PID：一個早就開著的程序（2026-10-02 實際撞到的是 OneDrive 同步服務）記著的父 PID 剛好等於這次的 bash，
+# 就會被認成它的子程序；真殺下去會砍掉 Yolin 正在同步的檔案。兩道：
+#   一、子程序必須比父程序晚建立才算（reslog.tree；根程序被殺之後仍用殺之前記下的建立時間判斷）；
+#   二、只殺名稱在可殺清單裡的；不在清單裡的就算被認成子程序也不殺，只印出來。
+KILLABLE = {
+    'bash', 'sh', 'python', 'python3', 'git', 'git-remote-http', 'git-remote-https', 'timeout', 'node', 'conhost',
+    'powershell',   # reslog.py 取樣用的，是 reslog 自己的子程序
+    'cat', 'grep', 'sed', 'awk', 'gawk', 'cut', 'sort', 'tr', 'wc', 'head', 'tail', 'mktemp', 'rm', 'chmod', 'cmp',
+    'date', 'mkdir', 'cp', 'mv', 'ls', 'env', 'printf', 'sleep', 'tee', 'find', 'xargs', 'diff', 'uniq', 'basename',
+    'dirname', 'readlink', 'realpath', 'touch', 'expr', 'seq', 'od', 'sha256sum', 'file', 'cygpath',
+}
+
+
+def kill_tree(root):
+    """殺 root 這一棵（兩道見上）。回傳 (殺了的 [(pid, 名稱)], 沒殺的 [(pid, 名稱)], 殺完還在的可殺程序 [pid])。
+    最多 3 輪：每一輪重新取程序表、重新算樹（殺的時候可能又開了新的子程序）。"""
+    snap = reslog.snapshot()
+    if snap is None:
+        raise SetupError('要殺之前取不到程序表')
+    root_ct = reslog.ctime(snap[0], root)
+    killed, skipped, skip_ids = [], [], set()
+
+    def tree_now():
+        sn = reslog.snapshot()
+        if sn is None:
+            raise SetupError('殺的途中取不到程序表')
+        procs = dict(sn[0])
+        if root not in procs and root_ct:
+            procs[root] = (0, 0, '', root_ct)   # 根已經被殺：補上它殺之前的建立時間，PID 重用的孤兒照樣被擋
+        return procs, reslog.tree(procs, root) & set(sn[0])
+
+    for _round in range(3):
+        procs, t = tree_now()
+        todo = sorted((p for p in t if p not in skip_ids), key=lambda x: (x != root, x))   # 先殺根，讓它不再開新的
+        if not todo:
+            break
+        for p in todo:
+            name = reslog.base_name(procs[p][2])
+            if name in KILLABLE:
+                subprocess.run(['taskkill', '/PID', str(p), '/F'], capture_output=True)
+                killed.append((p, name))
+            else:
+                skipped.append((p, procs[p][2]))
+                skip_ids.add(p)
+                print(f'[未殺] PID {p} {procs[p][2]}：被認成這棵樹的程序，但名稱不在可殺清單——只印出、不殺')
+        time.sleep(1)
+    procs, t = tree_now()
+    remaining = sorted(p for p in t if p not in skip_ids)
+    return killed, skipped, remaining
+
+
+def kill_tree_controls():
+    """kill_tree 兩道的對照組（每次都跑，秒級）。
+    一、合成程序表（不碰真的程序）：根 100、真子程序 101（晚於根建立）、PID 重用的舊程序 50（記著父 PID＝根，但比根早建立）。
+        殺的動作換成記錄；根被殺之後程序表裡沒有根——舊程序照樣不能被殺（靠殺之前記下的根建立時間）。
+    二、真的程序：一個 python 根、底下一個改了名字（不在可殺清單）的子程序；根要被殺、子程序只印出不殺，最後由這裡精準收掉。"""
+    import types
+    ROOT_PID, KID, STALE = 900001, 900002, 900003
+    state = {ROOT_PID: (1, 10, 'bash.exe', 100), KID: (ROOT_PID, 10, 'python.exe', 101), STALE: (ROOT_PID, 10, 'python.exe', 50)}
+    calls = []
+    real_snapshot, real_run = reslog.snapshot, subprocess.run
+
+    def fake_snapshot():
+        return dict(state), 10 ** 9
+
+    def fake_run(args, **k):
+        if args[:1] == ['taskkill']:
+            pid = int(args[2])
+            calls.append(pid)
+            state.pop(pid, None)
+            return types.SimpleNamespace(returncode=0, stdout=b'', stderr=b'')
+        return real_run(args, **k)
+    reslog.snapshot, subprocess.run = fake_snapshot, fake_run
+    try:
+        killed, skipped, alive = kill_tree(ROOT_PID)
+    finally:
+        reslog.snapshot, subprocess.run = real_snapshot, real_run
+    ok1 = sorted(calls) == [ROOT_PID, KID] and STALE not in calls and not alive and not skipped
+    record(ok1, 'kill_tree 對照組一（合成）：殺根與真子程序；PID 重用的舊程序在根死後也不殺', f'殺了 {calls}、殺完還在 {alive}')
+
+    # 二、真的程序：不在清單的名字
+    td = tempfile.mkdtemp(prefix='jlpt-killctl2-')
+    odd = os.path.join(td, 'notkillable.exe')
+    shutil.copy(sys.executable, odd)
+    parent = subprocess.Popen([sys.executable, '-c',
+                               'import subprocess,sys,time; subprocess.Popen([sys.argv[1], "-c", "import time; time.sleep(60)"]); time.sleep(60)',
+                               odd])
+    kid_pid = None
+    try:
+        for _ in range(20):
+            time.sleep(0.5)
+            sn = reslog.snapshot()
+            kids = [p for p, v in (sn[0].items() if sn else []) if v[0] == parent.pid and reslog.base_name(v[2]) == 'notkillable']
+            if kids:
+                kid_pid = kids[0]
+                break
+        if kid_pid is None:
+            raise SetupError('kill_tree 對照組二：改名的子程序沒起來')
+        killed, skipped, alive = kill_tree(parent.pid)
+        sn = reslog.snapshot()
+        still = sn is not None and kid_pid in sn[0]
+        ok2 = (parent.pid, 'python') in killed and [p for p, _n in skipped] == [kid_pid] and still and not alive
+        record(ok2, 'kill_tree 對照組二（真的程序）：python 根被殺、不在可殺清單的子程序只印出不殺',
+               f'殺了 {killed}、沒殺 {skipped}、那個子程序事後還在 {still}')
+    finally:
+        if kid_pid:
+            subprocess.run(['taskkill', '/PID', str(kid_pid), '/F'], capture_output=True)   # 這一支是這裡自己開的，精準收掉
+        try:
+            parent.kill()
+        except OSError:
+            pass
+        time.sleep(1)
+        rmtree(td)
+
+
 def attempt(bash, mode, label):
     """跑一次「開跑→殺」。mode='real'：等到改壞並開始跑情境才殺；mode='early'：開跑後 1 秒就殺（對照組，一定不成立）。
     回傳 (成立與否, 痕跡說明, 暫存目錄或 None)。每一次都把完整輸出留在 .logs/。"""
@@ -182,22 +298,17 @@ def attempt(bash, mode, label):
     b = child.poll() is None
     m = reslog.measure(child.pid) if b else None
     c = m is not None and m[0] >= 2
-    pids = m[3] if m else set()
-    k = subprocess.run(['taskkill', '/PID', str(child.pid), '/T', '/F'], capture_output=True) if b else None
+    killed, skipped, alive = kill_tree(child.pid) if b else ([], [], [])
     try:
         child.wait(timeout=60)
     except subprocess.TimeoutExpired:
         pass
     fh.close()
-    time.sleep(2)
-    snap = reslog.snapshot()
-    if snap is None:
-        raise SetupError('殺掉之後取不到程序表')
-    alive = sorted(p for p in pids if p in snap[0])
-    if alive:
+    time.sleep(1)
+    if alive or skipped:
         for d in ours(tmpdirs() - t_before):   # 丟出之前先清掉自己留下的暫存目錄（2026-10-02 這裡中止時留下一個）
             rmtree(d)
-        raise SetupError(f'殺掉之後還有程序活著：{alive}')
+        raise SetupError(f'殺掉之後還有可殺的程序活著：{alive}；不在可殺清單、沒殺的：{skipped}')
     final = open(out, encoding='utf-8', errors='replace').read()
     d = not finished(final)
     ts = ours(tmpdirs() - t_before)
@@ -206,7 +317,7 @@ def attempt(bash, mode, label):
     e = bool(T) and os.path.exists(ps) and 'fetch -q origin main' not in open(ps, encoding='utf-8').read()
     traces = (f'(a) 已改壞且情境開跑 {a}、(b) 殺時還在跑 {b}、(c) 程序樹 {m[0] if m else "?"} 個、'
               f'(d) 沒有結尾 {d}、(e) 複本裡是壞檔 {e}；開跑後 {time.time() - t0:.0f} 秒；'
-              f'taskkill rc={k.returncode if k else "沒殺（已結束）"}；log {os.path.relpath(out, ROOT)}')
+              f'殺了 {len(killed)} 個（{sorted({n for _p, n in killed})}）；log {os.path.relpath(out, ROOT)}')
     for extra in ts[1:] if len(ts) > 1 else []:
         rmtree(extra)
     return a and b and c and d and e, traces, T
@@ -230,7 +341,7 @@ def run_k(bash, mode, before_raw, tag):
 def run_r(bash, before_raw, timeout):
     """反向：不殺、讓閘門驗法正常跑完。回傳 None＝情境成立且已判（record）；回傳 4＝情境未成立。
     逾時：subprocess 的 timeout 只殺得到直接的子程序（reslog.py），底下整棵閘門驗法會變成孤兒繼續跑——
-    所以自己等、逾時就量下整棵樹、taskkill /T /F、確認都不在了、清掉留下的暫存目錄，再判「情境未成立」。"""
+    所以自己等、逾時就用 kill_tree 殺這一棵（不用 taskkill /T）、確認都不在了、清掉留下的暫存目錄，再判「情境未成立」。"""
     os.makedirs(LOGDIR, exist_ok=True)   # 新 clone 裡沒有 .logs/（2026-10-02 在暫存 clone 跑突變時崩潰才發現；主 repo 一直有，所以沒露出來）
     rlog = os.path.join(LOGDIR, f'kill-{STAMP}-R.log')
     t_before = tmpdirs()
@@ -240,25 +351,22 @@ def run_r(bash, before_raw, timeout):
     try:
         p.wait(timeout=timeout)
     except subprocess.TimeoutExpired:
-        m = reslog.measure(p.pid)
-        pids = m[3] if m else set()
-        subprocess.run(['taskkill', '/PID', str(p.pid), '/T', '/F'], capture_output=True)
+        killed, skipped, alive = kill_tree(p.pid)
         try:
             p.wait(timeout=60)
         except subprocess.TimeoutExpired:
             pass
         fh.close()
-        time.sleep(2)
-        snap = reslog.snapshot()
-        alive = sorted(x for x in pids if snap and x in snap[0])
+        time.sleep(1)
         left = ours(tmpdirs() - t_before)
         for d in left:
             rmtree(d)
         raw, diff, status = tree_state(ROOT)
         clean = raw == before_raw and not diff and not status.strip()
-        record(not alive and not any(os.path.exists(d) for d in left) and clean and snap is not None,
-               f'R 逾時（{timeout} 秒）的收尾：整棵殺掉、留下的暫存目錄清掉、主 repo 等於 HEAD',
-               f'殺掉前量到 {len(pids)} 個程序、還活著 {alive}、找到留下的暫存目錄 {len(left)} 個、清完還在 {sum(os.path.exists(d) for d in left)} 個、主 repo {"等於" if clean else "不等於"} HEAD')
+        record(not alive and not skipped and not any(os.path.exists(d) for d in left) and clean,
+               f'R 逾時（{timeout} 秒）的收尾：整棵殺掉（只殺可殺清單裡的）、留下的暫存目錄清掉、主 repo 等於 HEAD',
+               f'殺了 {len(killed)} 個（{sorted({n for _p, n in killed})}）、不在清單沒殺的 {skipped}、殺完還在 {alive}、'
+               f'找到留下的暫存目錄 {len(left)} 個、清完還在 {sum(os.path.exists(d) for d in left)} 個、主 repo {"等於" if clean else "不等於"} HEAD')
         print(f'{NOT_ESTABLISHED}：R 閘門驗法 {timeout} 秒沒跑完（逾時）——「正常跑完之後主 repo 等於 HEAD」這次沒量到'
               f'（log {os.path.relpath(rlog, ROOT)}）')
         if not results[-1]:   # 收尾本身不符（還有程序活著、目錄沒清掉、主 repo 被動到）是真的不符，不能被「未成立」的 4 蓋掉
@@ -298,6 +406,7 @@ def main():
             return 2
         checker_control()
         parser_controls()
+        kill_tree_controls()
         reg0 = reg_state()
 
         if args.only_r:
