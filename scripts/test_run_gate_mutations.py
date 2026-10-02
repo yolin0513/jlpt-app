@@ -24,10 +24,10 @@ ID = ['-c', 'user.name=p', '-c', 'user.email=p@users.noreply.github.com']
 results = []
 
 FAKE = r'''#!/usr/bin/env bash
-#   TEST_PUSHSAFE_MUTATE=<突變> bash x   # 突變：mok mflaky mhang
+#   TEST_PUSHSAFE_MUTATE=<突變> bash x   # 突變：mok mflaky mhang mpartial
 case "$MUTATE" in
   "") ;;
-  mok|mflaky|mhang)
+  mok|mflaky|mhang|mpartial)
     ;;
 esac
 LIST="s01 s02 s03"
@@ -35,6 +35,7 @@ N_SCEN=3
 M="${TEST_PUSHSAFE_MUTATE:-}"
 if [ "$M" = mflaky ] && [ ! -f "$FLAKY_MARK" ]; then : > "$FLAKY_MARK"; echo "ABORT: 第一次故意造情境失敗"; exit 2; fi
 if [ "$M" = mhang ]; then sleep 60; fi
+if [ "$M" = mpartial ]; then echo "MUTATION ACTIVE: mpartial（假的）"; echo "yes  01 一"; echo "no   02 二  rc=0(期望 1)"; sleep 60; fi
 echo "MUTATION ACTIVE: $M（假的）"
 echo "yes  01 一"
 echo "no   02 二  rc=0(期望 1)"
@@ -45,7 +46,8 @@ exit 1
 EXPECT = ('名稱\t類別\ts01\ts02\ts03\t依據\n'
           'mok\tred\t不紅\t紅\t不紅\t讀程式推論（測試）\n'
           'mflaky\tred\t不紅\t紅\t不紅\t讀程式推論（測試）\n'
-          'mhang\tred\t不紅\t紅\t不紅\t讀程式推論（測試）\n')
+          'mhang\tred\t不紅\t紅\t不紅\t讀程式推論（測試）\n'
+          'mpartial\tred\t不紅\t紅\t不紅\t讀程式推論（測試）\n')
 
 
 def record(ok, label, detail=''):
@@ -87,11 +89,14 @@ def run(repo, td):
 
 def judge(rc, out, evs):
     flaky2 = any(l.strip().startswith('第 2 輪') and 'mflaky：紅' in l for l in out)
-    hang = [l for l in out if l.startswith('⊘ 情境未成立：')]
+    hang = sorted(l.split('：')[1].split()[0] for l in out if l.startswith('⊘ 情境未成立：'))
+    # 被中斷的那一條（已經印了 MUTATION ACTIVE 與兩個情境、沒有結尾那一行）每一輪都必須判成情境未成立，不能判成紅
+    partial = [l.strip() for l in out if 'mpartial：' in l and l.strip().startswith('第 ')]
+    partial_ok = len(partial) == 2 and all('mpartial：情境未成立' in l for l in partial)
     rows = [l.split('\t') for l in open(evs[0], encoding='utf-8').read().splitlines()[1:]] if len(evs) == 1 else []
-    ok = (rc == 4 and flaky2 and len(hang) == 1 and 'mhang' in hang[0] and len(rows) == 5
-          and any(l.startswith('  MKEVIDENCE SOURCES: ') and '兩邊對得上的 5 筆' in l for l in out))
-    return ok, f'rc={rc}、mflaky 第 2 輪成立 {flaky2}、⊘ {hang}、證據 {len(rows)} 行'
+    ok = (rc == 4 and flaky2 and hang == ['mhang', 'mpartial'] and partial_ok and len(rows) == 7
+          and any(l.startswith('  MKEVIDENCE SOURCES: ') and '兩邊對得上的 7 筆' in l for l in out))
+    return ok, f'rc={rc}、mflaky 第 2 輪成立 {flaky2}、⊘ {hang}、mpartial 各輪 {partial}、證據 {len(rows)} 行'
 
 
 def main():
@@ -109,6 +114,38 @@ def main():
                                                "(Get-CimInstance Win32_Process -Filter \"Name='sleep.exe'\" | Measure-Object).Count"],
                                               capture_output=True).stdout.decode().strip()
             record(sn == '0', 'A 卡住的那一棵事後都不在了（沒有殘留的 sleep 60）', f'殘留 {sn}')
+        finally:
+            shutil.rmtree(td, onerror=onerr)
+        # C 突變（改的是複本裡的 mkevidence）：分類不看結尾那一行——被中斷、但已經印了判定行的就算成紅 → mpartial 被當成跑完
+        mk = open(os.path.join(ROOT, 'scripts', 'mkevidence_mut.py'), encoding='utf-8').read()
+        b = "    if abort or name is None or len(end) != 1:\n"
+        if mk.count(b) != 1:
+            raise RuntimeError('mkevidence 的分類錨點不是恰好一處')
+        td = tempfile.mkdtemp(prefix='jlpt-runner-')
+        try:
+            repo = setup(td, src)
+            mp = os.path.join(repo, 'scripts', 'mkevidence_mut.py')
+            open(mp, 'w', encoding='utf-8').write(mk.replace(b, "    if abort or name is None:\n        return name, '情境未成立', [], [], n\n    if len(end) != 1:\n        return name, '紅', reds, wrong, n\n    if False:\n"))
+            subprocess.run(['git', *ID, 'commit', '-qam', 'mut'], cwd=repo, check=True, env=ENV, capture_output=True)
+            rc, out, evs = run(repo, td)
+            ok, d = judge(rc, out, evs)
+            record(not ok, 'C 突變「分類不看結尾那一行」→ 被中斷的 mpartial 會被當成紅、A 的判斷必須紅', d)
+        finally:
+            shutil.rmtree(td, onerror=onerr)
+        # D 兩道一起拿掉（分類不看結尾＋不比判定行數）：被中斷的 mpartial 會被默默記成紅、證據檔照樣寫出 → A 的判斷必須紅。
+        #   C 只拿掉第一道時，第二道（判定行數）會大聲擋下；兩道是刻意的冗餘（mkevidence_mut.py classify 旁的說明）。
+        c2 = "            if njudged != len(scen_now):   # 刻意的冗餘：classify 要求結尾那一行也守同一件事（見 classify）\n"
+        if mk.count(c2) != 1:
+            raise RuntimeError('mkevidence 的判定行數錨點不是恰好一處')
+        td = tempfile.mkdtemp(prefix='jlpt-runner-')
+        try:
+            repo = setup(td, src)
+            mp = os.path.join(repo, 'scripts', 'mkevidence_mut.py')
+            open(mp, 'w', encoding='utf-8').write(mk.replace(b, "    if abort or name is None:\n        return name, '情境未成立', [], [], n\n    if len(end) != 1:\n        return name, '紅', reds, wrong, n\n    if False:\n").replace(c2, "            if False:\n"))
+            subprocess.run(['git', *ID, 'commit', '-qam', 'mut'], cwd=repo, check=True, env=ENV, capture_output=True)
+            rc, out, evs = run(repo, td)
+            ok, d = judge(rc, out, evs)
+            record(not ok and len(evs) == 1, 'D 兩道一起拿掉 → 被中斷的 mpartial 默默記成紅、證據檔照樣寫出；A 的判斷必須紅', d)
         finally:
             shutil.rmtree(td, onerror=onerr)
         a = '    for attempt in range(1, a.max_tries + 1):\n'

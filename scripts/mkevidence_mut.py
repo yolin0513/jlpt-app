@@ -39,6 +39,9 @@ def classify(text):
     wrong = sorted({l.split()[1] for l in lines if l.startswith('no ') and len(l.split()) > 1 and '擋下理由不對' in l})
     judged = [l for l in lines if (l.startswith('yes ') or l.startswith('no ')) and len(l.split()) > 1 and l.split()[1].isdigit()]
     n = len(judged)
+    # 刻意的冗餘（§5.19）：「沒有結尾那一行就是情境未成立」與 main 裡「每份 log 的判定行數要等於情境數」守同一件事——
+    # 被中斷的 log（已經印了幾個情境就被殺）。單獨拿掉任一道不會讓測試紅（另一道擋下、而且是大聲失敗）；
+    # 兩道一起拿掉，被中斷的那一條會被默默記成紅（test_run_gate_mutations 情境 D）。
     if abort or name is None or len(end) != 1:
         return name, '情境未成立', [], [], n
     if end[0].startswith('TEST-PUSHSAFE: 全部符合，但這一輪是突變'):
@@ -267,7 +270,7 @@ def main(argv=None):
         if cls != '情境未成立':
             got_lines += njudged
             want_lines += len(scen_now)
-            if njudged != len(scen_now):
+            if njudged != len(scen_now):   # 刻意的冗餘：classify 要求結尾那一行也守同一件事（見 classify）
                 short.append(f'{base}：抽到判定行 {njudged} 行、應有 {len(scen_now)} 行')
         row = [name, cls, verdict, ecls, ered, ','.join(reds) or '-', over, under, ','.join(wrong) or '-', str(njudged), sec, base]
         rows.append([clean(c) for c in row])
