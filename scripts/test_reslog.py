@@ -127,6 +127,31 @@ def main():
         record(ok, 'C 突變「取樣永遠失敗」：紀錄寫「?」、摘要寫取樣失敗次數',
                f'rc={rc}、各行程序數 {[r[2] for r in rows]}、取樣失敗 {idx[7]}、摘要那一行有寫同樣的次數：{said}')
 
+        # E 裸寫的 bash 要解成 Git 的 bash（不是 System32 的 WSL）：被包住的 bash -c "exit 7" 必須真的跑、回傳值照傳 7
+        logdir = os.path.join(td, 'logs-E')
+        r = subprocess.run([sys.executable, SRC, '--label', 'E', '--estimate', '1', '--interval', '1', '--sample', '1',
+                            '--logdir', logdir, '--', 'bash', '-c', 'exit 7'], capture_output=True, timeout=120)
+        summ = [l for l in r.stdout.decode('utf-8', 'replace').splitlines() if l.startswith('RESLOG: ')]
+        record(r.returncode == 7 and len(summ) == 1, 'E 裸寫的 bash 解成 Git 的 bash：bash -c "exit 7" 真的跑了、回傳值照傳',
+               f'rc={r.returncode}、摘要 {summ[:1]}')
+        if os.name == 'nt':
+            # 錨點逐行接起來（整段寫成一個字串時，「if w」後面接冒號再接換行跳脫，會被自查的路徑樣式誤認成磁碟代號）
+            anchor = '\n'.join(['        w = shutil.which(first)', '        if w' + ':', '            first = w']) + '\n'
+            pe = mutated(td, anchor, "        pass\n", 'reslog_noresolve.py')
+            r = subprocess.run([sys.executable, pe, '--label', 'E2', '--estimate', '1', '--interval', '1', '--sample', '1',
+                                '--logdir', os.path.join(td, 'logs-E2'), '--', 'bash', '-c', 'exit 7'], capture_output=True, timeout=120)
+            record(r.returncode != 7, 'E 突變「不解路徑」：裸寫的 bash 落到別的 bash（WSL），回傳值不是 7——對照必須紅',
+                   f'rc={r.returncode}')
+            # F 拒絕那一條路：直接給 System32 的 bash.exe（WSL），reslog 必須不跑、回 2、行首 RESLOG ABORT
+            sysroot = os.environ.get('SystemRoot')
+            if not sysroot:
+                raise RuntimeError('取不到 SystemRoot，F 造不出來')
+            wsl = os.path.join(sysroot, 'System32', 'bash.exe')
+            r = subprocess.run([sys.executable, SRC, '--label', 'F', '--estimate', '1', '--logdir', os.path.join(td, 'logs-F'),
+                                '--', wsl, '-c', 'exit 7'], capture_output=True, timeout=120)
+            ab = [l for l in r.stdout.decode('utf-8', 'replace').splitlines() if l.startswith('RESLOG ABORT: ')]
+            record(r.returncode == 2 and len(ab) == 1 and 'WSL' in ab[0], 'F 給的是 System32 的 bash.exe：拒絕、回 2、不跑',
+                   f'rc={r.returncode}、{ab[:1]}')
         n, t = syn_count(load(SRC, 'reslog_src'))
         record(n == SYN_WANT and 50 not in t and 60 not in t, f'D 工作程序的數法（合成程序表）：應該 {SYN_WANT}，PID 重用的 60 不在樹裡', f'算出 {n}；這一棵 {t}')
         for a, b, label in (

@@ -132,6 +132,21 @@ def measure(root):
     return len(t), sum(procs[p][1] for p in t), free, t, count_workers(procs, t)
 
 
+def resolve_cmd(cmd):
+    """把裸的指令名稱照 PATH 解成完整路徑（2026-10-02 實際撞到：Windows 開子程序時先找 System32、才找 PATH，
+    裸寫的 bash 會變成系統目錄 System32 底下的 bash.exe（WSL），被包住的驗法根本沒跑，回傳 1、峰值 0 個程序）。
+    回傳 (解好的指令, 錯誤訊息或 None)：解出來是 System32 的 bash.exe 就拒絕。"""
+    import shutil
+    first = cmd[0]
+    if not os.path.isabs(first) and os.sep not in first and '/' not in first:
+        w = shutil.which(first)
+        if w:
+            first = w
+    if os.name == 'nt' and os.path.basename(first).lower() == 'bash.exe' and 'system32' in first.lower():
+        return cmd, f'解出來的 bash 是 {first}（WSL，不是 Git 的 bash）——不跑'
+    return [first] + list(cmd[1:]), None
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--label', required=True)
@@ -144,6 +159,10 @@ def main(argv=None):
     cmd = a.cmd[1:] if a.cmd[:1] == ['--'] else a.cmd
     if not cmd:
         print('RESLOG ABORT: 沒有要包住的指令')
+        return 2
+    cmd, why = resolve_cmd(cmd)
+    if why:
+        print(f'RESLOG ABORT: {why}')
         return 2
     os.makedirs(a.logdir, exist_ok=True)
     day = datetime.date.today().isoformat()
