@@ -173,8 +173,15 @@ def main(argv=None):
     ap.add_argument('--expect', help='預期表；沒給就全部「未登記」')
     ap.add_argument('--verifier', default=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'scripts', 'test_pushsafe.sh'),
                     help='用來核對預期表沒過期的驗法（預設 repo 裡的 test_pushsafe.sh）')
-    ap.add_argument('logs', nargs='+')
+    ap.add_argument('--check-only', action='store_true', help='只核對預期表有沒有過期、格式對不對，不讀 log、不寫證據檔（跑突變之前先跑這個）')
+    ap.add_argument('logs', nargs='*')
     a = ap.parse_args(argv)
+    if not a.check_only and not a.logs:
+        print('MKEVIDENCE FAILED: 沒有交 log（只核對預期表請加 --check-only）')
+        return 2
+    if a.check_only and not a.expect:
+        print('MKEVIDENCE FAILED: --check-only 要配 --expect')
+        return 2
     bad = clean_controls()
     if bad:
         for b in bad:
@@ -206,6 +213,17 @@ def main(argv=None):
                 print('      ' + x)   # 證據行：6 格縮排，不在行首
             print(f'MKEVIDENCE STALE-EXPECT: 預期清單過期 {len(stale)} 處——先更新預期表，這不是「不如預期」（不寫檔）')
             return 3
+        # 通過時也印量到的數字（Dispatch 2026-10-02，StockDiary／MealMate：通過時一行都不印，「0 處過期」就只是從沒有報錯推出來的，
+        # 跟檢查根本沒跑長得一樣）：讀了幾列、查了幾格、驗法裡有幾條突變幾個情境、對哪一份驗法查的
+        import hashlib
+        vh = hashlib.sha256(open(a.verifier, 'rb').read()).hexdigest()[:12]
+        cells = len(expect) * len(scen)
+        print(f'MKEVIDENCE EXPECT-CHECK: 預期表 {len(expect)} 條突變 × {len(scen)} 個情境＝查了 {cells} 格；'
+              f'驗法裡有突變 {len(names)} 條、情境 {len(scen)} 個（{os.path.basename(a.verifier)} sha256 {vh}）；過期 0 處、格式不對 0 處')
+    else:
+        print('MKEVIDENCE EXPECT-CHECK: 沒給預期表，沒有查（預期欄全部寫「未登記」）')
+    if a.check_only:
+        return 0
     secs = read_seconds(a.summary)
     rows = []
     for lp in a.logs:

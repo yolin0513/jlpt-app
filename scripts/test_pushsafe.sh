@@ -249,6 +249,14 @@ case "$MUTATE" in
     confirm_mutated $PS 'if [ ! -f "$REG" ]; then' ;;
   *) die "不認得的突變 $MUTATE" ;;
 esac
+# 依賴範圍 B（Dispatch 2026-10-02）：複本裡刪掉 docs/ 與 data/ 並 commit——之後任何情境都讀不到它們，
+# 閘門突變的依賴範圍才能在結構上排除這兩類（改 STATUS、題庫不必重跑突變），不靠「宣告它們沒被讀」。
+# 先確認原本在（§5.2：斷言「不見了」之前先確認它原本在），刪掉之後再確認檔案系統與 git 都沒有了。
+[ -d docs ] && [ -d data ] || die "複本裡原本就沒有 docs/ 或 data/（前提沒造成，刪掉之後的確認會恆真）"
+git rm -r -q -- docs data || die "複本裡刪 docs/、data/"
+git commit -q -m "scope: remove docs and data" || die "commit 刪掉 docs/、data/"
+if [ -e docs ] || [ -e data ] || [ -n "$(git ls-files -- docs data)" ]; then die "複本裡 docs/ 或 data/ 還在（依賴範圍 B 沒造成）"; fi
+echo "依賴範圍 B：複本裡已刪掉 docs/、data/（之後的情境都讀不到它們）"
 [ -n "$MUTATE" ] && echo "MUTATION ACTIVE: $MUTATE（已確認改壞之前那段在、改壞之後不在，HEAD 與工作區一致）"
 register_clone
 git push -q origin main || die "初始推送到假遠端"

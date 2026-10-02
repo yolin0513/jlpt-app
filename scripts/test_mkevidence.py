@@ -131,6 +131,17 @@ def main():
         r4 = {r[0]: (r[2], r[4]) for r in rows(out4)} if rc == 0 else {}
         record(rc == 0 and r4.get('mred') == ('符合預期', '02,03') and r4.get('mclean') == ('符合預期', '-')
                and r4.get('mabort', ('',))[0] == '—', 'E 完整劃分對得上 → 放行；判定：紅在預期、等價、情境未成立記「—」', f'rc={rc}、{r4}')
+        # 通過時也要印量到的數字（不是從「沒有報錯」推出來的 0）：5 條 × 3 個情境＝15 格、驗法 5 條突變、3 個情境
+        ck = [l for l in out.splitlines() if l.startswith('MKEVIDENCE EXPECT-CHECK: ')]
+        record(len(ck) == 1 and '預期表 5 條突變 × 3 個情境＝查了 15 格' in ck[0] and '驗法裡有突變 5 條、情境 3 個' in ck[0]
+               and '過期 0 處' in ck[0], 'E 通過時印出量到的數字（列數、格數、驗法的突變與情境數、驗法的雜湊）', f'{ck}')
+        rc, out = run(SRC, ['--out', os.path.join(td, 'ev_co.tsv'), '--check-only', '--expect', ok_exp, '--verifier', ver])
+        ck = [l for l in out.splitlines() if l.startswith('MKEVIDENCE EXPECT-CHECK: ')]
+        record(rc == 0 and len(ck) == 1 and '查了 15 格' in ck[0] and not os.path.exists(os.path.join(td, 'ev_co.tsv')),
+               'E --check-only：只核對、印量到的數字、不寫證據檔', f'rc={rc}、{ck[:1]}')
+        rc, out = run(SRC, ['--out', os.path.join(td, 'ev_ne.tsv'), *paths])
+        ck = [l for l in out.splitlines() if l.startswith('MKEVIDENCE EXPECT-CHECK: ')]
+        record(rc == 0 and len(ck) == 1 and '沒有查' in ck[0], 'E 沒給預期表時明講「沒有查」', f'{ck}')
         # 不符預期：mred 預期 01、03 紅，實際 02、03 紅 → 預期不紅卻紅＝02、預期紅卻沒紅＝01
         off_exp = exp('e_off.tsv', H + ALL.replace('mred\tred\t不紅\t紅\t紅', 'mred\tred\t紅\t不紅\t紅'))
         out7 = os.path.join(td, 'ev7.tsv')
