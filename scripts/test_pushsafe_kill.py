@@ -265,6 +265,12 @@ def main():
         open(rlog, 'wb').write(rr.stdout + rr.stderr)
         tail = rr.stdout.decode('utf-8', 'replace').strip().splitlines()[-3:]
         r_raw, r_diff, r_status = tree_state(ROOT)
+        # R 的情境是「正常跑完」：只認驗法自己在行首印的全過那一行，不看回傳值（v11.4：崩潰與逾時不得被回傳值吃掉）
+        rtext = rr.stdout.decode('utf-8', 'replace')
+        if not any(l.startswith('TEST-PUSHSAFE: 全部符合預期（兩種順序）') for l in rtext.splitlines()):
+            print(f'{NOT_ESTABLISHED}：R 閘門驗法沒有正常跑完（rc={rr.returncode}；{" ／ ".join(tail)}；log {os.path.relpath(rlog, ROOT)}）'
+                  '——「正常跑完之後主 repo 等於 HEAD」這次沒量到')
+            return 4
         record(rr.returncode == 0 and r_raw == before_raw and not r_diff and not r_status.strip(),
                'R 反向：正常跑完閘門驗法（全符合）後，主 repo 同樣等於 HEAD',
                f'rc={rr.returncode}；{" ／ ".join(tail)}；與 HEAD 不同的 {r_diff}；log {os.path.relpath(rlog, ROOT)}')

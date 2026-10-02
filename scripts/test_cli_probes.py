@@ -1,7 +1,8 @@
 """三支統計類檢查的「暫存 clone ＋命令列入口」對照組（共用慣例 v11.2 §5.20；Dispatch 2026-10-02）。
 
 用法：python scripts/test_cli_probes.py
-回傳值：0＝全部符合；1＝有不符（某一道該紅沒紅、該綠沒綠、或樣本沒寫進去）；2＝造情境失敗（clone、commit 之類），沒驗到。
+回傳值：0＝全部符合；1＝有不符（某一道該紅沒紅、該綠沒綠、或樣本沒寫進去）；2＝造情境失敗（clone、commit、逾時之類），沒驗到；
+        4＝沒有不符、但有情境未成立（例：改壞的檢查程式崩潰——不算抓到，以行首「⊘ 情境未成立」宣告）。
 什麼時候跑：每次發版至少一次；改過 lint_gate.py／selfcheck_public.py／check_data.py 或這支也要跑。
 耗時與負載：單一程序、依序跑，一次只開一個子程序（實測見 docs/STATUS.md）。
 
@@ -64,6 +65,8 @@ def workspace_state():
 
 
 results = []
+NOT_EST = []
+NOT_ESTABLISHED = '⊘ 情境未成立'
 
 
 def record(ok, label, detail=''):
@@ -72,6 +75,28 @@ def record(ok, label, detail=''):
 
 
 # ---- 讀輸出只認行首（MealMate 2026-10-02：「那一行有出現某個字」會把印出來的命中內容、或通過那一行的說明誤當成判定） ----
+# ---- 每一次叫檢查程式都記下來（共用慣例 v11.4 §5.20：逾時與崩潰歸「情境未成立」，不得被回傳值吃掉）----
+RUNS = []
+CHECKER_TIMEOUT = 300
+OK_LINE = {'scripts/lint_gate.py': lambda l: l == 'LINT-GATE OK',
+           'scripts/selfcheck_public.py': lambda l: l == 'SELF-CHECK OK',
+           'scripts/check_data.py': lambda l: l.startswith('✓ 全部檢查通過')}
+
+
+def run_checker(args, W, expect):
+    """args[1] 是檢查程式的相對路徑；expect＝'pass' 或 'fail'（這一次照理該過還是該擋）。逾時就丟 SetupError（沒驗到）。"""
+    try:
+        r = subprocess.run(args, cwd=W, capture_output=True, env=ENV, timeout=CHECKER_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        raise SetupError(f'{args[1]} 逾時（{CHECKER_TIMEOUT} 秒）——沒有結果，不是通過也不是擋下')
+    out = r.stdout.decode('utf-8', 'replace') + r.stderr.decode('utf-8', 'replace')
+    lines = out.splitlines()
+    RUNS.append({'checker': args[1], 'expect': expect, 'rc': r.returncode,
+                 'ok_line': any(OK_LINE[args[1]](l) for l in lines),
+                 'crashed': r.returncode not in (0, 1) or any(l.startswith('Traceback (most recent call last):') for l in lines)})
+    return r.returncode, out
+
+
 def has_line(out, exact):
     return exact in out.splitlines()
 
@@ -177,7 +202,7 @@ def probe_lint(W, tag=''):
     m = lint_targets(W)
     scan = list(m.TARGETS) + [f for f in m.ESCAPE_TARGETS if f not in m.TARGETS]
     out_ok = []
-    rc, out = sh([sys.executable, 'scripts/lint_gate.py'], W, check=False)
+    rc, out = run_checker([sys.executable, 'scripts/lint_gate.py'], W, 'pass')
     base_ok = rc == 0 and has_line(out, 'LINT-GATE OK')
     if not tag:
         record(base_ok, 'lint 原樣（該綠）', f'rc={rc}')
@@ -186,7 +211,7 @@ def probe_lint(W, tag=''):
         if (BS * 2) not in sample:
             raise SetupError(f'lint {cat} 樣本裡沒有兩個反斜線')
         n = append_line(os.path.join(W, f), sample)
-        rc, out = sh([sys.executable, 'scripts/lint_gate.py'], W, check=False)
+        rc, out = run_checker([sys.executable, 'scripts/lint_gate.py'], W, 'fail')
         restore(W, f)
         want = [f'{f}:{n} [overescape]'] + ([f'{f}:{n} [backslash]'] if cat == '.sh' and f in m.TARGETS else [])
         got = lint_hits(out)
@@ -219,7 +244,7 @@ def probe_selfcheck(W, base, tag=''):
     # 原樣：一個乾淨的 commit 要放行
     append_line(os.path.join(W, 'docs/STATUS.md'), '對照用的乾淨一行')
     sh(['git', *ID, 'commit', '-qam', 'clean line'], W)
-    rc, out = sh([sys.executable, 'scripts/selfcheck_public.py', base], W, check=False)
+    rc, out = run_checker([sys.executable, 'scripts/selfcheck_public.py', base], W, 'pass')
     sh(['git', 'reset', '-q', '--hard', base], W)
     ok = rc == 0 and has_line(out, 'SELF-CHECK OK')
     oks.append(ok)
@@ -233,7 +258,7 @@ def probe_selfcheck(W, base, tag=''):
             _r, shown = sh(['git', 'show', 'HEAD', '--', f], W)
             if s not in shown:
                 raise SetupError(f'commit 裡找不到樣本（{f} {k}）')
-            rc, out = sh([sys.executable, 'scripts/selfcheck_public.py', base], W, check=False)
+            rc, out = run_checker([sys.executable, 'scripts/selfcheck_public.py', base], W, 'fail')
             sh(['git', 'reset', '-q', '--hard', base], W)
             cnt = sc_counts(out)
             want_hit = set(cnt) == set(samples) and all((cnt[kk].get('added_hits') == '1') == (kk == k)
@@ -246,7 +271,7 @@ def probe_selfcheck(W, base, tag=''):
     # commit 訊息帶 email
     append_line(os.path.join(W, 'docs/STATUS.md'), '訊息對照用')
     sh(['git', *ID, 'commit', '-qam', 'msg ' + samples['email']], W)
-    rc, out = sh([sys.executable, 'scripts/selfcheck_public.py', base], W, check=False)
+    rc, out = run_checker([sys.executable, 'scripts/selfcheck_public.py', base], W, 'fail')
     sh(['git', 'reset', '-q', '--hard', base], W)
     ok = rc == 1 and fail_items(out, 'SELF-CHECK FAILED: ') == ['email 命中 1 行（commit 訊息或作者欄）']
     oks.append(ok)
@@ -266,7 +291,7 @@ DATA_CASES = [   # (檔, 改哪一欄, 怎麼改, 預期的問題字樣)
 
 def probe_data(W, tag=''):
     oks = []
-    rc, out = sh([sys.executable, 'scripts/check_data.py'], W, check=False)
+    rc, out = run_checker([sys.executable, 'scripts/check_data.py'], W, 'pass')
     ok = rc == 0 and any(l.startswith('✓ 全部檢查通過') for l in out.splitlines())
     oks.append(ok)
     if not tag:
@@ -280,7 +305,7 @@ def probe_data(W, tag=''):
         back = json.load(open(p, encoding='utf-8'))['items'][0]
         if back[field] != it[field] or back[field] == json.load(io.StringIO(sh(['git', 'show', f'HEAD:{f}'], W)[1]))['items'][0].get(field):
             raise SetupError(f'讀回的 {f} {field} 沒有改到')
-        rc, out = sh([sys.executable, 'scripts/check_data.py'], W, check=False)
+        rc, out = run_checker([sys.executable, 'scripts/check_data.py'], W, 'fail')
         restore(W, f)
         probs = data_problems(out)
         ok = rc == 1 and len(probs) == 1 and it['id'] in probs[0] and want in probs[0]
@@ -292,11 +317,15 @@ def probe_data(W, tag=''):
 
 # ---------- 這支自己的對照組：在複本裡套已知的突變，對應那一道必須報不符 ----------
 MUTATIONS = [
-    ('scripts/lint_gate.py', "    else:\n        for i, l in enumerate(lines, 1):\n            if l.lstrip().startswith(('//', '*')):",
-     "    elif name.endswith('.mjs'):\n        for i, l in enumerate(lines, 1):\n            if l.lstrip().startswith(('//', '*')):", 'lint'),
-    # 自查選「掃描結果被丟掉」：內建的合成對照組與程式內真實檔對照組都直接呼叫 hit()，照樣全過——只有從命令列入口才分得出
+    # 三條都選「程式內的對照組照樣過、只有從命令列入口才分得出」的壞法（2026-10-02 改：原本的 lint「.js 分支不掃」與
+    # 題庫「假名檢查拿掉」會先被各自程式內的真實檔對照組擋下、印不出通過，從這裡驗不出命令列入口那一段）。
+    # lint：正式掃描的結果被丟掉（程式內的真實檔對照組另外呼叫 scan_one，照樣過）
+    ('scripts/lint_gate.py', '        unexpected += [(f, i, rule, line) for i, rule, line in hits]',
+     '        unexpected += []', 'lint'),
+    # 自查：掃描結果被丟掉（內建的合成對照組與程式內真實檔對照組都直接呼叫 hit()，照樣過）
     ('scripts/selfcheck_public.py', '    hits = scan(added)', '    hits = []', 'selfcheck'),
-    ('scripts/check_data.py', '        if kana and not KANA_RE.match(kana):', '        if False:', 'data'),
+    # 題庫：正式那一輪不呼叫檢查（程式內的真實檔對照組自己呼叫 checker，照樣過）
+    ('scripts/check_data.py', '            checker(level, items)\n', '            pass\n', 'data'),
 ]
 
 
@@ -345,13 +374,26 @@ def main():
                 if b not in shown or a in shown:
                     raise SetupError(f'複本 HEAD 裡的 {f} 不是改壞的版本')
                 _r, mb = sh(['git', 'rev-parse', 'HEAD'], W)
+                RUNS.clear()
                 passed = {'lint': probe_lint, 'selfcheck': lambda w, tag: probe_selfcheck(w, mb.strip(), tag),
                           'data': probe_data}[which](W, 'mut')
                 sh(['git', 'reset', '-q', '--hard', base], W)
             else:
+                RUNS.clear()
                 passed = {'lint': probe_lint, 'data': probe_data}[which](W, 'mut')
                 restore(W, f)
-            record(not passed, f'這支自己的對照組：複本裡套 {which} 的已知突變，必須報不符', '報了不符' if not passed else '照樣全符合（這支沒有擋）')
+            # 抓到＝「該擋的那一次，改壞的檢查程式完整跑完（印出通過那一行、回 0）」至少一次，而且沒有任何一次崩潰。
+            # 崩潰（回傳值不是 0／1、有 Traceback）＝改壞的程式根本沒在檢查，這次什麼都沒證明——判「情境未成立」，不算抓到。
+            crashed = [r for r in RUNS if r['crashed']]
+            missed = [r for r in RUNS if r['expect'] == 'fail' and r['ok_line'] and r['rc'] == 0]
+            if crashed:
+                NOT_EST.append(which)
+                print(f'{NOT_ESTABLISHED}：複本裡套 {which} 的已知突變，改壞的檢查程式崩潰 {len(crashed)} 次（回傳值 '
+                      f'{sorted({r["rc"] for r in crashed})}）——不算抓到、不算沒抓到')
+            else:
+                record(not passed and bool(missed), f'這支自己的對照組：複本裡套 {which} 的已知突變，必須在該擋的地方放行',
+                       f'該擋卻放行（完整跑完、印出通過）{len(missed)} 次；共叫了 {len(RUNS)} 次、崩潰 0 次'
+                       if missed else f'沒有任何一次「該擋卻放行」（整組{"有" if not passed else "沒有"}不符）——不能算抓到')
     except SetupError as e:
         print(f'CLI-PROBES ABORT: 造情境失敗：{e}（沒驗到，不是通過）')
         return 2
@@ -361,7 +403,10 @@ def main():
     record(before == after, '工作區與開始時相同（HEAD、狀態、每一個有改動的檔的雜湊）',
            f'HEAD {after[0][:7]}，狀態 {after[1].strip() or "乾淨"}')
     record(not os.path.exists(td), '暫存目錄已刪')
-    print(f'共 {len(results)} 項，耗時 {time.time() - t0:.1f} 秒')
+    print(f'共 {len(results)} 項（另有情境未成立 {len(NOT_EST)} 項，不算數），耗時 {time.time() - t0:.1f} 秒')
+    if all(results) and NOT_EST:
+        print(f'CLI-PROBES NOT-ESTABLISHED: {NOT_EST}')
+        return 4
     if all(results):
         print('CLI-PROBES OK')
         return 0

@@ -110,7 +110,10 @@ def main():
                     '    return 0, sum(procs[p][1] for p in t), free, t, 0', 'reslog_zero.py')
         rc, out, rows, idx = run_reslog(p, td, 'B')
         ok, d = judge_a(rc, rows, idx)
-        record(not ok, 'B 突變「取程序數回 0」：A 的對照必須紅', ('紅了：' if not ok else '沒紅：') + d)
+        # 抓到＝改壞的 reslog 完整跑完（回傳值照傳 3、沒有取樣失敗），而且記下的正是「0 個」——不是崩潰或別的原因讓 A 不成立
+        zero = rc == 3 and idx[7] == '0' and idx[4] == '0' and idx[8] == '0' and all(r[2] == '0' for r in rows)
+        record(not ok and zero, 'B 突變「取程序數回 0」：A 的對照必須紅，而且紅的理由是記成 0',
+               ('紅了、理由對：' if not ok and zero else '不能算抓到：') + d)
 
         p = mutated(td, '    """回傳 ({pid: (ppid, 記憶體位元組, 程序名稱)}, 系統可用記憶體位元組)；取不到回傳 None。"""\n',
                     '    """回傳 ({pid: (ppid, 記憶體位元組, 程序名稱)}, 系統可用記憶體位元組)；取不到回傳 None。"""\n    return None\n',

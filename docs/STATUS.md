@@ -80,6 +80,14 @@
 >     - **今天 5 條突變的分類用行首比對重驗：結論不變**（每一份 log：行首「MUTATION ACTIVE」1 行、行首「ABORT」0 行、yes＋no 恰好 33；第一次空跑的兩份是行首 ABORT、沒有 MUTATION ACTIVE；完整閘門驗法 66 個 yes）。
 >     - **我今天新寫的三支有子字串比對，已改**：`test_cli_probes.py`（`LINT-GATE OK`、`SELF-CHECK OK`、「X 命中 1 行」、「全部檢查通過」、題庫問題清單混進警告）、`test_pushsafe_kill.py`（`MUTATION ACTIVE`、「yes  01」、`TEST-PUSHSAFE:`）、`test_reslog.py`（「取樣失敗」）。一律只認行首的判定行，失敗原因用「；」拆開逐項全等比對。三支各補擷取函式的對照組（命中內容與別一行裡帶著那幾個字，不能被算進去），**原樣全符合、改回子字串比對的 5 個突變都紅**（log `.logs/parser-controls-2026-10-02.log`）；`test_reslog.py` 改完重跑 6 項全符合。
 >     - **因此作廢、要重驗的**：`test_cli_probes.py` 先前報的「33 項全符合」是用子字串判的——改完之後還沒重跑（約 1 分鐘，屬重負載界線），排進下一場。`test_pushsafe_kill.py` 2026-10-02 那次 370 秒的結果，判斷「MUTATION ACTIVE」「沒有結尾」也是子字串——痕跡（e）讀檔那一項不受影響，但整次照規矩當成要重驗，跟補完版一起跑。
+> - **v11.4 §5.20「逾時與崩潰不得被回傳值吃掉」——本 App 查到同一種洞，已改（2026-10-02）**：
+>   - `test_cli_probes.py` 的三條自身突變，原本「整組有不符」就算抓到——改壞的檢查程式崩潰（回 1＋Traceback）也會被算成抓到；呼叫檢查程式也沒有逾時。改成：每一次叫檢查程式都記回傳值、有沒有在行首印出「通過」那一行、有沒有崩潰、這一次預期該過還是該擋；**抓到＝該擋的那一次，改壞的程式完整跑完卻印出通過**；崩潰＝「⊘ 情境未成立」、回傳 4、不算抓到；逾時 300 秒＝造情境失敗（沒驗到）。
+>   - 順帶發現：原本的 lint「`.js` 分支不掃」與題庫「假名檢查拿掉」兩條自身突變，在 `7b656ad` 之後會先被各自程式內的真實檔對照組擋下，從命令列入口那一道根本驗不到——換成「正式掃描的結果被丟掉」（lint）與「正式那一輪不呼叫檢查」（題庫），程式內的對照組照樣過、只有命令列入口分得出。**新的這三條還沒實跑過。**
+>   - `test_pushsafe_kill.py` 的反向 R：原本看回傳值；改成只認驗法行首印的「TEST-PUSHSAFE: 全部符合預期（兩種順序）」，沒有就是「⊘ 情境未成立」回傳 4（沒正常跑完＝沒量到），不判成不符。
+>   - `test_reslog.py` 的突變 B：原本「A 的對照不成立」就算抓到；改成要求改壞的那份完整跑完（回傳值照傳、沒有取樣失敗）而且記下的正是 0。重跑 6 項全符合（`.logs/test_reslog-2026-10-02-strict.log`）。
+>   - 驗擷取函式的一次性腳本也有同一個洞（子程序崩潰被當成「有紅」），改成崩潰＝未成立後重跑 7 項全符合（`.logs/parser-controls-2026-10-02.log`）。
+>   - 閘門驗法本身：突變那一輪的「有不符」由各情境的 yes／no 算出、`die` 回 2 獨立；沒有逾時——單條卡住會一直掛著，**這一條留給突變執行器的單條逾時**（設計 §2）。
+>   - 「判定器只有四種結果、沒寫 expect 的只看 exit code」這句不是本 App 寫過的（應該是別的 App 的回報）；本 App 照那個問題回頭查，查到的就是上面這幾處。
 > - **證據 log 一律寫進 `.logs/`（Dispatch 2026-10-02，先照做、之後收進共用慣例）**：凡是要當證據的輸出，不留在 session 暫存區或系統暫存目錄——那 29 條突變降級、TripQuest 的 148 份突變、先前的 `ev2.sh`，根因都是證據放在暫存區、跟著 session 一起過期。驗法內部用的暫存目錄（clone、樣本）照舊放系統暫存區，但它們印出來、要拿來下結論的那份輸出要落在 `.logs/`。
 > - **工單 3a 盤點：本 repo 會開工作程序的地方**（2026-10-02；數法照 MealMate：node／python 各算一個、瀏覽器實例算一個、git／shell／PowerShell 不算個數）。搜的樣式：`Promise.all`、`Popen`、`subprocess.run`、`child_process`、`spawn(`、`execSync`、`execFile`、`puppeteer.launch`、`ThreadPool`、`ProcessPool`、`multiprocessing`、`concurrent.futures`、`threading`、`ThreadingHTTPServer`、`Worker(`、shell 的背景 `&`、`wait`、`xargs`；範圍 `scripts/**`、`js/**`、`sw.js`。**在這些樣式範圍內未見平行開多個工作程序**（shell 沒有背景工作；Python 都是 `subprocess.run` 依序、一次一個）。
 >
