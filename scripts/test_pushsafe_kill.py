@@ -1,6 +1,8 @@
 """閘門驗法被強制終止時，主 repo 的原始碼會不會被改壞（共用慣例 v11.3 §5.20；Dispatch 2026-10-02）。
 
-用法：python scripts/test_pushsafe_kill.py
+用法：python scripts/test_pushsafe_kill.py [--r-timeout 秒數] [--only-r]
+  驗「反向那一步逾時」那條路：python scripts/test_pushsafe_kill.py --only-r --r-timeout 2 → 必須回 4、行首「⊘ 情境未成立」、
+  整棵殺掉、留下的暫存目錄清掉、主 repo 等於 HEAD（造一條必然超過 1800 秒的情境太貴，所以把逾時值做成可覆寫）。
 回傳值：0＝全部符合；1＝有不符；2＝造情境失敗（git 之類的步驟壞了，沒驗到）；
         4＝情境未成立（重試 3 次都沒在「壞檔在磁碟上、情境在跑」的時候殺到——這次什麼都沒量到，不是通過也不是紅）。
 什麼時候跑：改過 test_pushsafe.sh 的「複製、cd、改檔、清理、登記」那幾段就跑。重負載（含一次完整的閘門驗法，約 6～7 分鐘）。
@@ -223,7 +225,65 @@ def run_k(bash, mode, before_raw, tag):
     return False, traces, None, MAX_TRIES
 
 
+def run_r(bash, before_raw, timeout):
+    """反向：不殺、讓閘門驗法正常跑完。回傳 None＝情境成立且已判（record）；回傳 4＝情境未成立。
+    逾時：subprocess 的 timeout 只殺得到直接的子程序（reslog.py），底下整棵閘門驗法會變成孤兒繼續跑——
+    所以自己等、逾時就量下整棵樹、taskkill /T /F、確認都不在了、清掉留下的暫存目錄，再判「情境未成立」。"""
+    rlog = os.path.join(LOGDIR, f'kill-{STAMP}-R.log')
+    t_before = tmpdirs()
+    fh = open(rlog, 'wb')
+    p = subprocess.Popen([sys.executable, os.path.join(ROOT, 'scripts', 'reslog.py'), '--label', 'test_pushsafe-reverse',
+                          '--estimate', '363', '--', bash, 'scripts/test_pushsafe.sh'], cwd=ROOT, stdout=fh, stderr=subprocess.STDOUT, env=ENV)
+    try:
+        p.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        m = reslog.measure(p.pid)
+        pids = m[3] if m else set()
+        subprocess.run(['taskkill', '/PID', str(p.pid), '/T', '/F'], capture_output=True)
+        try:
+            p.wait(timeout=60)
+        except subprocess.TimeoutExpired:
+            pass
+        fh.close()
+        time.sleep(2)
+        snap = reslog.snapshot()
+        alive = sorted(x for x in pids if snap and x in snap[0])
+        left = ours(tmpdirs() - t_before)
+        for d in left:
+            rmtree(d)
+        raw, diff, status = tree_state(ROOT)
+        clean = raw == before_raw and not diff and not status.strip()
+        record(not alive and not any(os.path.exists(d) for d in left) and clean and snap is not None,
+               f'R 逾時（{timeout} 秒）的收尾：整棵殺掉、留下的暫存目錄清掉、主 repo 等於 HEAD',
+               f'殺掉前量到 {len(pids)} 個程序、還活著 {alive}、清掉暫存目錄 {len(left)} 個、主 repo {"等於" if clean else "不等於"} HEAD')
+        print(f'{NOT_ESTABLISHED}：R 閘門驗法 {timeout} 秒沒跑完（逾時）——「正常跑完之後主 repo 等於 HEAD」這次沒量到'
+              f'（log {os.path.relpath(rlog, ROOT)}）')
+        if not results[-1]:   # 收尾本身不符（還有程序活著、目錄沒清掉、主 repo 被動到）是真的不符，不能被「未成立」的 4 蓋掉
+            print('TEST-KILL FAILED: 逾時之後的收尾不符')
+            return 1
+        return 4
+    fh.close()
+    rtext = open(rlog, encoding='utf-8', errors='replace').read()
+    tail = rtext.strip().splitlines()[-3:]
+    r_raw, r_diff, r_status = tree_state(ROOT)
+    # R 的情境是「正常跑完」：只認驗法自己在行首印的全過那一行，不看回傳值（v11.4：崩潰與逾時不得被回傳值吃掉）
+    if not any(l.startswith('TEST-PUSHSAFE: 全部符合預期（兩種順序）') for l in rtext.splitlines()):
+        print(f'{NOT_ESTABLISHED}：R 閘門驗法沒有正常跑完（rc={p.returncode}；{" ／ ".join(tail)}；log {os.path.relpath(rlog, ROOT)}）'
+              '——「正常跑完之後主 repo 等於 HEAD」這次沒量到')
+        return 4
+    record(p.returncode == 0 and r_raw == before_raw and not r_diff and not r_status.strip(),
+           'R 反向：正常跑完閘門驗法（全符合）後，主 repo 同樣等於 HEAD',
+           f'rc={p.returncode}；{" ／ ".join(tail)}；與 HEAD 不同的 {r_diff}；log {os.path.relpath(rlog, ROOT)}')
+    print(f'[紀錄] R 之後主 repo 的驗法登記：{reg_state()}')
+    return None
+
+
 def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--r-timeout', type=float, default=1800, help='反向那一步的逾時秒數（驗逾時那條路時調短，例：2）')
+    ap.add_argument('--only-r', action='store_true', help='只跑前置與反向那一步（驗逾時那條路用；不跑 C、K）')
+    args = ap.parse_args()
     bash = shutil.which('bash')
     if not bash or 'system32' in bash.lower():
         print(f'ABORT: 找不到 Git 的 bash（{bash}）')
@@ -237,49 +297,36 @@ def main():
         parser_controls()
         reg0 = reg_state()
 
+        if args.only_r:
+            print('[紀錄] --only-r：只跑前置與反向那一步，C、K 這次不跑')
         # ---- C：對照組「一定不成立」——開跑後 1 秒就殺，突變還沒生效 ----
-        ok, traces, T, n = run_k(bash, 'early', before_raw, 'C')
-        record(not ok and T is None, f'C 對照組「一定不成立」：{n} 次都判成情境未成立（不是紅、不是綠）',
+        ok, traces, T, n = run_k(bash, 'early', before_raw, 'C') if not args.only_r else (False, '', None, 0)
+        if not args.only_r:
+          record(not ok and T is None, f'C 對照組「一定不成立」：{n} 次都判成情境未成立（不是紅、不是綠）',
                '判成未成立' if not ok else f'竟然判成成立：{traces}')
 
         # ---- K：強制終止 ----
-        ok, traces, T, n = run_k(bash, 'real', before_raw, 'K')
+        ok, traces, T, n = run_k(bash, 'real', before_raw, 'K') if not args.only_r else (True, '', None, 0)
         if not ok:
             print(f'{NOT_ESTABLISHED}：K 重試 {n} 次都沒在「壞檔在磁碟上、情境在跑」的時候殺到——這次什麼都沒量到（最後一次：{traces}）')
             return 4
         after_raw, after_diff, after_status = tree_state(ROOT)
-        record(after_raw == before_raw and not after_diff and not after_status.strip(),
+        if not args.only_r:
+          record(after_raw == before_raw and not after_diff and not after_status.strip(),
                f'K 情境成立（第 {n} 次）：主 repo 每個追蹤中的檔原始位元組與開跑前相同、內容雜湊等於 HEAD、git status 乾淨',
                f'{len(after_raw)} 支檔；位元組有變的 {[f for f in after_raw if after_raw[f] != before_raw.get(f)]}；'
                f'與 HEAD 不同的 {after_diff}；status {after_status.strip() or "乾淨"}')
-        reg1 = reg_state()
-        print(f'[紀錄] K 主 repo 的驗法登記：中斷前 {reg0}；中斷後 {reg1}（{"沒變" if reg0 == reg1 else "變了"}）')
-        print(f'[紀錄] K 被殺之後留下的暫存目錄：{"有" if os.path.isdir(T) else "沒有"}（trap 不會跑，預期會留下）')
-        rmtree(T)
-        record(not os.path.exists(T), 'K 留下的暫存目錄已清掉')
+        if not args.only_r:
+          reg1 = reg_state()
+          print(f'[紀錄] K 主 repo 的驗法登記：中斷前 {reg0}；中斷後 {reg1}（{"沒變" if reg0 == reg1 else "變了"}）')
+          print(f'[紀錄] K 被殺之後留下的暫存目錄：{"有" if os.path.isdir(T) else "沒有"}（trap 不會跑，預期會留下）')
+          rmtree(T)
+          record(not os.path.exists(T), 'K 留下的暫存目錄已清掉')
 
         # ---- R：反向，正常跑完 ----
-        try:
-            rr = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'reslog.py'), '--label', 'test_pushsafe-reverse',
-                                 '--estimate', '363', '--', bash, 'scripts/test_pushsafe.sh'], cwd=ROOT, capture_output=True, env=ENV,
-                                timeout=1800)
-        except subprocess.TimeoutExpired:
-            print(f'{NOT_ESTABLISHED}：R 閘門驗法 1800 秒沒跑完（逾時）——「正常跑完之後主 repo 等於 HEAD」這次沒量到')
-            return 4
-        rlog = os.path.join(LOGDIR, f'kill-{STAMP}-R.log')
-        open(rlog, 'wb').write(rr.stdout + rr.stderr)
-        tail = rr.stdout.decode('utf-8', 'replace').strip().splitlines()[-3:]
-        r_raw, r_diff, r_status = tree_state(ROOT)
-        # R 的情境是「正常跑完」：只認驗法自己在行首印的全過那一行，不看回傳值（v11.4：崩潰與逾時不得被回傳值吃掉）
-        rtext = rr.stdout.decode('utf-8', 'replace')
-        if not any(l.startswith('TEST-PUSHSAFE: 全部符合預期（兩種順序）') for l in rtext.splitlines()):
-            print(f'{NOT_ESTABLISHED}：R 閘門驗法沒有正常跑完（rc={rr.returncode}；{" ／ ".join(tail)}；log {os.path.relpath(rlog, ROOT)}）'
-                  '——「正常跑完之後主 repo 等於 HEAD」這次沒量到')
-            return 4
-        record(rr.returncode == 0 and r_raw == before_raw and not r_diff and not r_status.strip(),
-               'R 反向：正常跑完閘門驗法（全符合）後，主 repo 同樣等於 HEAD',
-               f'rc={rr.returncode}；{" ／ ".join(tail)}；與 HEAD 不同的 {r_diff}；log {os.path.relpath(rlog, ROOT)}')
-        print(f'[紀錄] R 之後主 repo 的驗法登記：{reg_state()}')
+        rc_r = run_r(bash, before_raw, args.r_timeout)
+        if rc_r is not None:
+            return rc_r
     except SetupError as e:
         print(f'TEST-KILL ABORT: 造情境失敗：{e}（沒驗到，不是通過）')
         return 2

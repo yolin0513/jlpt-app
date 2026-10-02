@@ -348,6 +348,35 @@ def escape_orphans(script_names):
     return sorted(n for n in script_names if n.endswith(SCRIPT_EXT) and n not in ESCAPE_TARGETS)
 
 
+# ---- 閘門驗法的情境母體（2026-10-02，Dispatch 問「33 是母體嗎、從哪裡來」）----
+# test_pushsafe.sh 要跑的情境寫在 LIST、個數寫在 N_SCEN，驗法只核對「跑完的個數＝N_SCEN」；定義了 sNN() 卻沒加進 LIST 的情境
+# 永遠不會被跑，33＝33 照樣成立。這裡三者互相核對：定義的 sNN() 集合＝LIST 的集合＝N_SCEN，而且 LIST 沒有重複。
+SCEN_DEF = re.compile(r'^(s\d\d)\(\)\s*\{', re.M)
+SCEN_LIST = re.compile(r'^LIST="([^"]*)"\s*$', re.M)
+SCEN_N = re.compile(r'^N_SCEN=(\d+)\s*$', re.M)
+
+
+def scenario_population(text):
+    """回傳 None 表示一致；否則回傳哪裡不一致（讀不到 LIST 或 N_SCEN 也算不一致——故障時停下）。"""
+    defined = SCEN_DEF.findall(text)
+    lm, nm = SCEN_LIST.findall(text), SCEN_N.findall(text)
+    if len(lm) != 1 or len(nm) != 1:
+        return f'LIST 有 {len(lm)} 行、N_SCEN 有 {len(nm)} 行，應各恰好 1 行'
+    listed, n = lm[0].split(), int(nm[0])
+    if not defined:
+        return '一個 sNN() 都沒讀到'
+    probs = []
+    if len(listed) != len(set(listed)):
+        probs.append(f'LIST 有重複：{sorted({x for x in listed if listed.count(x) > 1})}')
+    if len(defined) != len(set(defined)):
+        probs.append(f'sNN() 定義了兩次：{sorted({x for x in defined if defined.count(x) > 1})}')
+    if set(defined) != set(listed):
+        probs.append(f'定義了卻沒在 LIST：{sorted(set(defined) - set(listed))}；在 LIST 卻沒定義：{sorted(set(listed) - set(defined))}')
+    if not (n == len(set(defined)) == len(listed)):
+        probs.append(f'N_SCEN={n}、定義 {len(set(defined))} 個、LIST {len(listed)} 個')
+    return '；'.join(probs) or None
+
+
 def run_rule(rule, name, text):
     return RULES[rule](name, text.split('\n'))
 
@@ -453,12 +482,40 @@ def main():
         os.rmdir(empty)
     if not _err:
         bad.append('孤兒檢查的對照組不對：在不是 git repo 的目錄取不到清單，卻沒有判成檢查器壞了（檢查器壞了）')
+    # 情境母體檢查的對照組：當場組出來的合成腳本，一致的要放行、每一種不一致各一個要擋
+    def _scen(defs, lst, n):
+        return ''.join(f'{d}() {{ at_start\n}}\n' for d in defs) + (f'LIST="{lst}"\n' if lst is not None else '') + f'N_SCEN={n}\n'
+    scen_cases = [
+        (_scen(['s01', 's02'], 's01 s02', 2), None, '一致'),
+        (_scen(['s01', 's02', 's03'], 's01 s02', 2), 's03', '定義了卻沒在 LIST'),
+        (_scen(['s01', 's02'], 's01', 1), 's02', 'LIST 少一個（N_SCEN 跟著 LIST）'),
+        (_scen(['s01', 's02'], 's01 s02', 3), 'N_SCEN=3', 'N_SCEN 不符'),
+        (_scen(['s01', 's02'], 's01 s02 s02', 3), 'LIST 有重複', 'LIST 重複'),
+        (_scen(['s01'], None, 1), 'LIST 有 0 行', '讀不到 LIST'),
+    ]
+    for text, want, label in scen_cases:
+        got = scenario_population(text)
+        if (want is None) != (got is None) or (want is not None and want not in got):
+            bad.append(f'情境母體檢查的對照組不對：「{label}」得到 {got!r}（檢查器壞了）')
     n_controls = sum(len(v) for v in CONTROLS.values())
     print(f'對照組 {n_controls} 條、反例 {len(NEGATIVES)} 條：{"全部符合" if not bad else "有問題"}')
     if bad:
         for b in bad:
             print('  ', b)
         print('LINT-GATE FAILED: 檢查器本身的對照組不過，這次的掃描結果不可信')
+        return 1
+
+    # 1.5) 閘門驗法的情境母體：定義的 sNN()＝LIST＝N_SCEN
+    try:
+        tps = open(os.path.join(ROOT, 'scripts', 'test_pushsafe.sh'), encoding='utf-8').read()
+    except OSError as e:
+        print(f'LINT-GATE FAILED: 讀不到 scripts/test_pushsafe.sh（{e}），情境母體沒辦法核對')
+        return 1
+    sp = scenario_population(tps)
+    print(f'情境母體：定義的 sNN() {len(set(SCEN_DEF.findall(tps)))} 個、LIST {len((SCEN_LIST.findall(tps) or [""])[0].split())} 個、'
+          f'N_SCEN={(SCEN_N.findall(tps) or ["?"])[0]}：{"一致" if sp is None else "不一致"}')
+    if sp is not None:
+        print(f'LINT-GATE FAILED: 閘門驗法的情境母體不一致：{sp}')
         return 1
 
     # 2) 掃登記的檔
