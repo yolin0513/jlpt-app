@@ -60,6 +60,13 @@ WANT = {   # 名稱 → (分類, 實際紅, 理由也不對)
 def main():
     td = tempfile.mkdtemp(prefix='jlpt-mkev-')
     try:
+        # 合成的驗法：情境 3 個（判定行數的母體檢查要從它的 LIST 數）
+        ver = os.path.join(td, 'fake_tps.sh')
+        open(ver, 'w', encoding='utf-8').write(
+            '#   TEST_PUSHSAFE_MUTATE=<突變> bash x   # 突變：mred mclean mnoend mabort mnoactive\n'
+            'case "$MUTATE" in\n  "") ;;\n  mred)\n    x ;;\n  mclean|mnoend|mabort|mnoactive)\n    y ;;\nesac\n'
+            'LIST="s01 s02 s03"\nN_SCEN=3\n')
+        V = ['--verifier', ver]
         paths = []
         for n, t in LOGS.items():
             p = os.path.join(td, n)
@@ -68,24 +75,29 @@ def main():
         summ = os.path.join(td, 'pre-a.summary')
         open(summ, 'w', encoding='utf-8').write('mred rc=1 秒=111\nmclean rc=1 秒=22\n')
         out1 = os.path.join(td, 'ev.tsv')
-        rc, out = run(SRC, ['--out', out1, '--summary', summ, *paths])
-        # 欄位：0 名稱 1 分類 2 判定 3 預期類別 4 預期紅 5 實際紅 6 預期不紅卻紅 7 預期紅卻沒紅 8 其中擋下理由也不對 9 秒數 10 log
+        rc, out = run(SRC, ['--out', out1, *V, '--summary', summ, *paths])
+        # 欄位：0 名稱 1 分類 2 判定 3 預期類別 4 預期紅 5 實際紅 6 預期不紅卻紅 7 預期紅卻沒紅 8 其中擋下理由也不對 9 判定行數 10 秒數 11 log
         got = {r[0]: (r[1], r[5], r[8]) for r in rows(out1)} if rc == 0 and os.path.exists(out1) else {}
         ok = rc == 0 and got == WANT and len(rows(out1)) == len(paths)
         record(ok, 'A 五種 log 的分類、實際紅、證據行不被當成判定', f'rc={rc}；{got}')
-        secs = {r[0]: r[9] for r in rows(out1)} if got else {}
+        secs = {r[0]: r[10] for r in rows(out1)} if got else {}
         record(secs.get('mred') == '111' and secs.get('mclean') == '22' and secs.get('mabort') == '未記',
                'A 秒數從同一次的摘要讀到、沒有的寫「未記」', f'{secs}')
 
-        # B 母體：多交一個讀不到的 log；原本的檔不能被覆寫
-        before = open(out1, 'rb').read()
-        rc, out = run(SRC, ['--out', out1, *paths, os.path.join(td, 'pre-a.missing.log')])
+        # B 母體：多交一個讀不到的 log；原本的檔不能被覆寫（自己放一份基準檔，不依賴 A 的產出——情境之間不互相污染）
+        outb = os.path.join(td, 'ev_b.tsv')
+        open(outb, 'wb').write(b'baseline\n')
+        rc, out = run(SRC, ['--out', outb, *V, *paths, os.path.join(td, 'pre-a.missing.log')])
         fl = [l for l in out.splitlines() if l.startswith('MKEVIDENCE FAILED: ')]
-        record(rc == 1 and len(fl) == 1 and '不等' in fl[0] and open(out1, 'rb').read() == before,
+        record(rc == 1 and len(fl) == 1 and '不等' in fl[0] and open(outb, 'rb').read() == b'baseline\n',
                'B 讀不到一個 log → 母體不等、回 1、不寫檔（原檔沒被覆寫）', f'rc={rc}、{fl}')
 
-        # C 清洗：證據檔沒有路徑與使用者名稱；clean() 改成原樣回傳 → 自己的對照組擋下
-        text = open(out1, encoding='utf-8').read()
+        # C 清洗：證據檔沒有路徑與使用者名稱（自己產生一份，產生不出來就記不符、不整支中止）；clean() 改成原樣回傳 → 自己的對照組擋下
+        outc = os.path.join(td, 'ev_c.tsv')
+        rc, out = run(SRC, ['--out', outc, *V, *paths])
+        text = open(outc, encoding='utf-8').read() if rc == 0 and os.path.exists(outc) else ''
+        if not text:
+            record(False, 'C 清洗：產生不出證據檔，沒辦法檢查', f'rc={rc}')
         user = os.environ.get('USERNAME') or os.environ.get('USER') or ''
         record(td not in text and (not user or user not in text) and 'Users' not in text,
                'C 證據檔裡沒有暫存目錄路徑、使用者名稱', f'{len(text)} 字元')
@@ -96,7 +108,7 @@ def main():
         mp = os.path.join(td, 'mk_noclean.py')
         open(mp, 'w', encoding='utf-8').write(s.replace(a, a + "    return cell\n"))
         out2 = os.path.join(td, 'ev2.tsv')
-        rc, out = run(mp, ['--out', out2, *paths])
+        rc, out = run(mp, ['--out', out2, *V, *paths])
         fl = [l for l in out.splitlines() if l.startswith('MKEVIDENCE FAILED: 清洗的對照組不過')]
         record(rc == 1 and len(fl) == 1 and not os.path.exists(out2), 'C 突變「clean 原樣回傳」→ 清洗對照組擋下、回 1、不寫檔',
                f'rc={rc}、{fl}')
@@ -109,15 +121,10 @@ def main():
         open(s1, 'w', encoding='utf-8').write('mred rc=2 秒=8\n')
         open(s2, 'w', encoding='utf-8').write('mred rc=1 秒=250\n')
         out3 = os.path.join(td, 'ev3.tsv')
-        rc, out = run(SRC, ['--out', out3, '--summary', s1, '--summary', s2, p1, p2])
-        got = [(r[10], r[9]) for r in rows(out3)] if rc == 0 else []
+        rc, out = run(SRC, ['--out', out3, *V, '--summary', s1, '--summary', s2, p1, p2])
+        got = [(r[11], r[10]) for r in rows(out3)] if rc == 0 else []
         record(got == [('run1.mred.log', '8'), ('run2.mred.log', '250')], 'D 秒數只對應同一次的摘要（不會被後一份蓋掉）', f'{got}')
         # E 預期表：對全部情境的完整劃分（合成的驗法：case 分支 mred／mclean／mnoend／mabort／mnoactive、LIST s01～s03）
-        ver = os.path.join(td, 'fake_tps.sh')
-        open(ver, 'w', encoding='utf-8').write(
-            '#   TEST_PUSHSAFE_MUTATE=<突變> bash x   # 突變：mred mclean mnoend mabort mnoactive\n'
-            'case "$MUTATE" in\n  "") ;;\n  mred)\n    x ;;\n  mclean|mnoend|mabort|mnoactive)\n    y ;;\nesac\n'
-            'LIST="s01 s02 s03"\nN_SCEN=3\n')
         H = '名稱\t類別\ts01\ts02\ts03\t依據\n'
         def exp(name, body):
             p = os.path.join(td, name)
@@ -133,13 +140,13 @@ def main():
                and r4.get('mabort', ('',))[0] == '—', 'E 完整劃分對得上 → 放行；判定：紅在預期、等價、情境未成立記「—」', f'rc={rc}、{r4}')
         # 通過時也要印量到的數字（不是從「沒有報錯」推出來的 0）：5 條 × 3 個情境＝15 格、驗法 5 條突變、3 個情境
         ck = [l for l in out.splitlines() if l.startswith('MKEVIDENCE EXPECT-CHECK: ')]
-        record(len(ck) == 1 and '預期表 5 條突變 × 3 個情境＝查了 15 格' in ck[0] and '驗法裡有突變 5 條、情境 3 個' in ck[0]
+        record(len(ck) == 1 and '預期表實際讀到 15 格（應有 5 條突變 × 3 個情境＝15 格）' in ck[0] and '驗法裡有突變 5 條、情境 3 個' in ck[0]
                and '過期 0 處' in ck[0], 'E 通過時印出量到的數字（列數、格數、驗法的突變與情境數、驗法的雜湊）', f'{ck}')
         rc, out = run(SRC, ['--out', os.path.join(td, 'ev_co.tsv'), '--check-only', '--expect', ok_exp, '--verifier', ver])
         ck = [l for l in out.splitlines() if l.startswith('MKEVIDENCE EXPECT-CHECK: ')]
-        record(rc == 0 and len(ck) == 1 and '查了 15 格' in ck[0] and not os.path.exists(os.path.join(td, 'ev_co.tsv')),
+        record(rc == 0 and len(ck) == 1 and '實際讀到 15 格' in ck[0] and not os.path.exists(os.path.join(td, 'ev_co.tsv')),
                'E --check-only：只核對、印量到的數字、不寫證據檔', f'rc={rc}、{ck[:1]}')
-        rc, out = run(SRC, ['--out', os.path.join(td, 'ev_ne.tsv'), *paths])
+        rc, out = run(SRC, ['--out', os.path.join(td, 'ev_ne.tsv'), *V, *paths])
         ck = [l for l in out.splitlines() if l.startswith('MKEVIDENCE EXPECT-CHECK: ')]
         record(rc == 0 and len(ck) == 1 and '沒有查' in ck[0], 'E 沒給預期表時明講「沒有查」', f'{ck}')
         # 不符預期：mred 預期 01、03 紅，實際 02、03 紅 → 預期不紅卻紅＝02、預期紅卻沒紅＝01
@@ -172,6 +179,19 @@ def main():
         rc, out = run(SRC, ['--out', os.path.join(td, 'ev10.tsv'), '--expect', ok_exp, '--verifier', bad_ver, *paths])
         fl = [l for l in out.splitlines() if l.startswith('MKEVIDENCE FAILED: 驗法的母體讀不清楚')]
         record(rc == 1 and len(fl) == 1 and 'mnoend' in fl[0], 'E 驗法的檔頭清單與 case 分支不一致 → 回 1、點名', f'rc={rc}、{fl}')
+        # F 判定行數的母體（TripQuest 2026-10-02：兩份空清單互比得到「差異 0」）：對照組兩向在同一支裡
+        rc, out = run(SRC, ['--out', os.path.join(td, 'evf1.tsv'), *V, *paths])
+        cmp_l = [l for l in out.splitlines() if l.startswith('MKEVIDENCE COMPARE: ')]
+        record(rc == 0 and len(cmp_l) == 1 and '實際抽到判定行 6 行、應有 6 行' in cmp_l[0],
+               'F 完整的 log：印出實際抽到的判定行數＝應有的（2 份情境成立 × 3 個情境＝6）', f'rc={rc}、{cmp_l}')
+        short = os.path.join(td, 'pre-a.mshort.log')
+        open(short, 'w', encoding='utf-8').write(LOGS['pre-a.mred.log'].replace('no   03 c  rc=1(期望 1)\n', ''))
+        if 'no   03' in open(short, encoding='utf-8').read():
+            raise RuntimeError('少一行的樣本沒造成')
+        rc, out = run(SRC, ['--out', os.path.join(td, 'evf2.tsv'), *V, short])
+        fl = [l for l in out.splitlines() if l.startswith('MKEVIDENCE FAILED: ') and '判定行數不等於情境數' in l]
+        record(rc == 1 and len(fl) == 1 and 'pre-a.mshort.log：抽到判定行 2 行、應有 3 行' in out and not os.path.exists(os.path.join(td, 'evf2.tsv')),
+               'F 少一行判定行的 log → 擋下、點名那一份、不寫檔', f'rc={rc}、{fl}')
     except (RuntimeError, OSError, IndexError, subprocess.TimeoutExpired) as e:
         print(f'TEST-MKEVIDENCE ABORT: 造情境失敗：{e}（沒驗到，不是通過）')
         return 2

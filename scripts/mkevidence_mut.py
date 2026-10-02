@@ -25,11 +25,11 @@ import re
 import sys
 
 
-HEADER = ['名稱', '分類', '判定', '預期類別', '預期紅', '實際紅', '預期不紅卻紅', '預期紅卻沒紅', '其中擋下理由也不對', '秒數', 'log']
+HEADER = ['名稱', '分類', '判定', '預期類別', '預期紅', '實際紅', '預期不紅卻紅', '預期紅卻沒紅', '其中擋下理由也不對', '判定行數', '秒數', 'log']
 
 
 def classify(text):
-    """回傳 (名稱或 None, 分類, 實際紅的情境 list, 擋下理由不對的情境 list)。只看行首。"""
+    """回傳 (名稱或 None, 分類, 實際紅的情境 list, 擋下理由不對的情境 list, 抽到的情境判定行數)。只看行首。"""
     lines = text.splitlines()
     active = [l for l in lines if l.startswith('MUTATION ACTIVE: ')]
     name = active[0][len('MUTATION ACTIVE: '):].split('（', 1)[0].strip() if len(active) == 1 else None
@@ -37,13 +37,15 @@ def classify(text):
     end = [l for l in lines if l.startswith('TEST-PUSHSAFE: ')]
     reds = sorted({l.split()[1] for l in lines if l.startswith('no ') and len(l.split()) > 1})
     wrong = sorted({l.split()[1] for l in lines if l.startswith('no ') and len(l.split()) > 1 and '擋下理由不對' in l})
+    judged = [l for l in lines if (l.startswith('yes ') or l.startswith('no ')) and len(l.split()) > 1 and l.split()[1].isdigit()]
+    n = len(judged)
     if abort or name is None or len(end) != 1:
-        return name, '情境未成立', [], []
+        return name, '情境未成立', [], [], n
     if end[0].startswith('TEST-PUSHSAFE: 全部符合，但這一輪是突變'):
-        return name, '全部符合', [], []
+        return name, '全部符合', [], [], n
     if end[0].startswith('TEST-PUSHSAFE: 有不符合預期的情況'):
-        return name, '紅', reds, wrong
-    return name, '情境未成立', [], []   # 結尾是別的樣子（例：沒有突變的正常一輪）＝不是這裡要的那一種
+        return name, '紅', reds, wrong, n
+    return name, '情境未成立', [], [], n   # 結尾是別的樣子（例：沒有突變的正常一輪）＝不是這裡要的那一種
 
 
 USER = os.environ.get('USERNAME') or os.environ.get('USER') or ''
@@ -102,6 +104,7 @@ def current_population(tps_text):
 
 
 RED, NOT_RED = '紅', '不紅'
+COUNTED = {'cells': 0}   # 實際讀到的「紅／不紅」格數（不是列數乘欄數）
 
 
 def read_expect(path, scen, names):
@@ -140,6 +143,7 @@ def read_expect(path, scen, names):
         if name not in names:
             stale.append(f'{name}：驗法裡已經沒有這條突變')
         expect[name] = (f[1], [cols[j][1:] for j, c in enumerate(cells) if c == RED], f[-1])
+        COUNTED['cells'] += sum(1 for c in cells if c in (RED, NOT_RED))
     missing = sorted(names - set(expect))
     if missing and not fmt:
         stale.append(f'這幾條突變在驗法裡、預期表沒有列：{missing}')
@@ -217,22 +221,33 @@ def main(argv=None):
         # 跟檢查根本沒跑長得一樣）：讀了幾列、查了幾格、驗法裡有幾條突變幾個情境、對哪一份驗法查的
         import hashlib
         vh = hashlib.sha256(open(a.verifier, 'rb').read()).hexdigest()[:12]
-        cells = len(expect) * len(scen)
-        print(f'MKEVIDENCE EXPECT-CHECK: 預期表 {len(expect)} 條突變 × {len(scen)} 個情境＝查了 {cells} 格；'
+        cells, should = COUNTED['cells'], len(expect) * len(scen)
+        if cells != should or cells == 0:
+            print(f'MKEVIDENCE FAILED: 預期表實際讀到 {cells} 格、應有 {len(expect)}×{len(scen)}＝{should} 格，不相等或是 0（讀格子壞了，不寫檔）')
+            return 1
+        print(f'MKEVIDENCE EXPECT-CHECK: 預期表實際讀到 {cells} 格（應有 {len(expect)} 條突變 × {len(scen)} 個情境＝{should} 格）；'
               f'驗法裡有突變 {len(names)} 條、情境 {len(scen)} 個（{os.path.basename(a.verifier)} sha256 {vh}）；過期 0 處、格式不對 0 處')
     else:
         print('MKEVIDENCE EXPECT-CHECK: 沒給預期表，沒有查（預期欄全部寫「未登記」）')
     if a.check_only:
         return 0
     secs = read_seconds(a.summary)
-    rows = []
+    try:   # 情境數一律從驗法的 LIST 數出來（沒給預期表也要有，判定行數的母體檢查靠它）
+        _n, scen_now, probs = current_population(open(a.verifier, encoding='utf-8').read())
+    except OSError as e:
+        print(f'MKEVIDENCE FAILED: 讀不到驗法 {a.verifier}（{e}），數不出情境數，不寫檔')
+        return 1
+    if not scen_now:
+        print('MKEVIDENCE FAILED: 驗法的 LIST 讀不到，數不出情境數，不寫檔')
+        return 1
+    rows, short, got_lines, want_lines = [], [], 0, 0
     for lp in a.logs:
         try:
             text = open(lp, encoding='utf-8', errors='replace').read()
         except OSError as e:
             print(f'  讀不到 log：{os.path.basename(lp)}（{type(e).__name__}）——這一條沒有行，下面的母體檢查會擋')
             continue
-        name, cls, reds, wrong = classify(text)
+        name, cls, reds, wrong, njudged = classify(text)
         base = os.path.basename(lp)
         if name is None:   # 沒有 MUTATION ACTIVE：名稱從檔名推（本 App 的檔名是 …<名稱>.log）
             name = base.rsplit('.', 2)[-2] if base.count('.') >= 2 else base
@@ -245,8 +260,20 @@ def main(argv=None):
             verdict = '符合預期' if over == '-' and under == '-' else '不符預期'
         ered = '未登記' if ered_l is None else (','.join(ered_l) or '-')
         sec = secs.get((log_prefix(base, name), name), '未記')
-        row = [name, cls, verdict, ecls, ered, ','.join(reds) or '-', over, under, ','.join(wrong) or '-', sec, base]
+        if cls != '情境未成立':
+            got_lines += njudged
+            want_lines += len(scen_now)
+            if njudged != len(scen_now):
+                short.append(f'{base}：抽到判定行 {njudged} 行、應有 {len(scen_now)} 行')
+        row = [name, cls, verdict, ecls, ered, ','.join(reds) or '-', over, under, ','.join(wrong) or '-', str(njudged), sec, base]
         rows.append([clean(c) for c in row])
+    if short:
+        for x in short:
+            print('      ' + x)
+        print(f'MKEVIDENCE FAILED: {len(short)} 份 log 的判定行數不等於情境數（抽取規則壞了，或那一輪沒跑完整），不寫檔')
+        return 1
+    print(f'MKEVIDENCE COMPARE: 情境成立的 log 實際抽到判定行 {got_lines} 行、應有 {want_lines} 行'
+          f'（{len(scen_now)} 個情境 × {want_lines // len(scen_now) if scen_now else 0} 份）；情境未成立的不算')
     if len(rows) != len(a.logs):
         print(f'MKEVIDENCE FAILED: 證據 {len(rows)} 行、交進來的 log {len(a.logs)} 個，不等，不寫檔')
         return 1
