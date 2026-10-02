@@ -143,6 +143,7 @@ def main(argv=None):
     t0 = time.time()
     child = subprocess.Popen(cmd)
     peak_n, peak_w, peak_m, fails, last_line = 0, 0, 0, 0, -1e9
+    min_free = None   # 系統可用記憶體的最低值（每次取樣都更新，不只寫進紀錄的那幾行）
 
     def line(note, m):
         now = datetime.datetime.now().strftime('%H:%M:%S')
@@ -158,6 +159,7 @@ def main(argv=None):
         fails += 1
     else:
         peak_n, peak_w, peak_m = max(peak_n, first[0]), max(peak_w, first[4]), max(peak_m, first[1])
+        min_free = first[2]
     line('開始', first)
     last_line = time.time()
     while child.poll() is None:
@@ -169,6 +171,7 @@ def main(argv=None):
             fails += 1
         else:
             peak_n, peak_w, peak_m = max(peak_n, m[0]), max(peak_w, m[4]), max(peak_m, m[1])
+            min_free = m[2] if min_free is None else min(min_free, m[2])
         if time.time() - last_line >= a.interval:
             line('', m)
             last_line = time.time()
@@ -179,15 +182,16 @@ def main(argv=None):
     line(f'結束 rc={rc}', end)
     el = time.time() - t0
     fh.close()
+    low = '?' if min_free is None else f'{min_free / MB:.0f}'
     idx = os.path.join(a.logdir, 'reslog-index.tsv')
     new = not os.path.exists(idx)
     with open(idx, 'a', encoding='utf-8') as ih:
         if new:
-            ih.write('日期時間\tlabel\t預估秒\t實際秒\t峰值程序數\t峰值記憶體MB\t回傳值\t取樣失敗\t峰值工作程序數\n')
+            ih.write('日期時間\tlabel\t預估秒\t實際秒\t峰值程序數\t峰值記憶體MB\t回傳值\t取樣失敗\t峰值工作程序數\t最低可用記憶體MB\n')
         ih.write(f'{datetime.datetime.now().isoformat(timespec="seconds")}\t{a.label}\t{a.estimate}\t{el:.0f}\t'
-                 f'{peak_n}\t{peak_m / MB:.0f}\t{rc}\t{fails}\t{peak_w}\n')
+                 f'{peak_n}\t{peak_m / MB:.0f}\t{rc}\t{fails}\t{peak_w}\t{low}\n')
     warn = f'；取樣失敗 {fails} 次（峰值可能偏低）' if fails else ''
-    print(f'RESLOG: {a.label} 預估 {a.estimate} 秒、實際 {el:.0f} 秒；峰值 {peak_w} 個工作程序（全部 {peak_n} 個程序）、{peak_m / MB:.0f} MB；rc={rc}{warn}')
+    print(f'RESLOG: {a.label} 預估 {a.estimate} 秒、實際 {el:.0f} 秒；峰值 {peak_w} 個工作程序（全部 {peak_n} 個程序）、{peak_m / MB:.0f} MB；系統可用記憶體最低 {low} MB；rc={rc}{warn}')
     return rc
 
 

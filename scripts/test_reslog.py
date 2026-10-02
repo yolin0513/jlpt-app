@@ -88,7 +88,7 @@ def judge_a(rc, rows, idx):
     mid = [r for r in rows if r[6] == '']
     mid_ok = any(r[2] != '?' and int(r[2]) >= 3 and int(r[3]) >= 3 for r in mid)
     end_ok = rows[-1][6].startswith('結束') and rows[-1][2] == '0' and rows[-1][3] == '0'
-    peak_ok = int(idx[4]) >= 3 and int(idx[8]) >= 3
+    peak_ok = int(idx[4]) >= 3 and int(idx[8]) >= 3 and idx[9].isdigit() and int(idx[9]) > 0   # 最低可用記憶體要有值
     return rc == 3 and mid_ok and end_ok and peak_ok and idx[7] == '0', \
         (f'rc={rc}、中間各行（程序／工作程序）{[(r[2], r[3]) for r in mid]}、結束那一行 {rows[-1][2]}／{rows[-1][3]}、'
          f'峰值 {idx[4]}／{idx[8]}、取樣失敗 {idx[7]}')
