@@ -229,6 +229,7 @@ def run_r(bash, before_raw, timeout):
     """反向：不殺、讓閘門驗法正常跑完。回傳 None＝情境成立且已判（record）；回傳 4＝情境未成立。
     逾時：subprocess 的 timeout 只殺得到直接的子程序（reslog.py），底下整棵閘門驗法會變成孤兒繼續跑——
     所以自己等、逾時就量下整棵樹、taskkill /T /F、確認都不在了、清掉留下的暫存目錄，再判「情境未成立」。"""
+    os.makedirs(LOGDIR, exist_ok=True)   # 新 clone 裡沒有 .logs/（2026-10-02 在暫存 clone 跑突變時崩潰才發現；主 repo 一直有，所以沒露出來）
     rlog = os.path.join(LOGDIR, f'kill-{STAMP}-R.log')
     t_before = tmpdirs()
     fh = open(rlog, 'wb')
