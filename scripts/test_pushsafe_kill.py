@@ -36,7 +36,6 @@ import sys
 import tempfile
 import time
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'scripts'))
 import reslog  # noqa: E402
@@ -447,4 +446,6 @@ def main():
 
 
 if __name__ == '__main__':
+    # 只在直接執行時重包輸出：run_gate_mutations 會 import 這支拿 kill_tree，載入時重包會把它的輸出關掉（2026-10-02 撞到）
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
     sys.exit(main())
