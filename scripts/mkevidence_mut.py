@@ -177,6 +177,8 @@ def main(argv=None):
     ap.add_argument('--expect', help='預期表；沒給就全部「未登記」')
     ap.add_argument('--verifier', default=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'scripts', 'test_pushsafe.sh'),
                     help='用來核對預期表沒過期的驗法（預設 repo 裡的 test_pushsafe.sh）')
+    ap.add_argument('--planned', help='這一場要跑的突變清單（一行一個名稱）；給了才查「log 有、清單沒有」與「沒輪到」')
+    ap.add_argument('--claim-complete', action='store_true', help='宣稱這一場跑完了：清單裡還有沒輪到的就擋')
     ap.add_argument('--check-only', action='store_true', help='只核對預期表有沒有過期、格式對不對，不讀 log、不寫證據檔（跑突變之前先跑這個）')
     ap.add_argument('logs', nargs='*')
     a = ap.parse_args(argv)
@@ -241,6 +243,7 @@ def main(argv=None):
         print('MKEVIDENCE FAILED: 驗法的 LIST 讀不到，數不出情境數，不寫檔')
         return 1
     rows, short, got_lines, want_lines = [], [], 0, 0
+    meta = []   # (名稱, 名稱是不是 log 自己寫的, 前綴, log 檔名, 分類)
     for lp in a.logs:
         try:
             text = open(lp, encoding='utf-8', errors='replace').read()
@@ -248,6 +251,7 @@ def main(argv=None):
             print(f'  讀不到 log：{os.path.basename(lp)}（{type(e).__name__}）——這一條沒有行，下面的母體檢查會擋')
             continue
         name, cls, reds, wrong, njudged = classify(text)
+        from_job = name is not None   # 名稱來自那一條自己印的「MUTATION ACTIVE」
         base = os.path.basename(lp)
         if name is None:   # 沒有 MUTATION ACTIVE：名稱從檔名推（本 App 的檔名是 …<名稱>.log）
             name = base.rsplit('.', 2)[-2] if base.count('.') >= 2 else base
@@ -267,6 +271,7 @@ def main(argv=None):
                 short.append(f'{base}：抽到判定行 {njudged} 行、應有 {len(scen_now)} 行')
         row = [name, cls, verdict, ecls, ered, ','.join(reds) or '-', over, under, ','.join(wrong) or '-', str(njudged), sec, base]
         rows.append([clean(c) for c in row])
+        meta.append((name, from_job, log_prefix(base, name), base, cls))
     if short:
         for x in short:
             print('      ' + x)
@@ -274,6 +279,45 @@ def main(argv=None):
         return 1
     print(f'MKEVIDENCE COMPARE: 情境成立的 log 實際抽到判定行 {got_lines} 行、應有 {want_lines} 行'
           f'（{len(scen_now)} 個情境 × {want_lines // len(scen_now) if scen_now else 0} 份）；情境未成立的不算')
+    # ---- 兩個來源與四道擋（Dispatch 2026-10-02：「相加等於母體」若是逐條走清單補出來的，永遠成立、不是檢查）----
+    # 來源一：每一條自己在 log 裡印的「MUTATION ACTIVE: 名稱」（被測的那一條寫的）；
+    # 來源二：跑的那一方每跑完一條寫進進度摘要的「名稱 rc=… 秒=…」（--summary，另一個寫入者、另一個時間點）。
+    probs = []
+    by_name = {}
+    for name, from_job, prefix, base, cls in meta:
+        by_name.setdefault(name, []).append(cls)
+    for name, clss in sorted(by_name.items()):
+        est = [c for c in clss if c != '情境未成立']
+        if len(est) > 1:
+            probs.append(f'重複：{name} 有 {len(est)} 份情境成立的 log（重試只准一份成立）')
+    if a.summary:
+        prog = set(secs)   # (前綴, 名稱)
+        logged = {(prefix, name) for name, _f, prefix, _b, _c in meta}
+        for k in sorted(logged - prog):
+            probs.append(f'log 有、進度紀錄沒有：{k[1]}（{k[0]}）')
+        for k in sorted(prog - logged):
+            probs.append(f'進度紀錄有、log 沒有：{k[1]}（{k[0]}）')
+        print(f'MKEVIDENCE SOURCES: log 那一側數到 {len(meta)} 份（{sum(1 for m in meta if m[1])} 份的名稱是那一條自己印的）、'
+              f'進度紀錄那一側 {len(prog)} 筆；兩邊對得上的 {len(logged & prog)} 筆')
+    else:
+        print('MKEVIDENCE SOURCES: 沒給進度紀錄（--summary），只剩 log 一個來源——「兩個來源對得上」這一道這次沒有查')
+    if a.planned:
+        planned = [l.strip() for l in open(a.planned, encoding='utf-8').read().splitlines() if l.strip() and not l.startswith('#')]
+        if len(planned) != len(set(planned)):
+            probs.append(f'清單本身有重複：{sorted({p for p in planned if planned.count(p) > 1})}')
+        ran = set(by_name)
+        for n in sorted(ran - set(planned)):
+            probs.append(f'log 有、清單沒有：{n}')
+        notyet = sorted(set(planned) - ran)
+        if a.claim_complete and notyet:
+            probs.append(f'宣稱跑完，清單裡卻還有沒輪到的：{notyet}')
+        print(f'MKEVIDENCE PLANNED: 清單 {len(set(planned))} 條、有 log 的 {len(ran & set(planned))} 條；'
+              f'還沒輪到 {len(notyet)} 條 {notyet}（＝清單 − 有 log 的，減出來的，不是檢查）')
+    if probs:
+        for x in probs:
+            print('      ' + x)
+        print(f'MKEVIDENCE FAILED: 來源對不上或清單不符 {len(probs)} 處（不寫檔）')
+        return 1
     if len(rows) != len(a.logs):
         print(f'MKEVIDENCE FAILED: 證據 {len(rows)} 行、交進來的 log {len(a.logs)} 個，不等，不寫檔')
         return 1
@@ -286,7 +330,13 @@ def main(argv=None):
     n = {}
     for r in rows:
         n[r[1]] = n.get(r[1], 0) + 1
-    print(f'MKEVIDENCE OK: {len(rows)} 條（' + '、'.join(f'{k} {v}' for k, v in sorted(n.items())) + f'）→ {a.out}')
+    v = {}
+    for r in rows:
+        v[r[2]] = v.get(r[2], 0) + 1
+    print(f'MKEVIDENCE OK: {len(rows)} 條（分類：' + '、'.join(f'{k} {c}' for k, c in sorted(n.items())) + '；判定：'
+          + '、'.join(f'{k} {c}' for k, c in sorted(v.items())) + f'）→ {a.out}')
+    print(f'MKEVIDENCE NOTE: 各類相加＝{sum(n.values())}＝log 數 {len(a.logs)}——這個等式是結構上必然的（每份 log 產生一行），'
+          '不是獨立的檢查；獨立的是上面 SOURCES 那一行（進度紀錄對 log）與 PLANNED 那一行（清單對 log）')
     return 0
 
 

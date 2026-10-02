@@ -73,7 +73,8 @@ def main():
             open(p, 'w', encoding='utf-8').write(t)
             paths.append(p)
         summ = os.path.join(td, 'pre-a.summary')
-        open(summ, 'w', encoding='utf-8').write('mred rc=1 秒=111\nmclean rc=1 秒=22\n')
+        # 進度紀錄要五條都有（兩個來源要對得上）
+        open(summ, 'w', encoding='utf-8').write('mred rc=1 秒=111\nmclean rc=1 秒=22\nmabort rc=2 秒=3\nmnoactive rc=1 秒=4\nmnoend rc=1 秒=5\n')
         out1 = os.path.join(td, 'ev.tsv')
         rc, out = run(SRC, ['--out', out1, *V, '--summary', summ, *paths])
         # 欄位：0 名稱 1 分類 2 判定 3 預期類別 4 預期紅 5 實際紅 6 預期不紅卻紅 7 預期紅卻沒紅 8 其中擋下理由也不對 9 判定行數 10 秒數 11 log
@@ -81,8 +82,8 @@ def main():
         ok = rc == 0 and got == WANT and len(rows(out1)) == len(paths)
         record(ok, 'A 五種 log 的分類、實際紅、證據行不被當成判定', f'rc={rc}；{got}')
         secs = {r[0]: r[10] for r in rows(out1)} if got else {}
-        record(secs.get('mred') == '111' and secs.get('mclean') == '22' and secs.get('mabort') == '未記',
-               'A 秒數從同一次的摘要讀到、沒有的寫「未記」', f'{secs}')
+        record(secs.get('mred') == '111' and secs.get('mclean') == '22' and secs.get('mabort') == '3',
+               'A 秒數從同一次的摘要讀到', f'{secs}')
 
         # B 母體：多交一個讀不到的 log；原本的檔不能被覆寫（自己放一份基準檔，不依賴 A 的產出——情境之間不互相污染）
         outb = os.path.join(td, 'ev_b.tsv')
@@ -115,7 +116,8 @@ def main():
 
         # D 兩份摘要寫同一個名稱、秒數不同
         p1, p2 = os.path.join(td, 'run1.mred.log'), os.path.join(td, 'run2.mred.log')
-        shutil.copy(paths[-1], p1)
+        # 第一次 8 秒空跑（情境未成立）、第二次成立——真實發生過的形狀；兩份都成立會被當成重複
+        open(p1, 'w', encoding='utf-8').write(LOGS['pre-a.mabort.log'])
         shutil.copy(paths[-1], p2)
         s1, s2 = os.path.join(td, 'run1.summary'), os.path.join(td, 'run2.summary')
         open(s1, 'w', encoding='utf-8').write('mred rc=2 秒=8\n')
@@ -192,6 +194,42 @@ def main():
         fl = [l for l in out.splitlines() if l.startswith('MKEVIDENCE FAILED: ') and '判定行數不等於情境數' in l]
         record(rc == 1 and len(fl) == 1 and 'pre-a.mshort.log：抽到判定行 2 行、應有 3 行' in out and not os.path.exists(os.path.join(td, 'evf2.tsv')),
                'F 少一行判定行的 log → 擋下、點名那一份、不寫檔', f'rc={rc}、{fl}')
+        # G 兩個來源與四道擋（Dispatch 2026-10-02：「相加等於母體」若是逐條走清單補出來的，永遠成立）
+        g = os.path.join(td, 'g')
+        os.makedirs(g)
+        def glog(name, text):
+            p = os.path.join(g, name)
+            open(p, 'w', encoding='utf-8').write(text)
+            return p
+        red, clean_ = LOGS['pre-a.mred.log'], LOGS['pre-a.mclean.log']
+        r1, c1 = glog('run.mred.log', red), glog('run.mclean.log', clean_)
+        prog = glog('run.summary', 'mred rc=1 秒=10\nmclean rc=1 秒=11\n')
+        plan = glog('plan.txt', 'mred\nmclean\nmnoend\n')
+        def grun(*extra, logs=(r1, c1), summ=prog):
+            return run(SRC, ['--out', os.path.join(g, 'ev.tsv'), *V, '--summary', summ, *extra, *logs])
+        rc, out = grun('--planned', plan)
+        pl = [l for l in out.splitlines() if l.startswith('MKEVIDENCE PLANNED: ')]
+        so = [l for l in out.splitlines() if l.startswith('MKEVIDENCE SOURCES: ')]
+        record(rc == 0 and len(pl) == 1 and "還沒輪到 1 條 ['mnoend']" in pl[0] and '不是檢查' in pl[0]
+               and len(so) == 1 and 'log 那一側數到 2 份' in so[0] and '兩邊對得上的 2 筆' in so[0],
+               'G 沒宣稱跑完：放行，印兩個來源各數到幾筆、「還沒輪到」寫明是減出來的不是檢查', f'rc={rc}、{pl}、{so}')
+        rc, out = grun('--planned', plan, '--claim-complete')
+        record(rc == 1 and '宣稱跑完，清單裡卻還有沒輪到的' in out, 'G 宣稱跑完、清單還有沒輪到的 → 擋、點名', f'rc={rc}')
+        r2 = glog('run2.mred.log', red)
+        prog2 = glog('run2.summary', 'mred rc=1 秒=9\n')
+        rc, out = run(SRC, ['--out', os.path.join(g, 'ev2.tsv'), *V, '--summary', prog, '--summary', prog2, r1, c1, r2])
+        record(rc == 1 and '重複：mred 有 2 份情境成立的 log' in out, 'G 同一條兩份情境成立的 log → 重複、擋、點名', f'rc={rc}')
+        a1 = glog('run3.mred.log', LOGS['pre-a.mabort.log'])
+        a2 = glog('run4.mred.log', LOGS['pre-a.mabort.log'])
+        prog34 = glog('run3.summary', 'mred rc=2 秒=8\n'), glog('run4.summary', 'mred rc=2 秒=8\n')
+        rc, out = run(SRC, ['--out', os.path.join(g, 'ev3.tsv'), *V, '--summary', prog, '--summary', prog34[0], '--summary', prog34[1], r1, c1, a1, a2])
+        record(rc == 0 and '重複' not in out, 'G 重試（兩份情境未成立＋一份成立）→ 放行', f'rc={rc}')
+        rc, out = grun('--planned', glog('plan_short.txt', 'mred\n'))
+        record(rc == 1 and 'log 有、清單沒有：mclean' in out, 'G log 有、清單沒有 → 擋、點名', f'rc={rc}')
+        rc, out = grun(summ=glog('prog_short.summary', 'mred rc=1 秒=10\n'))
+        record(rc == 1 and 'log 有、進度紀錄沒有：mclean' in out, 'G 進度紀錄少一筆（兩個來源對不上）→ 擋、點名', f'rc={rc}')
+        rc, out = grun(summ=glog('prog_extra.summary', 'mred rc=1 秒=10\nmclean rc=1 秒=11\nmnoend rc=1 秒=12\n'))
+        record(rc == 1 and '進度紀錄有、log 沒有：mnoend' in out, 'G 進度紀錄多一筆（跑了卻沒有 log）→ 擋、點名', f'rc={rc}')
     except (RuntimeError, OSError, IndexError, subprocess.TimeoutExpired) as e:
         print(f'TEST-MKEVIDENCE ABORT: 造情境失敗：{e}（沒驗到，不是通過）')
         return 2
