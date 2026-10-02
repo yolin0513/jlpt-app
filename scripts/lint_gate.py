@@ -460,12 +460,12 @@ def main():
     for rule, samples in CONTROLS.items():
         for name, text in samples:
             if not run_rule(rule, name, text):
-                bad.append(f'對照組沒命中：{rule} 抓不到 {text[:60]!r}（檢查器壞了）')
+                bad.append(f'對照組沒命中：{rule}（檢查器壞了）\n      抓不到 {text[:60]!r}')
     # 2) 反例：任何規則都不能抓
     for name, text in NEGATIVES:
         for rule in RULES:
             if run_rule(rule, name, text):
-                bad.append(f'反例被誤抓：{rule} 抓了 {text[:60]!r}（檢查器壞了）')
+                bad.append(f'反例被誤抓：{rule}（檢查器壞了）\n      抓了 {text[:60]!r}')
     # 孤兒檢查的對照組：當場組出來的兩份假腳本，一份有推送指令（必須抓到）、一份只在註解提到（不能抓）
     fake = [('scripts/x_new.sh', 'echo hi\ngit -c a=b push origin main\n'),
             ('scripts/y_note.sh', '# 不要直接 git push，一律用閘門\necho hi\n'),
@@ -591,8 +591,11 @@ def main():
     for o in eorph:
         unexpected.append((o, 0, 'escape-orphan', '新腳本沒登記進 ESCAPE_TARGETS（跳脫類的掃描掃不到它）'))
     stale = stale + [(o, 'orphan', '登記成「不是目標」但這次沒有推送指令', '') for o in orphan_stale]
+    # 判定與證據分行（2026-10-02）：被抓到的那行原始碼是證據，放在下一行、縮排 6 格。原本寫在判定行裡，驗法要求判定行出現
+    # 「[envread]」「scripts/pushsafe.sh」這類字時，別支檔被抓到的原始碼剛好含這些字，要求就會被證據碰巧滿足。
     for f, i, rule, line in unexpected:
-        print(f'  命中（沒登記）：{f}:{i} [{rule}] {line[:140]}')
+        print(f'  命中（沒登記）：{f}:{i} [{rule}]')
+        print(f'      {line[:140]}')
     for e in stale:
         print(f'  登記的例外沒命中（過期了？）：{e[0]} [{e[1]}] {e[2]!r}')
     if unexpected or stale:
