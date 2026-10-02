@@ -87,6 +87,7 @@
 >   - `test_reslog.py` 的突變 B：原本「A 的對照不成立」就算抓到；改成要求改壞的那份完整跑完（回傳值照傳、沒有取樣失敗）而且記下的正是 0。重跑 6 項全符合（`.logs/test_reslog-2026-10-02-strict.log`）。
 >   - 驗擷取函式的一次性腳本也有同一個洞（子程序崩潰被當成「有紅」），改成崩潰＝未成立後重跑 7 項全符合（`.logs/parser-controls-2026-10-02.log`）。
 >   - 閘門驗法本身：突變那一輪的「有不符」由各情境的 yes／no 算出、`die` 回 2 獨立；沒有逾時——單條卡住會一直掛著，**這一條留給突變執行器的單條逾時**（設計 §2）。
+>   - **逾時實測（不是讀程式推論，2026-10-02，`.logs/timeout-probe-2026-10-02.log`）**：造一支一定卡住的假檢查程式、把逾時調成 2 秒，走真的程式路徑——`test_cli_probes.py` 自身突變那條路：`run_checker` 2.0 秒丟「逾時——沒有結果」，`main` 收到後回 2、行首「CLI-PROBES ABORT」，**沒有記成抓到、也沒有記成通過**；`test_reslog.py`：被包住的工作逾時，回 2、行首「TEST-RESLOG ABORT」、沒有任何一項記成符合。`test_pushsafe_kill.py` 的反向 R 原本沒有逾時，補成 1800 秒、逾時判「⊘ 情境未成立」回 4（這一條沒實測，跟第 1 場一起跑不到逾時的情況）。
 >   - 「判定器只有四種結果、沒寫 expect 的只看 exit code」這句不是本 App 寫過的（應該是別的 App 的回報）；本 App 照那個問題回頭查，查到的就是上面這幾處。
 > - **證據 log 一律寫進 `.logs/`（Dispatch 2026-10-02，先照做、之後收進共用慣例）**：凡是要當證據的輸出，不留在 session 暫存區或系統暫存目錄——那 29 條突變降級、TripQuest 的 148 份突變、先前的 `ev2.sh`，根因都是證據放在暫存區、跟著 session 一起過期。驗法內部用的暫存目錄（clone、樣本）照舊放系統暫存區，但它們印出來、要拿來下結論的那份輸出要落在 `.logs/`。
 > - **工單 3a 盤點：本 repo 會開工作程序的地方**（2026-10-02；數法照 MealMate：node／python 各算一個、瀏覽器實例算一個、git／shell／PowerShell 不算個數）。搜的樣式：`Promise.all`、`Popen`、`subprocess.run`、`child_process`、`spawn(`、`execSync`、`execFile`、`puppeteer.launch`、`ThreadPool`、`ProcessPool`、`multiprocessing`、`concurrent.futures`、`threading`、`ThreadingHTTPServer`、`Worker(`、shell 的背景 `&`、`wait`、`xargs`；範圍 `scripts/**`、`js/**`、`sw.js`。**在這些樣式範圍內未見平行開多個工作程序**（shell 沒有背景工作；Python 都是 `subprocess.run` 依序、一次一個）。

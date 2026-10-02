@@ -259,8 +259,13 @@ def main():
         record(not os.path.exists(T), 'K 留下的暫存目錄已清掉')
 
         # ---- R：反向，正常跑完 ----
-        rr = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'reslog.py'), '--label', 'test_pushsafe-reverse',
-                             '--estimate', '363', '--', bash, 'scripts/test_pushsafe.sh'], cwd=ROOT, capture_output=True, env=ENV)
+        try:
+            rr = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'reslog.py'), '--label', 'test_pushsafe-reverse',
+                                 '--estimate', '363', '--', bash, 'scripts/test_pushsafe.sh'], cwd=ROOT, capture_output=True, env=ENV,
+                                timeout=1800)
+        except subprocess.TimeoutExpired:
+            print(f'{NOT_ESTABLISHED}：R 閘門驗法 1800 秒沒跑完（逾時）——「正常跑完之後主 repo 等於 HEAD」這次沒量到')
+            return 4
         rlog = os.path.join(LOGDIR, f'kill-{STAMP}-R.log')
         open(rlog, 'wb').write(rr.stdout + rr.stderr)
         tail = rr.stdout.decode('utf-8', 'replace').strip().splitlines()[-3:]
