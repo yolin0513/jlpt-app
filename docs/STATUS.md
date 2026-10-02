@@ -68,6 +68,18 @@
 >   - **主 repo 142 支追蹤中的檔：位元組與開跑前完全相同、內容雜湊等於 HEAD、`git status` 乾淨——第 22 項「被強制終止時主工作區原始碼不受影響」由推論變成實測。**
 >   - **第 23 項：驗法登記檔中斷前後一樣**（8 行、雜湊沒變），沒有半完成的紀錄——登記只在驗法結尾（全過寫入、沒全過或突變刪掉）與造情境失敗時才動，被殺時兩者都沒發生，留下的是上一次全過的登記，內容仍對應 HEAD 的閘門檔。被殺時 `trap` 不跑，**暫存目錄會留在系統暫存區**（實測確認，已清掉）。
 >   - 反向：不殺、正常跑完一次完整閘門驗法（兩種順序，全符合，349 秒、峰值 4 個程序、38 MB），主 repo 同樣等於 HEAD。
+> - **兩件回頭查（Dispatch 2026-10-02，MealMate 挖出來的；讀程式＋秒級檢查）**：
+>   - **一、暫存複本裡跑的是不是改壞的那一版**（clone 拿到的是已 commit 的版本）：
+>     - `test_pushsafe.sh`：只測已 commit 的版本，而且開頭就比對「正在跑的驗法＝複本 HEAD 的」、本機閘門檔跟 HEAD 不同就不登記；突變在複本裡改完 commit，再用 `git show HEAD:` 確認改壞之後那段不在、工作區跟 HEAD 一致——**情境成立有執行時的讀回**。
+>     - `test_cli_probes.py`：本來就把工作區的三支檢查帶進複本並 commit、樣本寫入後讀回；**補兩道執行時確認**：帶過去的每一支，工作區檔、複本檔、複本 HEAD 三者位元組相同才往下；自查那條自身突變 commit 後確認複本 HEAD 裡是改壞的內容。
+>     - 自查「取檔退回與改名」三種情境（一次性腳本，暫存區）：重跑一次，先讀回確認複本裡的自查與工作區位元組相同、含要驗的兩段（`real_file_probe`、`numstat_by_category`），判斷改成行首比對——三種全符合，log 在 `.logs/selfcheck-paths-2026-10-02.log`。
+>     - `test_pushsafe_kill.py`：情境成立靠痕跡（e）讀複本裡的 `pushsafe.sh` 確認是壞檔；`test_reslog.py`：突變直接寫在被執行的那一份副本、寫入後讀回。
+>     - 沒查到的：`test_datacheck.py` 的自我探測也在 clone 裡改檔，這一輪沒逐行核對它的讀回。
+>   - **二、判斷「紅在哪一條」是不是子字串比對**：
+>     - **閘門驗法本身不是**：判定訊息先用行首的正規式挑出來（`PUSHSAFE:`、`SELF-CHECK `、`LINT-GATE `、兩格縮排的「命中（沒登記）：」等），才在那幾行裡找固定字串；「不能有」的那一類看整份輸出（寧可多報不符）；每個情境的 yes／no 由驗法邏輯算、行首印出。殘留：判定行裡的固定字串仍是子字串比對，靠驗法開頭 7 個比對函式的對照組守著（含「那句話只出現在命中內容裡」）。
+>     - **今天 5 條突變的分類用行首比對重驗：結論不變**（每一份 log：行首「MUTATION ACTIVE」1 行、行首「ABORT」0 行、yes＋no 恰好 33；第一次空跑的兩份是行首 ABORT、沒有 MUTATION ACTIVE；完整閘門驗法 66 個 yes）。
+>     - **我今天新寫的三支有子字串比對，已改**：`test_cli_probes.py`（`LINT-GATE OK`、`SELF-CHECK OK`、「X 命中 1 行」、「全部檢查通過」、題庫問題清單混進警告）、`test_pushsafe_kill.py`（`MUTATION ACTIVE`、「yes  01」、`TEST-PUSHSAFE:`）、`test_reslog.py`（「取樣失敗」）。一律只認行首的判定行，失敗原因用「；」拆開逐項全等比對。三支各補擷取函式的對照組（命中內容與別一行裡帶著那幾個字，不能被算進去），**原樣全符合、改回子字串比對的 5 個突變都紅**（log `.logs/parser-controls-2026-10-02.log`）；`test_reslog.py` 改完重跑 6 項全符合。
+>     - **因此作廢、要重驗的**：`test_cli_probes.py` 先前報的「33 項全符合」是用子字串判的——改完之後還沒重跑（約 1 分鐘，屬重負載界線），排進下一場。`test_pushsafe_kill.py` 2026-10-02 那次 370 秒的結果，判斷「MUTATION ACTIVE」「沒有結尾」也是子字串——痕跡（e）讀檔那一項不受影響，但整次照規矩當成要重驗，跟補完版一起跑。
 > - **證據 log 一律寫進 `.logs/`（Dispatch 2026-10-02，先照做、之後收進共用慣例）**：凡是要當證據的輸出，不留在 session 暫存區或系統暫存目錄——那 29 條突變降級、TripQuest 的 148 份突變、先前的 `ev2.sh`，根因都是證據放在暫存區、跟著 session 一起過期。驗法內部用的暫存目錄（clone、樣本）照舊放系統暫存區，但它們印出來、要拿來下結論的那份輸出要落在 `.logs/`。
 > - **工單 3a 盤點：本 repo 會開工作程序的地方**（2026-10-02；數法照 MealMate：node／python 各算一個、瀏覽器實例算一個、git／shell／PowerShell 不算個數）。搜的樣式：`Promise.all`、`Popen`、`subprocess.run`、`child_process`、`spawn(`、`execSync`、`execFile`、`puppeteer.launch`、`ThreadPool`、`ProcessPool`、`multiprocessing`、`concurrent.futures`、`threading`、`ThreadingHTTPServer`、`Worker(`、shell 的背景 `&`、`wait`、`xargs`；範圍 `scripts/**`、`js/**`、`sw.js`。**在這些樣式範圍內未見平行開多個工作程序**（shell 沒有背景工作；Python 都是 `subprocess.run` 依序、一次一個）。
 >

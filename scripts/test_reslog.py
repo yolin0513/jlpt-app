@@ -117,9 +117,11 @@ def main():
                     'reslog_fail.py')
         rc, out, rows, idx = run_reslog(p, td, 'C')
         q = all(r[2] == '?' and r[3] == '?' for r in rows)
-        ok = rc == 3 and q and int(idx[7]) >= 3 and '取樣失敗' in out
+        summary = [l for l in out.splitlines() if l.startswith('RESLOG: ')]   # 只認 reslog 的摘要那一行
+        said = len(summary) == 1 and f'取樣失敗 {idx[7]} 次' in summary[0]
+        ok = rc == 3 and q and int(idx[7]) >= 3 and said
         record(ok, 'C 突變「取樣永遠失敗」：紀錄寫「?」、摘要寫取樣失敗次數',
-               f'rc={rc}、各行程序數 {[r[2] for r in rows]}、取樣失敗 {idx[7]}、標準輸出有寫：{"取樣失敗" in out}')
+               f'rc={rc}、各行程序數 {[r[2] for r in rows]}、取樣失敗 {idx[7]}、摘要那一行有寫同樣的次數：{said}')
 
         n, t = syn_count(load(SRC, 'reslog_src'))
         record(n == SYN_WANT and 50 not in t, f'D 工作程序的數法（合成程序表）：應該 {SYN_WANT}', f'算出 {n}；這一棵 {t}')

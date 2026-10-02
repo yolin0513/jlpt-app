@@ -71,6 +71,68 @@ def record(ok, label, detail=''):
     print(f'[{"符合" if ok else "不符"}] {label}' + (f'：{detail}' if detail else ''))
 
 
+# ---- 讀輸出只認行首（MealMate 2026-10-02：「那一行有出現某個字」會把印出來的命中內容、或通過那一行的說明誤當成判定） ----
+def has_line(out, exact):
+    return exact in out.splitlines()
+
+
+def fail_items(out, prefix):
+    """以 prefix 開頭的判定行，冒號後面用「；」拆成一項一項（逐項全等比對，不找子字串）。"""
+    items = []
+    for l in out.splitlines():
+        if l.startswith(prefix):
+            items += [x.strip() for x in l[len(prefix):].split('；')]
+    return items
+
+
+def sc_counts(out):
+    """自查每一類那一行（例：「secret: control_hit=True added_hits=0 meta_hits=0」）解析成 {類別: {欄位: 值}}。"""
+    got = {}
+    for l in out.splitlines():
+        head, _sep, rest = l.partition(': ')
+        if head in ('secret', 'email', 'user', 'path') and rest.startswith('control_hit='):
+            got[head] = dict(x.split('=', 1) for x in rest.split())
+    return got
+
+
+def lint_hits(out):
+    return sorted(l.split('命中（沒登記）：', 1)[1].rsplit(']', 1)[0] + ']'
+                  for l in out.splitlines() if l.startswith('  命中（沒登記）：'))
+
+
+def data_problems(out):
+    """題庫檢查的問題清單：只認「發現 N 個問題：」那一行之後、以「  - 」開頭的行（警告也用「  - 」，在它前面）。"""
+    lines = out.splitlines()
+    start = next((i for i, l in enumerate(lines) if l.startswith('發現 ') and l.endswith('個問題：')), None)
+    if start is None:
+        return []
+    out_ = []
+    for l in lines[start + 1:]:
+        if not l.startswith('  - '):
+            break
+        out_.append(l[4:])
+    return out_
+
+
+def parser_controls():
+    """擷取函式自己的對照組（§5.11 第二層）：命中內容（縮排四格）與通過那一行的說明裡帶著那幾個字，不能被算進去。"""
+    s1 = '\n'.join(['secret: control_hit=True added_hits=0 meta_hits=0',
+                    '    secret 命中 1 行（新增行）', '    SELF-CHECK FAILED: secret 命中 1 行（新增行）', 'SELF-CHECK OK'])
+    s2 = '\n'.join(['secret: control_hit=True added_hits=1 meta_hits=0', 'SELF-CHECK FAILED: secret 命中 1 行（新增行）；email 命中 1 行（commit 訊息或作者欄）'])
+    s3 = '\n'.join(['  命中（沒登記）：js/app.js:9 [overescape] x', '    命中（沒登記）：js/x.js:1 [pipe] y', 'LINT-GATE FAILED: 1 處'])
+    s4 = '\n'.join(['⚠ 1 個警告（不影響結果碼）：', '  - 跨級別重複單字 x', '', '發現 1 個問題：', '  - N5/n5-v-0001: 假名欄含非假名字元', '✓ 全部檢查通過 不在這裡'])
+    checks = [
+        (fail_items(s1, 'SELF-CHECK FAILED: ') == [] and has_line(s1, 'SELF-CHECK OK'), '自查：縮排的命中內容不算判定'),
+        (fail_items(s2, 'SELF-CHECK FAILED: ') == ['secret 命中 1 行（新增行）', 'email 命中 1 行（commit 訊息或作者欄）'], '自查：判定行逐項拆開'),
+        (sc_counts(s2)['secret']['added_hits'] == '1' and 'email' not in sc_counts(s2), '自查：每一類那一行解析得到'),
+        (lint_hits(s3) == ['js/app.js:9 [overescape]'], 'lint：只認兩格縮排的命中行'),
+        (data_problems(s4) == ['N5/n5-v-0001: 假名欄含非假名字元'] and not has_line(s4, '✓ 全部檢查通過'), '題庫：只認「發現…個問題」之後的行，警告不算'),
+    ]
+    for ok, label in checks:
+        record(ok, f'擷取函式的對照組：{label}')
+    return all(ok for ok, _l in checks)
+
+
 def append_line(path, line):
     raw = open(path, 'rb').read()
     eol = b'\r\n' if b'\r\n' in raw else b'\n'
@@ -116,7 +178,7 @@ def probe_lint(W, tag=''):
     scan = list(m.TARGETS) + [f for f in m.ESCAPE_TARGETS if f not in m.TARGETS]
     out_ok = []
     rc, out = sh([sys.executable, 'scripts/lint_gate.py'], W, check=False)
-    base_ok = rc == 0 and 'LINT-GATE OK' in out
+    base_ok = rc == 0 and has_line(out, 'LINT-GATE OK')
     if not tag:
         record(base_ok, 'lint 原樣（該綠）', f'rc={rc}')
     for cat, sample in LINT_SAMPLES.items():
@@ -126,9 +188,8 @@ def probe_lint(W, tag=''):
         n = append_line(os.path.join(W, f), sample)
         rc, out = sh([sys.executable, 'scripts/lint_gate.py'], W, check=False)
         restore(W, f)
-        hits = sorted(l.strip() for l in out.splitlines() if '命中（沒登記）' in l)
         want = [f'{f}:{n} [overescape]'] + ([f'{f}:{n} [backslash]'] if cat == '.sh' and f in m.TARGETS else [])
-        got = sorted(h.split('命中（沒登記）：', 1)[1].rsplit(']', 1)[0] + ']' for h in hits)
+        got = lint_hits(out)
         ok = rc == 1 and got == sorted(want)
         out_ok.append(ok)
         if not tag:
@@ -160,7 +221,7 @@ def probe_selfcheck(W, base, tag=''):
     sh(['git', *ID, 'commit', '-qam', 'clean line'], W)
     rc, out = sh([sys.executable, 'scripts/selfcheck_public.py', base], W, check=False)
     sh(['git', 'reset', '-q', '--hard', base], W)
-    ok = rc == 0 and 'SELF-CHECK OK' in out
+    ok = rc == 0 and has_line(out, 'SELF-CHECK OK')
     oks.append(ok)
     if not tag:
         record(ok, '自查 原樣（乾淨的 commit，該綠）', f'rc={rc}')
@@ -174,19 +235,20 @@ def probe_selfcheck(W, base, tag=''):
                 raise SetupError(f'commit 裡找不到樣本（{f} {k}）')
             rc, out = sh([sys.executable, 'scripts/selfcheck_public.py', base], W, check=False)
             sh(['git', 'reset', '-q', '--hard', base], W)
-            lines = {l.split(':')[0]: l for l in out.splitlines() if 'control_hit=' in l}
-            want_hit = all(('added_hits=1' in lines.get(kk, '')) == (kk == k) for kk in samples)
-            ok = rc == 1 and want_hit and f'{k} 命中 1 行（新增行）' in out
+            cnt = sc_counts(out)
+            want_hit = set(cnt) == set(samples) and all((cnt[kk].get('added_hits') == '1') == (kk == k)
+                                                        and cnt[kk].get('added_hits') in ('0', '1') for kk in samples)
+            ok = rc == 1 and want_hit and fail_items(out, 'SELF-CHECK FAILED: ') == [f'{k} 命中 1 行（新增行）']
             oks.append(ok)
             if not tag:
                 record(ok, f'自查 {f}（{os.path.splitext(f)[1]}）加一行 {k} 樣本', f'rc={rc}，' +
-                       '、'.join(f'{kk}={lines.get(kk, "?").split("added_hits=")[-1].split()[0]}' for kk in samples))
+                       '、'.join(f'{kk}={cnt.get(kk, {}).get("added_hits", "?")}' for kk in samples))
     # commit 訊息帶 email
     append_line(os.path.join(W, 'docs/STATUS.md'), '訊息對照用')
     sh(['git', *ID, 'commit', '-qam', 'msg ' + samples['email']], W)
     rc, out = sh([sys.executable, 'scripts/selfcheck_public.py', base], W, check=False)
     sh(['git', 'reset', '-q', '--hard', base], W)
-    ok = rc == 1 and 'email 命中 1 行（commit 訊息或作者欄）' in out and 'email 命中 1 行（新增行）' not in out
+    ok = rc == 1 and fail_items(out, 'SELF-CHECK FAILED: ') == ['email 命中 1 行（commit 訊息或作者欄）']
     oks.append(ok)
     if not tag:
         record(ok, '自查 commit 訊息帶 email 樣本', f'rc={rc}')
@@ -205,7 +267,7 @@ DATA_CASES = [   # (檔, 改哪一欄, 怎麼改, 預期的問題字樣)
 def probe_data(W, tag=''):
     oks = []
     rc, out = sh([sys.executable, 'scripts/check_data.py'], W, check=False)
-    ok = rc == 0 and '全部檢查通過' in out
+    ok = rc == 0 and any(l.startswith('✓ 全部檢查通過') for l in out.splitlines())
     oks.append(ok)
     if not tag:
         record(ok, '題庫檢查 原樣（該綠）', f'rc={rc}')
@@ -220,8 +282,7 @@ def probe_data(W, tag=''):
             raise SetupError(f'讀回的 {f} {field} 沒有改到')
         rc, out = sh([sys.executable, 'scripts/check_data.py'], W, check=False)
         restore(W, f)
-        probs = [l.strip()[2:] for l in out.splitlines() if l.startswith('  - ') and '警告' not in l]
-        probs = [x for x in probs if not x.startswith('跨級別重複')]
+        probs = data_problems(out)
         ok = rc == 1 and len(probs) == 1 and it['id'] in probs[0] and want in probs[0]
         oks.append(ok)
         if not tag:
@@ -255,6 +316,15 @@ def main():
         if carried:
             sh(['git', 'add', '-A'], W)
             sh(['git', *ID, 'commit', '-qm', 'carry working-tree checkers'], W)
+        # 複本裡跑的必須是工作區這一版（MealMate 2026-10-02：clone 拿到的是已 commit 的版本，對照組一直在測原版）：
+        # 逐支讀出來比，工作區檔案、複本檔案、複本 HEAD 三者位元組相同才往下
+        for f in CHECKERS + ['scripts/lib/gitenv.py', 'scripts/test_cli_probes.py']:
+            mine = open(os.path.join(ROOT, f), 'rb').read()
+            r = subprocess.run(['git', 'show', f'HEAD:{f}'], cwd=W, capture_output=True, env=ENV)
+            if open(os.path.join(W, f), 'rb').read() != mine or r.returncode != 0 or r.stdout != mine:
+                raise SetupError(f'複本裡的 {f} 不是工作區這一版')
+        record(True, f'複本裡的 {len(CHECKERS) + 2} 支檢查程式與工作區位元組相同（檔案與複本 HEAD 都比過）')
+        parser_controls()
         print(f'複本：暫存目錄（HEAD {before[0][:7]}；帶過去的工作區改動：{carried or "無"}）')
         _r, base = sh(['git', 'rev-parse', 'HEAD'], W)
         base = base.strip()
@@ -271,6 +341,9 @@ def main():
                 raise SetupError(f'突變沒寫進去：{f}')
             if which == 'selfcheck':
                 sh(['git', *ID, 'commit', '-qam', 'mutate'], W)   # 自查掃 commit，突變本身要在基準裡，不然會被當新增行掃
+                _r, shown = sh(['git', 'show', f'HEAD:{f}'], W)
+                if b not in shown or a in shown:
+                    raise SetupError(f'複本 HEAD 裡的 {f} 不是改壞的版本')
                 _r, mb = sh(['git', 'rev-parse', 'HEAD'], W)
                 passed = {'lint': probe_lint, 'selfcheck': lambda w, tag: probe_selfcheck(w, mb.strip(), tag),
                           'data': probe_data}[which](W, 'mut')

@@ -134,6 +134,29 @@ def ours(dirs):
     return sorted(d for d in dirs if mine(d))
 
 
+# ---- 讀驗法的輸出只認行首（MealMate 2026-10-02：子字串會把別一行裡提到的字誤當成那一行） ----
+def mutation_active(text):
+    return any(l.startswith('MUTATION ACTIVE: ') for l in text.splitlines())
+
+
+def first_scenario_done(text):
+    """驗法每個情境印一行：「yes  01 …」或「no   01 …」。"""
+    return any(l.startswith(('yes ', 'no ')) and l.split()[1:2] == ['01'] for l in text.splitlines())
+
+
+def finished(text):
+    return any(l.startswith('TEST-PUSHSAFE: ') for l in text.splitlines())
+
+
+def parser_controls():
+    """擷取函式自己的對照組（§5.11 第二層）：別一行裡提到那幾個字，不能被當成那一行。"""
+    fake = '\n'.join(['       實際：MUTATION ACTIVE: nofetch', 'ABORT: 造情境失敗（TEST-PUSHSAFE: 不是結尾）', 'x yes  01 y'])
+    real = '\n'.join(['MUTATION ACTIVE: nofetch（已確認…）', 'yes  01 新增行命中自查', 'TEST-PUSHSAFE: 有不符合預期的情況；沒有登記'])
+    ok = (not mutation_active(fake) and not first_scenario_done(fake) and not finished(fake)
+          and mutation_active(real) and first_scenario_done(real) and finished(real))
+    record(ok, '擷取函式的對照組：別一行裡提到「MUTATION ACTIVE」「yes  01」「TEST-PUSHSAFE:」不算；行首的才算')
+
+
 def attempt(bash, mode, label):
     """跑一次「開跑→殺」。mode='real'：等到改壞並開始跑情境才殺；mode='early'：開跑後 1 秒就殺（對照組，一定不成立）。
     回傳 (成立與否, 痕跡說明, 暫存目錄或 None)。每一次都把完整輸出留在 .logs/。"""
@@ -151,9 +174,9 @@ def attempt(bash, mode, label):
         while time.time() - t0 < 300:
             time.sleep(1)
             text = open(out, encoding='utf-8', errors='replace').read()
-            if ('MUTATION ACTIVE' in text and ('yes  01' in text or 'no   01' in text)) or child.poll() is not None:
+            if (mutation_active(text) and first_scenario_done(text)) or child.poll() is not None:
                 break
-    a = 'MUTATION ACTIVE' in text and ('yes  01' in text or 'no   01' in text)
+    a = mutation_active(text) and first_scenario_done(text)
     b = child.poll() is None
     m = reslog.measure(child.pid) if b else None
     c = m is not None and m[0] >= 2
@@ -172,7 +195,7 @@ def attempt(bash, mode, label):
     if alive:
         raise SetupError(f'殺掉之後還有程序活著：{alive}')
     final = open(out, encoding='utf-8', errors='replace').read()
-    d = 'TEST-PUSHSAFE:' not in final
+    d = not finished(final)
     ts = ours(tmpdirs() - t_before)
     T = ts[0] if len(ts) == 1 else None
     ps = os.path.join(T, 'work', 'scripts', 'pushsafe.sh') if T else ''
@@ -211,6 +234,7 @@ def main():
             print(f'ABORT: 開跑前主 repo 就不等於 HEAD（{before_diff or before_status.strip()}），先 commit')
             return 2
         checker_control()
+        parser_controls()
         reg0 = reg_state()
 
         # ---- C：對照組「一定不成立」——開跑後 1 秒就殺，突變還沒生效 ----
