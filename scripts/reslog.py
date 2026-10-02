@@ -147,6 +147,101 @@ def resolve_cmd(cmd):
     return [first] + list(cmd[1:]), None
 
 
+# ---- 逐一計數（Dispatch 2026-10-02：取樣會系統性漏掉短命的程序——TripQuest 同一次逐一計數峰值 4、取樣只有 1）----
+# 沒有管理員權限拿不到 ETW 的程序事件，改用 WMI 的建立／結束事件、WITHIN 0.1 輪詢（TripQuest 同樣做法）：
+# 活不到 0.1 秒的程序仍可能漏——這句寫進輸出，不只寫在文件。
+WATCH_PS = (
+    "$ErrorActionPreference='Stop';"
+    "Register-CimIndicationEvent -Query \"SELECT * FROM __InstanceCreationEvent WITHIN 0.1 WHERE TargetInstance ISA 'Win32_Process'\" -SourceIdentifier jc | Out-Null;"
+    "Register-CimIndicationEvent -Query \"SELECT * FROM __InstanceDeletionEvent WITHIN 0.1 WHERE TargetInstance ISA 'Win32_Process'\" -SourceIdentifier jd | Out-Null;"
+    "[Console]::Out.WriteLine('READY'); [Console]::Out.Flush();"
+    "while ($true) { $e = Wait-Event -Timeout 1; if ($e) { $t = $e.SourceEventArgs.NewEvent.TargetInstance;"
+    " if ($e.SourceIdentifier -eq 'jc') { $ct = 0; if ($t.CreationDate) { $ct = $t.CreationDate.ToFileTimeUtc() };"
+    " [Console]::Out.WriteLine(\"C`t$($t.ProcessId)`t$($t.ParentProcessId)`t$($t.Name)`t$ct\") }"
+    " else { [Console]::Out.WriteLine(\"D`t$($t.ProcessId)\") };"
+    " [Console]::Out.Flush(); Remove-Event -EventIdentifier $e.EventIdentifier } }")
+EVENT_NOTE = '逐一計數用 WMI 建立／結束事件、每 0.1 秒輪詢（沒有管理員權限，拿不到 ETW）：活不到 0.1 秒的程序仍可能漏'
+
+
+class EventCounter:
+    """吃 C／D 事件，逐一加減「這一棵樹」的程序與工作程序，記峰值。父程序還沒進樹的建立事件先暫存，等父程序進來再補算
+    （WMI 同一批事件的順序不保證：孫的建立事件可能比子的先到）。子程序要比父程序晚建立才算（PID 重用）。"""
+
+    def __init__(self, root, root_ct=0):
+        self.root = root
+        self.ct = {root: root_ct}
+        self.names = {root: ''}
+        self.parent = {root: 0}
+        self.alive = {root}
+        self.pending = {}   # ppid → [(pid, name, ct)]
+        self.peak_n = self.peak_w = 0
+
+    def _workers(self):
+        procs = {p: (self.parent.get(p, 0), 0, self.names.get(p, ''), self.ct.get(p, 0)) for p in self.alive}
+        for p in self.alive:   # 父程序已經結束的，也要讓 count_workers 看得到它的名字（判斷瀏覽器的父程序）
+            pp = self.parent.get(p, 0)
+            if pp and pp not in procs and pp in self.names:
+                procs[pp] = (0, 0, self.names[pp], self.ct.get(pp, 0))
+        return count_workers(procs, self.alive)
+
+    def _add(self, pid, ppid, name, ct):
+        self.ct[pid], self.names[pid], self.parent[pid] = ct, name, ppid
+        self.alive.add(pid)
+        for c in self.pending.pop(pid, []):
+            if not (ct and c[2] and c[2] < ct):
+                self._add(c[0], pid, c[1], c[2])
+
+    def feed(self, line):
+        f = line.rstrip('\r\n').split('\t')
+        if f[0] == 'C' and len(f) == 5 and f[1].isdigit() and f[2].isdigit():
+            pid, ppid, name, ct = int(f[1]), int(f[2]), f[3], int(f[4] or 0)
+            if pid == self.root:
+                if ct:
+                    self.ct[pid] = ct
+                self.names[pid] = name
+            elif ppid in self.ct:
+                pc = self.ct.get(ppid, 0)
+                if not (pc and ct and ct < pc):
+                    self._add(pid, ppid, name, ct)
+            else:
+                self.pending.setdefault(ppid, []).append((pid, name, ct))
+        elif f[0] == 'D' and len(f) == 2 and f[1].isdigit():
+            pid = int(f[1])
+            self.alive.discard(pid)
+            for k in list(self.pending):
+                self.pending[k] = [c for c in self.pending[k] if c[0] != pid]
+        self.peak_n = max(self.peak_n, len(self.alive))
+        self.peak_w = max(self.peak_w, self._workers())
+
+
+def start_watcher():
+    """回傳 (watcher Popen, 事件佇列) 或 (None, 原因)。READY 之前不開被包住的指令。"""
+    import queue
+    import threading
+    if os.name != 'nt':
+        return None, '不是 Windows，沒有 WMI 事件'
+    try:
+        w = subprocess.Popen(['powershell', '-NoProfile', '-NonInteractive', '-Command', WATCH_PS],
+                             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    except OSError as e:
+        return None, f'PowerShell 叫不起來（{e}）'
+    q = queue.Queue()
+
+    def pump():
+        for raw in w.stdout:
+            q.put(raw.decode('utf-8', 'replace'))
+        q.put(None)
+    threading.Thread(target=pump, daemon=True).start()
+    try:
+        first = q.get(timeout=30)
+    except Exception:
+        first = None
+    if not first or first.strip() != 'READY':
+        w.kill()
+        return None, f'WMI 事件監看沒有就緒（{(first or "沒有輸出").strip()[:60]}）'
+    return w, q
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--label', required=True)
@@ -171,8 +266,29 @@ def main(argv=None):
     fh.write('# ' + ' '.join(cmd) + f'\t預估 {a.estimate}\n')
     fh.write('時間\t經過秒數\t程序數\t工作程序數\t樹的記憶體MB\t系統可用MB\t備註\n')
     MB = 1024 * 1024
+    watcher, wq = start_watcher()   # 先就緒再開被包住的指令，不然一開始的程序會漏
     t0 = time.time()
     child = subprocess.Popen(cmd)
+    ev = None
+    if watcher is not None:
+        sn = snapshot()
+        ev = EventCounter(child.pid, ctime(sn[0], child.pid) if sn else 0)
+        if sn:   # 監看就緒到開跑之間已經開出來的子程序（很少見）照程序表補進來
+            for p in sorted(tree(sn[0], child.pid) - {child.pid}):
+                ev.feed(f'C\t{p}\t{sn[0][p][0]}\t{sn[0][p][2]}\t{ctime(sn[0], p)}')
+    ev_why = None if watcher is not None else wq
+
+    def drain():
+        if ev is None:
+            return
+        while True:
+            try:
+                x = wq.get_nowait()
+            except Exception:
+                return
+            if x is None:
+                return
+            ev.feed(x)
     peak_n, peak_w, peak_m, fails, last_line = 0, 0, 0, 0, -1e9
     min_free = None   # 系統可用記憶體的最低值（每次取樣都更新，不只寫進紀錄的那幾行）
 
@@ -194,7 +310,11 @@ def main(argv=None):
     line('開始', first)
     last_line = time.time()
     while child.poll() is None:
-        time.sleep(a.sample)
+        for _i in range(int(a.sample * 10)):   # 0.1 秒一次把事件吃進來，取樣照舊每 --sample 秒一次
+            time.sleep(0.1)
+            drain()
+            if child.poll() is not None:
+                break
         if child.poll() is not None:
             break
         m = measure(child.pid)
@@ -207,6 +327,10 @@ def main(argv=None):
             line('', m)
             last_line = time.time()
     rc = child.returncode
+    if ev is not None:
+        time.sleep(0.5)   # 讓最後一批結束事件進來
+        drain()
+        watcher.kill()
     end = measure(child.pid)
     if end is None:
         fails += 1
@@ -214,15 +338,22 @@ def main(argv=None):
     el = time.time() - t0
     fh.close()
     low = '?' if min_free is None else f'{min_free / MB:.0f}'
+    ev_w, ev_n = (str(ev.peak_w), str(ev.peak_n)) if ev is not None else ('?', '?')
     idx = os.path.join(a.logdir, 'reslog-index.tsv')
     new = not os.path.exists(idx)
     with open(idx, 'a', encoding='utf-8') as ih:
         if new:
-            ih.write('日期時間\tlabel\t預估秒\t實際秒\t峰值程序數\t峰值記憶體MB\t回傳值\t取樣失敗\t峰值工作程序數\t最低可用記憶體MB\n')
+            ih.write('日期時間\tlabel\t預估秒\t實際秒\t峰值程序數\t峰值記憶體MB\t回傳值\t取樣失敗\t峰值工作程序數\t最低可用記憶體MB'
+                     '\t逐一計數峰值工作程序數\t逐一計數峰值程序數\n')
         ih.write(f'{datetime.datetime.now().isoformat(timespec="seconds")}\t{a.label}\t{a.estimate}\t{el:.0f}\t'
-                 f'{peak_n}\t{peak_m / MB:.0f}\t{rc}\t{fails}\t{peak_w}\t{low}\n')
+                 f'{peak_n}\t{peak_m / MB:.0f}\t{rc}\t{fails}\t{peak_w}\t{low}\t{ev_w}\t{ev_n}\n')
     warn = f'；取樣失敗 {fails} 次（峰值可能偏低）' if fails else ''
-    print(f'RESLOG: {a.label} 預估 {a.estimate} 秒、實際 {el:.0f} 秒；峰值 {peak_w} 個工作程序（全部 {peak_n} 個程序）、{peak_m / MB:.0f} MB；系統可用記憶體最低 {low} MB；rc={rc}{warn}')
+    print(f'RESLOG: {a.label} 預估 {a.estimate} 秒、實際 {el:.0f} 秒；逐一計數峰值 {ev_w} 個工作程序（全部 {ev_n} 個程序）、'
+          f'取樣峰值 {peak_w} 個工作程序（全部 {peak_n} 個）、{peak_m / MB:.0f} MB；系統可用記憶體最低 {low} MB；rc={rc}{warn}')
+    if ev is not None:
+        print(f'RESLOG LIMIT: {EVENT_NOTE}；取樣每 {a.sample:g} 秒一次，兩種峰值的差距就是取樣漏掉的量')
+    else:
+        print(f'RESLOG LIMIT: 逐一計數沒有啟動（{ev_why}），只有取樣峰值——取樣每 {a.sample:g} 秒一次，短命的程序會漏，峰值偏低')
     return rc
 
 

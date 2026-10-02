@@ -152,6 +152,37 @@ def main():
             ab = [l for l in r.stdout.decode('utf-8', 'replace').splitlines() if l.startswith('RESLOG ABORT: ')]
             record(r.returncode == 2 and len(ab) == 1 and 'WSL' in ab[0], 'F 給的是 System32 的 bash.exe：拒絕、回 2、不跑',
                    f'rc={r.returncode}、{ab[:1]}')
+        # G 逐一計數（Dispatch 2026-10-02：取樣會系統性漏掉短命的程序）：假工作在第 4 秒同時開 3 個子程序、各活 1 秒，
+        #   逐一計數的工作程序峰值必須 ≥ 4（父＋3）——子程序各活 1 秒，比 0.1 秒的輪詢長得多，不受時機影響。
+        #   取樣峰值照印、不綁死（第一次取樣什麼時候落下會變，§5.8）。
+        if os.name == 'nt':
+            burst = os.path.join(td, 'burst.py')
+            open(burst, 'w', encoding='utf-8').write(
+                'import subprocess, sys, time\ntime.sleep(4)\n'
+                'ks = [subprocess.Popen([sys.executable, "-c", "import time; time.sleep(1)"]) for _ in range(3)]\n'
+                '[k.wait() for k in ks]\ntime.sleep(4)\n')
+            def run_g(script, label):
+                logdir = os.path.join(td, 'logs-' + label)
+                r = subprocess.run([sys.executable, script, '--label', label, '--estimate', '9', '--sample', '5',
+                                    '--logdir', logdir, '--', sys.executable, burst], capture_output=True, timeout=180)
+                out = r.stdout.decode('utf-8', 'replace').splitlines()
+                idx = open(os.path.join(logdir, 'reslog-index.tsv'), encoding='utf-8').read().splitlines()[-1].split('\t')
+                return r.returncode, out, idx
+            rc, out, idx = run_g(SRC, 'G')
+            lim = [l for l in out if l.startswith('RESLOG LIMIT: ')]
+            record(rc == 0 and idx[10].isdigit() and int(idx[10]) >= 4 and len(lim) == 1 and '活不到 0.1 秒的程序仍可能漏' in lim[0],
+                   'G 逐一計數：同時開 3 個子程序 → 工作程序峰值 ≥ 4；輸出寫明 0.1 秒輪詢的限制',
+                   f'rc={rc}、逐一計數 {idx[10]}／{idx[11]}、取樣 {idx[8]}／{idx[4]}（取樣不綁死）')
+            pg = mutated(td, "                if not (pc and ct and ct < pc):\n                    self._add(pid, ppid, name, ct)\n",
+                         "                pass\n", 'reslog_noadd.py')
+            rc, out, idx = run_g(pg, 'G2')
+            record(idx[10].isdigit() and int(idx[10]) < 4, 'G 突變「建立事件不加一」→ 逐一計數數不到 4、對照必須紅', f'逐一計數 {idx[10]}')
+            ph = mutated(td, "    if os.name != 'nt':\n        return None, '不是 Windows，沒有 WMI 事件'\n",
+                         "    return None, '（測試）監看故意不啟動'\n", 'reslog_nowatch.py')
+            rc, out, idx = run_g(ph, 'H')
+            lim = [l for l in out if l.startswith('RESLOG LIMIT: ')]
+            record(rc == 0 and idx[10] == '?' and idx[11] == '?' and len(lim) == 1 and '逐一計數沒有啟動' in lim[0],
+                   'H 監看沒啟動 → index 寫「?」、不寫 0，輸出寫明只有取樣峰值', f'逐一計數 {idx[10]}／{idx[11]}、{lim[:1]}')
         n, t = syn_count(load(SRC, 'reslog_src'))
         record(n == SYN_WANT and 50 not in t and 60 not in t, f'D 工作程序的數法（合成程序表）：應該 {SYN_WANT}，PID 重用的 60 不在樹裡', f'算出 {n}；這一棵 {t}')
         for a, b, label in (
