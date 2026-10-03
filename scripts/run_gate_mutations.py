@@ -44,9 +44,19 @@ def git(*a):
 
 
 def planned_from_expect(path):
+    """這一列只要有任何一格的依據是事前推論（整列的「依據」或「依據:sNN」覆寫欄），就要跑——
+    2026-10-03 加 s34 之後，5 條「事後」的列在 s34 那一格是事前推論、從來沒跑過，漏掉等於那一格沒驗。"""
     lines = [l for l in open(path, encoding='utf-8').read().splitlines() if l.strip() and not l.startswith('#')]
     head = lines[0].split('\t')
-    return [l.split('\t')[0] for l in lines[1:] if l.split('\t')[len(head) - 1].startswith('讀程式推論')]
+    basis_cols = [i for i, c in enumerate(head) if c == '依據' or c.startswith('依據:')]
+    if not basis_cols or '依據' not in head:
+        raise SystemExit('RUNNER ABORT: 預期表沒有「依據」欄')
+    out = []
+    for l in lines[1:]:
+        f = l.split('\t')
+        if any(i < len(f) and f[i].startswith('讀程式推論') for i in basis_cols):
+            out.append(f[0])
+    return out
 
 
 def main(argv=None):

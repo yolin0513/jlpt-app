@@ -4,10 +4,11 @@
 # 三關，每關失敗都讓後面停下，各自的回傳值：
 #   1  沒有驗法登記或閘門改過沒重跑驗法、閘門腳本有已知的壞寫法（lint_gate.py）、自查失敗（有命中、對照組沒命中、取不到使用者名稱、沒有要推的 commit），或取不到遠端的最新狀態——沒有推
 #   2  推送失敗
-#   3  推送回報成功，但遠端 main 不等於本機 HEAD
+#   3  推送回報成功，但遠端 main 不等於開跑時鎖定的那個 commit
+#   5  推上去的是鎖定的那個 commit，但推送期間本機 main 多了 commit（那些沒有被推、也沒有被自查）
 #   1  （也包括）環境裡設了 git 自己認得的 GIT_ 變數（白名單以外）
 #   4  這次要推的 commit 動到題庫建置或它的驗法，卻沒有對得上的 F8 驗法登記（沒重跑 test_datacheck.py）——沒有推
-#   0  推上去了，而且遠端＝本機
+#   0  推上去了，而且遠端＝鎖定的 commit＝本機 main
 # 會決定成敗的指令一律不接管線（管線的回傳值是最後一個指令的，會吞掉失敗）；輸出導到檔案再印。
 # 改過這支或 selfcheck_public.py，就重跑 scripts/test_pushsafe.sh（分別製造每一關的失敗）。
 set -u
@@ -31,20 +32,32 @@ if [ -n "$badenv" ]; then
 fi
 
 cd "$(git rev-parse --show-toplevel)" || exit 1
+
+# 00000) 鎖定這一次要推的 commit（2026-10-03，Dispatch 轉 StockDiary／MealMate 的發現）：
+#        原本每一關各自取當下的 HEAD、推送推「推送那一刻」的 main、推完拿推送之後才取的 HEAD 比——
+#        自查之後、推送之前多出一個 commit，它會被一起推上去，而且核對時兩邊相等、照樣印「推送成功」。
+#        現在開跑時記下 main 的 commit 編號（HEAD 必須就在 main 上），之後的登記比對、F9、自查、推送、推完核對都只看它。
+PIN="$(git rev-parse --verify -q refs/heads/main)"
+if [ -z "$PIN" ]; then echo "PUSHSAFE: 讀不到本機的 main，沒有推送"; exit 1; fi
+CUR="$(git symbolic-ref -q HEAD)"
+if [ "$CUR" != refs/heads/main ]; then
+  echo "PUSHSAFE: HEAD 不在 main 上（${CUR:-detached}）——推的是 main、驗的會是別的東西，沒有推送"; exit 1
+fi
+echo "PUSHSAFE: 這一次鎖定 main＝${PIN:0:7}（之後每一關都只看這個 commit）"
 LOG="$(mktemp)"
 HELPER='!"$HOME/AppData/Local/Temp/gh-cli/bin/gh.exe" auth git-credential'   # gh 的位置見 STATUS §8
 export GIT_TERMINAL_PROMPT=0 GH_CONFIG_DIR="$HOME/.config/gh"
 
 # 000) 改過閘門就要重跑驗法——機器擋（共用慣例 v9 §5.15，J7，照 MealMate 的登記制）：
 #      test_pushsafe.sh 全部符合時，把下面四支「已 commit 版本」的雜湊寫進 .git/pushsafe-verified；
-#      這裡比對 HEAD 的版本，沒有登記檔或任何一支對不上就停。驗法沒全過、或跑的是突變，它會刪掉登記。
+#      這裡比對鎖定的那個 commit（$PIN），沒有登記檔或任何一支對不上就停。驗法沒全過、或跑的是突變，它會刪掉登記。
 REG="$(git rev-parse --git-path pushsafe-verified)"
 if [ ! -f "$REG" ]; then
   echo "PUSHSAFE: 沒有驗法登記（沒跑過 bash scripts/test_pushsafe.sh，或上次沒全過），沒有推送"; rm -f "$LOG"; exit 1
 fi
 stale=""
 for f in scripts/pushsafe.sh scripts/selfcheck_public.py scripts/test_pushsafe.sh scripts/lint_gate.py scripts/lib/verified_reg.py scripts/test_verified_reg.py scripts/test_selfcheck_meta.py scripts/lib/gitenv.py; do
-  now="$(git rev-parse "HEAD:$f" 2>/dev/null)"
+  now="$(git rev-parse "$PIN:$f" 2>/dev/null)"
   reg="$(awk -v f="$f" '$1 == f { print $2 }' "$REG")"
   if [ -z "$now" ] || [ "$now" != "$reg" ]; then stale="$stale $f"; fi
 done
@@ -67,14 +80,14 @@ if [ $rc -ne 0 ]; then cat "$LOG"; echo "PUSHSAFE: 取不到遠端的最新狀�
 #      的雜湊登記進 .logs/datacheck-verified（不進版控）。只在「這次要推的 commit 動到這四支」時才看登記——
 #      範圍照遠端的實際狀態算（上一步剛 fetch）。閘門本身那幾支不在這裡，照 000) 一律要先驗（新 clone 也一樣）。
 DGUARD="scripts/build_data.py scripts/check_data.py scripts/test_datacheck.py scripts/lib/verified_reg.py"
-touched="$(git log --pretty=tformat: --name-only origin/main..HEAD -- $DGUARD)"
+touched="$(git log --pretty=tformat: --name-only "origin/main..$PIN" -- $DGUARD)"
 rc=$?
 if [ $rc -ne 0 ]; then echo "PUSHSAFE: 算不出這次要推的 commit 動到哪些檔（rc=$rc），沒有推送"; rm -f "$LOG"; exit 4; fi
 if [ -n "$(printf '%s' "$touched" | tr -d '[:space:]')" ]; then
   DREG=.logs/datacheck-verified
   dstale=""
   for f in $DGUARD; do
-    now="$(git rev-parse "HEAD:$f" 2>/dev/null)"
+    now="$(git rev-parse "$PIN:$f" 2>/dev/null)"
     reg=""
     [ -f "$DREG" ] && reg="$(awk -v f="$f" '$1 == f { print $2 }' "$DREG")"
     if [ -z "$now" ] || [ "$now" != "$reg" ]; then dstale="$dstale $f"; fi
@@ -86,25 +99,29 @@ if [ -n "$(printf '%s' "$touched" | tr -d '[:space:]')" ]; then
 fi
 
 # 1) 自查
-python scripts/selfcheck_public.py origin/main > "$LOG" 2>&1
+python scripts/selfcheck_public.py origin/main "$PIN" > "$LOG" 2>&1
 rc=$?
 cat "$LOG"
 if [ $rc -ne 0 ]; then echo "PUSHSAFE: 自查失敗（rc=$rc），沒有推送"; rm -f "$LOG"; exit 1; fi
 
 # 2) 推送
-timeout 90 git -c credential.helper="$HELPER" push origin main > "$LOG" 2>&1
+timeout 90 git -c credential.helper="$HELPER" push origin "$PIN:refs/heads/main" > "$LOG" 2>&1
 rc=$?
 cat "$LOG"
 if [ $rc -ne 0 ]; then echo "PUSHSAFE: 推送失敗（rc=$rc）"; rm -f "$LOG"; exit 2; fi
 
-# 3) 推送後：遠端 main 必須等於本機 HEAD
+# 3) 推送後：遠端 main 必須等於鎖定的那個 commit（不是推送之後才取的 HEAD）
 timeout 90 git -c credential.helper="$HELPER" ls-remote origin refs/heads/main > "$LOG" 2>&1
 rc=$?
 remote="$(cut -f1 "$LOG")"
-localh="$(git rev-parse HEAD)"
 rm -f "$LOG"
-if [ $rc -ne 0 ] || [ -z "$remote" ] || [ "$remote" != "$localh" ]; then
-  echo "PUSHSAFE: 遠端與本機不一致（ls-remote rc=$rc remote=${remote:0:7} local=${localh:0:7}）"; exit 3
+if [ $rc -ne 0 ] || [ -z "$remote" ] || [ "$remote" != "$PIN" ]; then
+  echo "PUSHSAFE: 遠端與鎖定的 commit 不一致（ls-remote rc=$rc remote=${remote:0:7} 鎖定=${PIN:0:7}）"; exit 3
 fi
-echo "PUSHSAFE: 推送成功，遠端＝本機＝${localh:0:7}"
+# 推完本機 main 已經不是鎖定的那個：過程中多了 commit——它們沒有被推、也沒有被自查，另外報（回 5）
+nowmain="$(git rev-parse --verify -q refs/heads/main)"
+if [ "$nowmain" != "$PIN" ]; then
+  echo "PUSHSAFE: 推上去的是鎖定的 ${PIN:0:7}（遠端＝${remote:0:7}），但推送期間本機 main 多了 commit（現在 ${nowmain:0:7}）——那些沒有被推、也沒有被自查；要推就再跑一次閘門"; exit 5
+fi
+echo "PUSHSAFE: 推送成功，遠端＝鎖定的 commit＝本機 main＝${PIN:0:7}"
 exit 0

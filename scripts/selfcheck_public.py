@@ -2,7 +2,10 @@
 名字與信箱，查四類——金鑰或 token、email、本機使用者名稱、本機路徑。命中時標明是「新增行」還是「commit 訊息或作者欄」。
 
 回傳值：0＝通過；1＝有命中、任何一類的對照組沒命中、取不到使用者名稱、或沒有要推的 commit（都不該推）。
-由 scripts/pushsafe.sh 呼叫；也可以單獨跑：python scripts/selfcheck_public.py [基準，預設 origin/main]
+由 scripts/pushsafe.sh 呼叫：python scripts/selfcheck_public.py origin/main <閘門鎖定的 commit>；
+也可以單獨跑：python scripts/selfcheck_public.py [基準，預設 origin/main] [掃到哪一個 commit，預設 HEAD]
+（2026-10-03 起閘門一律交鎖定的 commit 編號：範圍內每一個 git 指令都看同一個 commit，不再各自取當下的 HEAD——
+  原本自查跑到一半多出 commit，diff 與 numstat 會各自看到不同的範圍；自查跑完才多出的，推送會把它一起推上去。）
 
 寫法上的刻意之處：
 - 對照組是當場組出來的合成樣本，跑的是同一個樣式（共用慣例 §5.3）；樣本與樣式都拆開寫，
@@ -37,15 +40,22 @@ def git(*args):
 
 
 base = sys.argv[1] if len(sys.argv) > 1 else 'origin/main'
-rc, commits = git('rev-list', f'{base}..HEAD')
+_tip_arg = sys.argv[2] if len(sys.argv) > 2 else 'HEAD'
+rc, TIP = git('rev-parse', '--verify', '-q', _tip_arg + '^{commit}')
+TIP = TIP.strip()
+if rc != 0 or not TIP:
+    print(f'SELF-CHECK FAILED: 讀不到要掃到的那個 commit（{_tip_arg}）')
+    sys.exit(1)
+print(f'掃的範圍：{base}..{TIP[:7]}（{_tip_arg}）')
+rc, commits = git('rev-list', f'{base}..{TIP}')
 if rc != 0:
-    print(f'SELF-CHECK FAILED: 算不出 {base}..HEAD（基準不存在？）')
+    print(f'SELF-CHECK FAILED: 算不出 {base}..{TIP[:7]}（基準不存在？）')
     sys.exit(1)
 commits = [c for c in commits.split() if c]
 if not commits:
-    print(f'SELF-CHECK FAILED: {base}..HEAD 沒有要推的 commit')
+    print(f'SELF-CHECK FAILED: {base}..{TIP[:7]} 沒有要推的 commit')
     sys.exit(1)
-rc, patch = git('-c', 'core.quotepath=false', 'log', '--format=', '-p', '-U0', '--no-color', f'{base}..HEAD')
+rc, patch = git('-c', 'core.quotepath=false', 'log', '--format=', '-p', '-U0', '--no-color', f'{base}..{TIP}')
 if rc != 0:
     print('SELF-CHECK FAILED: 取不到 diff')
     sys.exit(1)
@@ -101,7 +111,7 @@ def numstat_by_category(text):
 
 added = extract_added(patch)
 # ---- 核對行數：用獨立來源（numstat）算新增行數，對不上就停——抽取壞了（或換環境抽少了）時，零命中不可信 ----
-rc, numstat = git('-c', 'core.quotepath=false', 'log', '--format=', '--numstat', f'{base}..HEAD')
+rc, numstat = git('-c', 'core.quotepath=false', 'log', '--format=', '--numstat', f'{base}..{TIP}')
 if rc != 0:
     print('SELF-CHECK FAILED: 取不到 numstat，沒辦法核對新增行數')
     sys.exit(1)
@@ -122,7 +132,7 @@ if by_cat != by_cat_git or sum(by_cat.values()) != len(added):
     sys.exit(1)
 # ---- 核對結束 ----
 # commit 訊息與作者、提交者的名字與信箱：一樣會永久留在公開歷史裡（共用慣例 v8 §2.5「自查的範圍」）
-rc, meta_raw = git('log', '--format=%an%n%ae%n%cn%n%ce%n%B%x00', f'{base}..HEAD')
+rc, meta_raw = git('log', '--format=%an%n%ae%n%cn%n%ce%n%B%x00', f'{base}..{TIP}')
 if rc != 0:
     print('SELF-CHECK FAILED: 取不到 commit 訊息與作者欄')
     sys.exit(1)
@@ -204,20 +214,20 @@ def real_file_probe(text):
     for cat in sorted({category(p) for p in per_path}):
         src = None
         for p in per_path:
-            if category(p) == cat and subprocess.run(['git', 'cat-file', '-e', f'HEAD:{p}'], capture_output=True).returncode == 0:
+            if category(p) == cat and subprocess.run(['git', 'cat-file', '-e', f'{TIP}:{p}'], capture_output=True).returncode == 0:
                 src = p
                 break
         if src is None:   # 這次動到的那幾支在 HEAD 都被刪了：改拿 HEAD 裡同一類的別支（照樣是那一類的真實檔）
-            ls = subprocess.run(['git', '-c', 'core.quotepath=false', 'ls-files'] + (['--', f'*{cat}'] if cat.startswith('.') else []),
+            ls = subprocess.run(['git', '-c', 'core.quotepath=false', 'ls-tree', '-r', '--name-only', TIP] + (['--', f'*{cat}'] if cat.startswith('.') else []),
                                 capture_output=True)
             same = [p for p in ls.stdout.decode('utf-8', 'replace').splitlines() if category(p) == cat] if ls.returncode == 0 else []
             src = same[0] if same else None
         if src is None:
             bad.append(f'{cat}：這次有新增行的檔在 HEAD 都不在了、HEAD 裡也沒有同一類的檔，沒有真實檔可做對照組')
             continue
-        blob = subprocess.run(['git', 'show', f'HEAD:{src}'], capture_output=True)
+        blob = subprocess.run(['git', 'show', f'{TIP}:{src}'], capture_output=True)
         if blob.returncode != 0:
-            bad.append(f'{cat}：取不到 HEAD:{src}')
+            bad.append(f'{cat}：取不到 {TIP[:7]}:{src}')
             continue
         raw = blob.stdout
         eol = b'\r\n' if b'\r\n' in raw else b'\n'

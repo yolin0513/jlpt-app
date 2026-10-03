@@ -4,7 +4,7 @@
 #   bash scripts/test_pushsafe.sh                              # 正常：全部符合回 0，並登記四支閘門檔案的雜湊
 #   （預設：正常順序跑一輪、反過來再跑一輪，逐個情境比對兩輪結果一樣才算全過——J8 的「換序結果不變」每次都驗）
 #   TEST_PUSHSAFE_ORDER=normal|reverse bash scripts/test_pushsafe.sh  # 只跑一個順序（除錯用；不會登記）
-#   TEST_PUSHSAFE_MUTATE=<突變> bash scripts/test_pushsafe.sh   # 突變：nofetch nometa oldparse nocheck oldparse+nocheck nolint noregistry nof9 f9always regnopass regnotested regclean dienorm noselfhead regrevparse regdiff reghash nometa2 f9nofile f9nohash f9neverok f9regexists regwrongblob regnever noenvguard envguardall envtargetsempty noae noce nochkauthor nochkcommitter pyscenv pylintenv regnodrop
+#   TEST_PUSHSAFE_MUTATE=<突變> bash scripts/test_pushsafe.sh   # 突變：nofetch nometa oldparse nocheck oldparse+nocheck nolint noregistry nof9 f9always regnopass regnotested regclean dienorm noselfhead regrevparse regdiff reghash nometa2 f9nofile f9nohash f9neverok f9regexists regwrongblob regnever noenvguard envguardall envtargetsempty noae noce nochkauthor nochkcommitter pyscenv pylintenv regnodrop nopin
 # 完全不碰 GitHub：在暫存目錄建一個 bare repo 當假遠端，複製本 repo「已 commit 的內容」過去跑。
 # 所以改了閘門要先在本機 commit（先不推）再跑這支。
 # 登記（J7）：正常跑、全部符合時，把 pushsafe.sh、selfcheck_public.py、test_pushsafe.sh、lint_gate.py 被驗的那一版雜湊
@@ -240,6 +240,10 @@ case "$MUTATE" in
     mutate $PS "if [ -n \"\$(printf '%s' \"\$touched\""
     pyedit $PS "if [ -n \"\$(printf '%s' \"\$touched\" $BAR tr -d '[:space:]')\" ]; then" 'if true; then' || die "改壞閘門"
     confirm_mutated $PS "if [ -n \"\$(printf '%s' \"\$touched\"" ;;
+  nopin)   # 推送不鎖定 commit：推「推送那一刻」的 main（2026-10-03 之前的寫法）——自查之後多出的 commit 會被一起推上去
+    mutate $PS 'push origin "$PIN:refs/heads/main"'
+    pyedit $PS 'push origin "$PIN:refs/heads/main"' 'push origin main' || die "改壞閘門"
+    confirm_mutated $PS 'push origin "$PIN:refs/heads/main"' ;;
   noregistry)
     # 字面留著、只讓條件失效：若把整行換掉，lint 登記的例外就對不上、變成「例外過期」，
     # lint 會在第一步把所有情境都擋下——紅了，但不是被「拿掉登記檢查」弄紅的（2026-09-24 第一版就這樣被污染）
@@ -278,13 +282,14 @@ at_start() {  # 每個情境開始前確認起點真的一樣（互不污染）
 }
 bad=0
 declare -A RESULT   # 情境編號 → yes／no（這一輪的）
-check() {  # check 名稱 期望rc 實際rc 期望假遠端(same|local) must... [-- mustnot...]
+check() {  # check 名稱 期望rc 實際rc 期望假遠端(same|local|pin) must... [-- mustnot...]（pin＝等於情境記下的 S34_PIN）
   local name="$1" want="$2" got="$3" expect="$4"; shift 4
   local after ok why=""
   after="$(rhead)"; ok=yes
   [ -n "$after" ] || die "讀不到假遠端的 HEAD（兩邊都是空的，「假遠端沒動」會恆真）"
   [ "$got" = "$want" ] || { ok=no; why="回傳值"; }
   if [ "$expect" = same ]; then [ "$after" = "$(git rev-parse --short "$BASE")" ] || { ok=no; why="$why 假遠端被動到"; }
+  elif [ "$expect" = pin ]; then [ -n "$S34_PIN" ] && [ "$after" = "$(git rev-parse --short "$S34_PIN")" ] || { ok=no; why="$why 假遠端≠鎖定的 commit"; }
   else [ "$after" = "$(git rev-parse --short HEAD)" ] || { ok=no; why="$why 假遠端≠本機"; }; fi
   reason_ok "$T/out.txt" "$@" || { ok=no; why="$why 擋下理由不對"; }
   [ "$ok" = yes ] || bad=1
@@ -490,8 +495,22 @@ s33() { at_start; clean_commit 33   # 入口拒絕的 Python 層：自查、lint
   [ $rc -eq 0 ] && grep -q '^LINT-GATE OK' "$T/o33.txt" || { ok=no; why="$why lint 連白名單也擋（rc=$rc）"; }
   check_plain "33 GIT_ 變數的入口拒絕：Python 層（自查、lint）" "$ok" "$why"; restore; }
 
-LIST="s01 s02 s03 s04 s05 s06 s07 s08 s09 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 s21 s22 s23 s24 s25 s26 s27 s28 s29 s30 s31 s32 s33"
-N_SCEN=33
+S34_PIN=""
+s34() { at_start   # 自查之後才多出一個 commit（2026-10-03 鎖定 commit 的情境實測）：複本裡讓自查通過之後順手 commit 一個帶命中的檔
+  pyedit $SC "print('SELF-CHECK OK')" "print('SELF-CHECK OK'); import subprocess as _s34; open('s34_late.txt', 'w').write('late path E' + ':' + chr(92) + 'foo' + chr(10)); _s34.run(['git', 'add', 's34_late.txt']); _s34.run(['git', 'commit', '-qm', 's34 late commit after selfcheck'])" > /dev/null || die "改自查（34）"
+  git commit -q -am "s34: selfcheck makes a late commit" || die "commit 改過的自查（34）"
+  clean_commit 34
+  register_clone
+  S34_PIN="$(git rev-parse HEAD)"
+  rc="$(run)"
+  local subj34; subj34="$(git log -1 --pretty=%s)"
+  [ "$(git rev-parse HEAD)" != "$S34_PIN" ] && [ "$subj34" = 's34 late commit after selfcheck' ] || die "自查之後沒有多出那個 commit（前提沒造成）"
+  check "34 自查之後才多出一個 commit（推鎖定的那個、另外報）" 5 "$rc" pin 'PUSHSAFE: 推上去的是鎖定的' -- '推送成功'
+  git --git-dir="$T/remote.git" merge-base --is-ancestor HEAD main 2>/dev/null && echo "       自查之後多出的 commit 到了假遠端：是"
+  S34_PIN=""; restore; }
+
+LIST="s01 s02 s03 s04 s05 s06 s07 s08 s09 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 s21 s22 s23 s24 s25 s26 s27 s28 s29 s30 s31 s32 s33 s34"
+N_SCEN=34
 run_list() {  # run_list normal|reverse
   local l="$LIST"; [ "$1" = reverse ] && l="$(printf '%s\n' $LIST | sort -r | tr '\n' ' ')"
   echo "順序：$1（$l）"; RESULT=(); for s in $l; do $s; done

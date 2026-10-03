@@ -176,6 +176,14 @@ def main():
         badcell = exp('e_bad.tsv', H + ALL.replace('mnoend\tred\t紅\t不紅\t不紅', 'mnoend\tred\t紅\t?\t不紅'))
         rc, out = run(SRC, ['--out', os.path.join(td, 'ev9.tsv'), '--expect', badcell, '--verifier', ver, *paths])
         record(rc == 1 and "['s02']" in out, 'E 某一格不是「紅／不紅」→ 回 1、點名那一格', f'rc={rc}')
+        # 逐格標依據（2026-10-03）：「依據」之後可以多放「依據:sNN」覆寫欄；指向不存在的情境要判格式不對
+        ovr = exp('e_ovr.tsv', H.replace('\t依據\n', '\t依據\t依據:s03\n') + ''.join(l + '\t事前（s03）\n' for l in ALL.splitlines()))
+        rc, out = run(SRC, ['--out', os.path.join(td, 'ev11.tsv'), '--expect', ovr, '--verifier', ver, *paths])
+        ck = [l for l in out.splitlines() if l.startswith('MKEVIDENCE EXPECT-CHECK: ')]
+        record(rc == 0 and len(ck) == 1 and '實際讀到 15 格' in ck[0], 'E 帶「依據:s03」覆寫欄的表 → 放行、格數照樣是 15', f'rc={rc}、{ck[:1]}')
+        badovr = exp('e_badovr.tsv', H.replace('\t依據\n', '\t依據\t依據:s09\n') + ''.join(l + '\t事前（s09）\n' for l in ALL.splitlines()))
+        rc, out = run(SRC, ['--out', os.path.join(td, 'ev12.tsv'), '--expect', badovr, '--verifier', ver, *paths])
+        record(rc == 1 and '覆寫欄指向不存在的情境' in out and "依據:s09" in out, 'E 覆寫欄指向不存在的情境（依據:s09）→ 格式不對、回 1、點名', f'rc={rc}')
         bad_ver = os.path.join(td, 'fake_tps_bad.sh')
         open(bad_ver, 'w', encoding='utf-8').write(open(ver, encoding='utf-8').read().replace('mnoend mabort', 'mabort'))
         rc, out = run(SRC, ['--out', os.path.join(td, 'ev10.tsv'), '--expect', ok_exp, '--verifier', bad_ver, *paths])

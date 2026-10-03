@@ -112,7 +112,9 @@ COUNTED = {'cells': 0}   # 實際讀到的「紅／不紅」格數（不是列�
 
 def read_expect(path, scen, names):
     """讀預期表（對全部情境的完整劃分，Dispatch 2026-10-02）：
-    第一行是表頭：名稱<TAB>類別<TAB>s01<TAB>…<TAB>sNN<TAB>依據；之後每條突變一列，每一個情境一格「紅」或「不紅」。
+    第一行是表頭：名稱<TAB>類別<TAB>s01<TAB>…<TAB>sNN<TAB>依據[<TAB>依據:sNN…]；之後每條突變一列，每一個情境一格「紅」或「不紅」。
+    「依據」是整列的依據；後面可以多放「依據:sNN」欄覆寫那一格自己的依據（2026-10-03：新加 s34 時，那 5 條「事後」的列
+    在 s34 那一格是事前推論——同一列混著事前與事後，不能整列標成事後）。
     回傳 (expect, 過期的問題, 格式的問題)。expect＝{名稱: (類別, 預期紅的情境 list, 依據)}。
     過期（回 3）：表頭的情境欄≠現在的 LIST（後來加的情境沒有欄＝每一條都沒表態）、列裡有已經不存在的突變、有突變沒有列。
     格式（回 1）：某一列的格數不等於情境數、某一格不是「紅／不紅」、同一條突變兩列。"""
@@ -120,10 +122,16 @@ def read_expect(path, scen, names):
     if not lines:
         return {}, [], ['預期表是空的']
     head = lines[0].split('\t')
-    cols = [c for c in head[2:-1]]
+    cols = [c for c in head[2:] if re.fullmatch(r's\d\d', c)]
     stale, fmt, expect = [], [], {}
-    if head[:2] != ['名稱', '類別'] or head[-1] != '依據':
-        fmt.append(f'表頭不對：{head[:2]}…{head[-1:]}')
+    nb = 2 + len(cols)   # 「依據」那一欄的位置
+    extra = head[nb + 1:] if len(head) > nb else []
+    if head[:2] != ['名稱', '類別'] or head[2:nb] != cols or len(head) <= nb or head[nb] != '依據':
+        fmt.append(f'表頭不對：要是「名稱、類別、s01…sNN、依據[、依據:sNN…]」，實際 {head[:3]}…{head[nb:nb + 2]}')
+        return {}, stale, fmt
+    bad_extra = [c for c in extra if not (c.startswith('依據:') and c[3:] in cols)]
+    if bad_extra:
+        fmt.append(f'表頭裡「依據:」覆寫欄指向不存在的情境：{bad_extra}')
         return {}, stale, fmt
     want = ['s' + x for x in sorted(scen)]
     if cols != want:
@@ -132,7 +140,7 @@ def read_expect(path, scen, names):
     for i, line in enumerate(lines[1:], 2):
         f = line.split('\t')
         name = f[0]
-        cells = f[2:-1] if len(f) >= 3 else []
+        cells = f[2:nb] if len(f) >= nb else []
         if len(f) != len(head):
             fmt.append(f'第 {i} 行 {name}：{len(f)} 欄，表頭是 {len(head)} 欄（每一條都要對 {len(cols)} 個情境各表態一格）')
             continue
@@ -145,7 +153,7 @@ def read_expect(path, scen, names):
             continue
         if name not in names:
             stale.append(f'{name}：驗法裡已經沒有這條突變')
-        expect[name] = (f[1], [cols[j][1:] for j, c in enumerate(cells) if c == RED], f[-1])
+        expect[name] = (f[1], [cols[j][1:] for j, c in enumerate(cells) if c == RED], f[nb])
         COUNTED['cells'] += sum(1 for c in cells if c in (RED, NOT_RED))
     missing = sorted(names - set(expect))
     if missing and not fmt:
