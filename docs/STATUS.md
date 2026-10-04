@@ -20,6 +20,33 @@
 
 ### 現在正在做什麼
 
+> **2026-10-04 暫停**（Yolin 指示：App 的工作全部暫停，等他說做才開工。**這一段是最新的，優先於下面所有段落。**）
+>
+> **恢復時的第一件事**：先跑 `git status` 與 `git log --oneline origin/main..main`，確認本機只比遠端多兩個沒推的 commit（`e06b241` 程式改動＋這次暫停的 STATUS commit）、工作區乾淨；然後**不要推**，先向 Dispatch 要許可跑閘門驗法 `bash scripts/test_pushsafe.sh`（估值見下）。閘門驗法沒跑過 s34 之前，`pushsafe.sh` 會因驗法登記對不上而擋下，這是正確的。
+>
+> - **停在哪一步**：四步順序 ⓪→①→③→② 的 **⓪ 推送閘門鎖定 commit**。⓪ 的程式改動、s34 情境、`nopin` 突變、34 格補寫都**寫完了，也 commit 了，但還沒驗、還沒推**。①（強制終止實測改用 Job Object）、③（外部記憶體監看）、②（突變重跑）**都還沒開始**。
+> - **做到一半的東西，逐項**：
+>   - **commit 了、沒推**：`e06b241`（遠端還停在 `fd5d976`）。內容：`pushsafe.sh` 鎖定 commit、回傳值 5；`selfcheck_public.py` 加第二個參數；`test_pushsafe.sh` 加 s34 與 `nopin`；`mutation-expect.tsv`；`mkevidence_mut.py` 認「依據:sNN」覆寫欄；`run_gate_mutations.py` 的清單規則；`test_mkevidence.py` 補兩種情境；STATUS 與 `docs/DESIGN_突變範圍與帳本.md` 附表。細節見下面「⓪ 推送閘門鎖定 commit」那一條。
+>   - **改了、沒驗**（都在 `e06b241` 裡）：**閘門驗法沒跑過**，所以 s34 有沒有真的擋下「自查之後多出的 commit」**沒有實測**，鎖定機制目前只是讀程式推論；突變 `nopin` 沒跑過，s34 會不會紅也沒證明；`test_cli_probes.py`（自查改了要跑）、`test_run_gate_mutations.py`（清單規則改了要跑）都沒跑。
+>   - **跑過的**：lint 通過；`mkevidence_mut.py --check-only` 實際讀到 1190 格＝35×34、過期 0；`test_mkevidence.py` 全部符合，新加的覆寫欄壞格式那一種有突變證明會紅。
+>   - **驗了、沒 commit**：沒有。
+> - **那 34 格預期表：已經全部寫完，35 條 × 34 格都有值，不是寫到一半。** 每一格的依據：
+>   - s01～s33 那幾格照每一列的「依據」欄：`nofetch`、`nometa`、`oldparse`、`nocheck`、`oldparse+nocheck` 這 5 條是 **2026-10-02 實測（事後）**；其餘 29 條是 **2026-10-02 讀程式推論（事前）**。
+>   - s34 那一格照「依據:s34」欄：**35 條全部是 2026-10-03 讀程式推論（事前）**，包括上面那 5 條事後的列。預期紅的是 `oldparse`、`oldparse+nocheck`、`f9always`、`nopin`；其餘 31 條預期不紅，這也是預測。
+>   - `nopin` 整列都是 2026-10-03 事前推論，它只有 s34 那一格預期紅。
+> - **暫行硬規則還在生效**：自查到推送之間不得有任何新 commit、不准 amend 或 rebase，commit 全部做完才跑 `bash scripts/pushsafe.sh`。原因是鎖定 commit 還沒驗完：要等閘門驗法跑過 s34、`nopin` 證明 s34 會紅，才能撤；撤的時候要寫進 STATUS。
+> - **突變重跑還沒跑**：那 29 條的證據仍是「**曾有紀錄、無法複核**」，不當成現行證據。執行程式的清單現在算出來是 35 條（29 條＋5 條事後的列在 s34 那一格是事前＋`nopin`），約 2.3 小時；跑 35 條還是縮回 29 條，Dispatch 還沒回。
+> - **系統暫存區那 3 個樣本不要清**：`jlpt-live-1788409820897`、`tmpwlpawd6p`、`tmp_v19uxbn`。它們的主人程序編號不在了，是 2026-10-03 14:34 App 重開造成的，不是殘留（見下面「暫存區的 3 個樣本」那一條）。
+> - **在等 Dispatch／Yolin 的**：
+>   1. 開跑許可，依序單線、合計約 13 分鐘：
+>      - `test_cli_probes`：2 個 python，約 43 秒。
+>      - `test_run_gate_mutations`：3 個 python，約 2 分鐘。
+>      - 閘門驗法：3 個 python＋2 個 bash＋PowerShell 監看，約 6～9 分鐘。
+>      - 突變 `nopin`：約 4 分鐘。
+>   2. 突變重跑要跑 35 條還是 29 條。
+>   3. 授權改 `CLAUDE.md` 推送那一行，把回傳值從「0～4」加上 5。
+> - **沒有正在跑的東西**，也沒有留在背景的程序。
+
 > **2026-10-02 共用慣例 v11 工單（進行中）**——**這一段是最新的；下面 2026-09-25 那段是更早的收尾紀錄，其中「下一步：沒有工作」已過期。**
 >
 > - **工單**：`docs/SPEC_共用慣例更新_v11.md`。v11.1 版已 commit（`2d36a54`，雜湊與 Dispatch 給的一致）。之後統籌者在工作區把它覆寫成 **v11.2 版**（多了「歸類按次」與「對照組是合成字串不算」兩條），**還沒 commit**——等 Dispatch 給 v11.2 的雜湊再 commit，不要自己猜著收。
