@@ -41,6 +41,8 @@ python scripts/build_data.py          # data/src/*.txt → data/**/*.json、mani
 python scripts/check_data.py          # 題庫品質檢查（可加 --sample N）
 python scripts/serve.py               # 開發伺服器 http://localhost:5173/（多執行緒；不要用 python -m http.server）
 
+# 〔2026-10-08 Dispatch 授權〕下面六行都會開瀏覽器，照共用慣例 §5.19 屬重負載：開跑前先向 Dispatch 要許可（給程序數與預估耗時），一次一場。
+#   部署前照樣必跑、不得跳過；許可拿不到時寧可不部署。（改了什麼：補這一句。為什麼：原本沒註明，照著常用指令會直接跑重負載——文件與現行規則不一致）
 # 本機驗證（注意：verify-full 不帶參數時測的是「線上」，本機一定要帶網址）
 node scripts/audit.mjs http://localhost:5173/                 # 全面回歸 168 項
 node scripts/verify-full.mjs http://localhost:5173/           # 完整驗證 30 項
@@ -55,7 +57,9 @@ node scripts/regress.mjs https://yolin0513.github.io/jlpt-app/index.html
 推送一律用閘門，**不要直接下 `git push`**（共用慣例 §2.5；閘門裡已帶 gh credential helper，一般的 `git push` 會卡在看不到的 GUI 登入視窗，gh 放在使用者 Temp 目錄，見 STATUS §8）：
 
 ```bash
-bash scripts/pushsafe.sh   # 自查→推送→比對遠端；0 成功、1 前段任一關擋下、2 推送失敗、3 遠端≠本機、4 題庫驗法沒登記（完整說明見 scripts/pushsafe.sh 檔頭）
+bash scripts/pushsafe.sh   # 自查→推送→比對遠端；0 成功、1 前段任一關擋下、2 推送失敗、3 遠端≠開跑時鎖定的 commit、4 題庫驗法沒登記、5 推上去的是鎖定的 commit，但推送期間本機 main 多了 commit（那些沒推、沒自查）（完整說明見 scripts/pushsafe.sh 檔頭）
+# 〔2026-10-08 Dispatch 授權〕上一行補了回傳值 5、3 的說法跟著改。為什麼：原本只寫 0～4，看到 5 會不知道那是什麼——文件與現行閘門不一致。
+#   注意：5 與「鎖定 commit」來自 e06b241，閘門驗法還沒跑過、還沒推（見 STATUS §1 的暫停紀錄）
 # 改過閘門、自查、lint 或 scripts/lib/ 的共用模組就跑 bash scripts/test_pushsafe.sh；改過題庫建置（build_data／check_data／test_datacheck）就跑 python scripts/test_datacheck.py——沒重跑，閘門會擋
 ```
 
