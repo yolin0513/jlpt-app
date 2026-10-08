@@ -328,11 +328,11 @@ s03() { at_start; clean_commit 03; git remote set-url origin "$T/nope.git" || di
   rc="$(run)"; check "03 抓不到遠端" 1 "$rc" same 'PUSHSAFE: 取不到遠端的最新狀態' -- 'SELF-CHECK' '推送失敗'; restore; }
 s04() { at_start; clean_commit 04
   printf '#!/bin/sh\nexit 1\n' > "$T/remote.git/hooks/pre-receive" && chmod +x "$T/remote.git/hooks/pre-receive" || die "放 pre-receive"
-  rc="$(run)"; check "04 推送被拒（pre-receive）" 2 "$rc" same 'SELF-CHECK OK' 'PUSHSAFE: 推送失敗' -- '遠端與本機不一致' '推送成功'; restore; }
+  rc="$(run)"; check "04 推送被拒（pre-receive）" 2 "$rc" same 'SELF-CHECK OK' 'PUSHSAFE: 推送失敗' -- '遠端與鎖定的 commit 不一致' '推送成功'; restore; }   # 2026-10-08：e06b241 改了回 3 的訊息，舊字串在這裡空轉
 s05() { at_start; clean_commit 05
   printf '#!/bin/sh\nwhile read old new ref; do [ "$ref" = refs/heads/main ] && git update-ref refs/heads/main "$old"; done\n' > "$T/remote.git/hooks/post-receive" \
     && chmod +x "$T/remote.git/hooks/post-receive" || die "放 post-receive"
-  rc="$(run)"; check "05 推了遠端卻沒更新（post-receive）" 3 "$rc" same 'SELF-CHECK OK' 'PUSHSAFE: 遠端與本機不一致' -- '推送成功'; restore; }
+  rc="$(run)"; check "05 推了遠端卻沒更新（post-receive）" 3 "$rc" same 'SELF-CHECK OK' 'PUSHSAFE: 遠端與鎖定的 commit 不一致' -- '推送成功'; restore; }
 s06() { at_start; clean_commit 06
   rc="$(run)"; check "06 全部正常" 0 "$rc" local 'SELF-CHECK OK' 'PUSHSAFE: 推送成功'; restore; }
 s07() { at_start
