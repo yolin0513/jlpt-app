@@ -7,6 +7,7 @@
 #   3  推送回報成功，但遠端 main 不等於開跑時鎖定的那個 commit
 #   5  推上去的是鎖定的那個 commit，但推送期間本機 main 多了 commit（那些沒有被推、也沒有被自查）
 #   1  （也包括）環境裡設了 git 自己認得的 GIT_ 變數（白名單以外）
+#   1  （也包括）共用慣例副本跟主檔不一致或讀不到主檔（convcheck.py，2026-10-08）
 #   4  這次要推的 commit 動到題庫建置或它的驗法，卻沒有對得上的 F8 驗法登記（沒重跑 test_datacheck.py）——沒有推
 #   0  推上去了，而且遠端＝鎖定的 commit＝本機 main
 # 會決定成敗的指令一律不接管線（管線的回傳值是最後一個指令的，會吞掉失敗）；輸出導到檔案再印。
@@ -48,6 +49,15 @@ LOG="$(mktemp)"
 HELPER='!"$HOME/AppData/Local/Temp/gh-cli/bin/gh.exe" auth git-credential'   # gh 的位置見 STATUS §8
 export GIT_TERMINAL_PROMPT=0 GH_CONFIG_DIR="$HOME/.config/gh"
 
+# 0000) 共用慣例副本跟主檔一致（2026-10-08，Dispatch：過期的副本跟現行的讀起來一樣，沒有任何東西會說；本 App 的副本停在 v9 兩週）：
+#       讀不到主檔、副本與主檔是同一個實體檔、版本行不同、版本同全文不同，都停（判定在 scripts/convcheck.py）。
+#       換一台沒有統籌工作區的機器會停在這裡——刻意的，不要改成靜默跳過。
+#       比的是工作區的副本（Session 讀的就是它），不是 $PIN 裡的；副本改了沒 commit 時兩者會不同，這是已知限制。
+python scripts/convcheck.py > "$LOG" 2>&1
+crc=$?
+cat "$LOG"
+if [ $crc -ne 0 ]; then echo "PUSHSAFE: 共用慣例副本檢查沒過（$(tail -1 "$LOG")），沒有推送"; rm -f "$LOG"; exit 1; fi
+
 # 000) 改過閘門就要重跑驗法——機器擋（共用慣例 v9 §5.15，J7，照 MealMate 的登記制）：
 #      test_pushsafe.sh 全部符合時，把下面四支「已 commit 版本」的雜湊寫進 .git/pushsafe-verified；
 #      這裡比對鎖定的那個 commit（$PIN），沒有登記檔或任何一支對不上就停。驗法沒全過、或跑的是突變，它會刪掉登記。
@@ -56,7 +66,7 @@ if [ ! -f "$REG" ]; then
   echo "PUSHSAFE: 沒有驗法登記（沒跑過 bash scripts/test_pushsafe.sh，或上次沒全過），沒有推送"; rm -f "$LOG"; exit 1
 fi
 stale=""
-for f in scripts/pushsafe.sh scripts/selfcheck_public.py scripts/test_pushsafe.sh scripts/lint_gate.py scripts/lib/verified_reg.py scripts/test_verified_reg.py scripts/test_selfcheck_meta.py scripts/lib/gitenv.py; do
+for f in scripts/pushsafe.sh scripts/selfcheck_public.py scripts/test_pushsafe.sh scripts/lint_gate.py scripts/lib/verified_reg.py scripts/test_verified_reg.py scripts/test_selfcheck_meta.py scripts/lib/gitenv.py scripts/convcheck.py; do
   now="$(git rev-parse "$PIN:$f" 2>/dev/null)"
   reg="$(awk -v f="$f" '$1 == f { print $2 }' "$REG")"
   if [ -z "$now" ] || [ "$now" != "$reg" ]; then stale="$stale $f"; fi

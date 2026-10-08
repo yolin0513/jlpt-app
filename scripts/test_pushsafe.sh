@@ -4,7 +4,7 @@
 #   bash scripts/test_pushsafe.sh                              # 正常：全部符合回 0，並登記四支閘門檔案的雜湊
 #   （預設：正常順序跑一輪、反過來再跑一輪，逐個情境比對兩輪結果一樣才算全過——J8 的「換序結果不變」每次都驗）
 #   TEST_PUSHSAFE_ORDER=normal|reverse bash scripts/test_pushsafe.sh  # 只跑一個順序（除錯用；不會登記）
-#   TEST_PUSHSAFE_MUTATE=<突變> bash scripts/test_pushsafe.sh   # 突變：nofetch nometa oldparse nocheck oldparse+nocheck nolint noregistry nof9 f9always regnopass regnotested regclean dienorm noselfhead regrevparse regdiff reghash nometa2 f9nofile f9nohash f9neverok f9regexists regwrongblob regnever noenvguard envguardall envtargetsempty noae noce nochkauthor nochkcommitter pyscenv pylintenv regnodrop nopin
+#   TEST_PUSHSAFE_MUTATE=<突變> bash scripts/test_pushsafe.sh   # 突變：nofetch nometa oldparse nocheck oldparse+nocheck nolint noregistry nof9 f9always regnopass regnotested regclean dienorm noselfhead regrevparse regdiff reghash nometa2 f9nofile f9nohash f9neverok f9regexists regwrongblob regnever noenvguard envguardall envtargetsempty noae noce nochkauthor nochkcommitter pyscenv pylintenv regnodrop nopin noconv
 # 完全不碰 GitHub：在暫存目錄建一個 bare repo 當假遠端，複製本 repo「已 commit 的內容」過去跑。
 # 所以改了閘門要先在本機 commit（先不推）再跑這支。
 # 登記（J7）：正常跑、全部符合時，把 pushsafe.sh、selfcheck_public.py、test_pushsafe.sh、lint_gate.py 被驗的那一版雜湊
@@ -19,7 +19,7 @@ SRC_REG="$(cd "$SRC" && git rev-parse --path-format=absolute --git-path pushsafe
 T="$(mktemp -d)"
 cleanup() { chmod -R u+w "$T" 2>/dev/null; rm -r "$T" 2>/dev/null; }
 trap cleanup EXIT
-FILES="scripts/pushsafe.sh scripts/selfcheck_public.py scripts/test_pushsafe.sh scripts/lint_gate.py scripts/lib/verified_reg.py scripts/test_verified_reg.py scripts/test_selfcheck_meta.py scripts/lib/gitenv.py"
+FILES="scripts/pushsafe.sh scripts/selfcheck_public.py scripts/test_pushsafe.sh scripts/lint_gate.py scripts/lib/verified_reg.py scripts/test_verified_reg.py scripts/test_selfcheck_meta.py scripts/lib/gitenv.py scripts/convcheck.py"
 die() { echo "ABORT: $*（造情境失敗，不帶著沒造成的情境往下驗）"; rm -f "$SRC_REG"; exit 2; }
 MUTATE="${TEST_PUSHSAFE_MUTATE:-}"
 ORDER="${TEST_PUSHSAFE_ORDER:-}"
@@ -92,8 +92,13 @@ echo "比對函式的對照組：7/7 符合"
 
 # ---- 假遠端與工作複本 ----
 git init -q --bare "$T/remote.git" || die "建假遠端"
-git clone -q --no-local "$SRC" "$T/work" || die "複製"
-cd "$T/work" || die "進工作複本"
+# 複本放在 $T/w/work：閘門第一關 convcheck.py 讀「repo 往上兩層的 Fable_Planner/CONVENTIONS.md」，在這個版面就是 $T/Fable_Planner/。
+# 主檔放的是複本 HEAD 的副本（不是本機真的主檔）：情境驗的是閘門的接線，不是本機副本此刻新不新——那由真的推送去擋。
+mkdir -p "$T/w" "$T/Fable_Planner" || die "建複本的版面"
+git clone -q --no-local "$SRC" "$T/w/work" || die "複製"
+cd "$T/w/work" || die "進工作複本"
+CONV_MASTER="$T/Fable_Planner/CONVENTIONS.md"
+cp docs/CONVENTIONS.md "$CONV_MASTER" && [ -s "$CONV_MASTER" ] || die "放共用慣例的假主檔"
 # 取新版也要先證明它真的是新版：複本是 HEAD 的內容，正在跑的這支驗法必須跟 HEAD 的一模一樣（改了沒 commit，
 # 跑到的閘門就是舊的，新加的情境會對著舊閘門驗）；本機工作區的四支閘門檔也要跟 HEAD 一樣，登記才對得上實際的內容
 cmp -s "$SELF" scripts/test_pushsafe.sh || die "正在跑的驗法跟 HEAD 的不一樣（還沒 commit？），跑到的會是舊的閘門"
@@ -244,6 +249,10 @@ case "$MUTATE" in
     mutate $PS 'push origin "$PIN:refs/heads/main"'
     pyedit $PS 'push origin "$PIN:refs/heads/main"' 'push origin main' || die "改壞閘門"
     confirm_mutated $PS 'push origin "$PIN:refs/heads/main"' ;;
+  noconv)   # 共用慣例副本檢查沒過也放行（字面留著、只讓條件失效，理由同 noregistry）
+    mutate $PS 'if [ $crc -ne 0 ]; then'
+    pyedit $PS 'if [ $crc -ne 0 ]; then' 'if [ $crc -ne 0 ] && false; then' || die "改壞閘門"
+    confirm_mutated $PS 'if [ $crc -ne 0 ]; then' ;;
   noregistry)
     # 字面留著、只讓條件失效：若把整行換掉，lint 登記的例外就對不上、變成「例外過期」，
     # lint 會在第一步把所有情境都擋下——紅了，但不是被「拿掉登記檢查」弄紅的（2026-09-24 第一版就這樣被污染）
@@ -256,11 +265,14 @@ esac
 # 依賴範圍 B（Dispatch 2026-10-02）：複本裡刪掉 docs/ 與 data/ 並 commit——之後任何情境都讀不到它們，
 # 閘門突變的依賴範圍才能在結構上排除這兩類（改 STATUS、題庫不必重跑突變），不靠「宣告它們沒被讀」。
 # 先確認原本在（§5.2：斷言「不見了」之前先確認它原本在），刪掉之後再確認檔案系統與 git 都沒有了。
-[ -d docs ] && [ -d data ] || die "複本裡原本就沒有 docs/ 或 data/（前提沒造成，刪掉之後的確認會恆真）"
-git rm -r -q -- docs data || die "複本裡刪 docs/、data/"
+# 例外：docs/CONVENTIONS.md 留著——閘門第一關 convcheck.py 讀它（2026-10-08 起它是閘門真的依賴，改它就該重跑突變）。
+[ -d docs ] && [ -d data ] && [ -f docs/CONVENTIONS.md ] || die "複本裡原本就沒有 docs/、data/ 或共用慣例副本（前提沒造成，刪掉之後的確認會恆真）"
+git rm -r -q -- docs data ':(exclude)docs/CONVENTIONS.md' || die "複本裡刪 docs/、data/"
 git commit -q -m "scope: remove docs and data" || die "commit 刪掉 docs/、data/"
-if [ -e docs ] || [ -e data ] || [ -n "$(git ls-files -- docs data)" ]; then die "複本裡 docs/ 或 data/ 還在（依賴範圍 B 沒造成）"; fi
-echo "依賴範圍 B：複本裡已刪掉 docs/、data/（之後的情境都讀不到它們）"
+if [ -e data ] || [ -n "$(git ls-files -- data)" ] || [ "$(git ls-files -- docs)" != docs/CONVENTIONS.md ] || [ "$(ls -A docs)" != CONVENTIONS.md ]; then
+  die "複本裡 docs/（共用慣例副本以外）或 data/ 還在（依賴範圍 B 沒造成）"
+fi
+echo "依賴範圍 B：複本裡已刪掉 docs/（只留共用慣例副本）、data/（之後的情境都讀不到它們）"
 [ -n "$MUTATE" ] && echo "MUTATION ACTIVE: $MUTATE（已確認改壞之前那段在、改壞之後不在，HEAD 與工作區一致）"
 register_clone
 git push -q origin main || die "初始推送到假遠端"
@@ -509,8 +521,16 @@ s34() { at_start   # 自查之後才多出一個 commit（2026-10-03 鎖定 comm
   git --git-dir="$T/remote.git" merge-base --is-ancestor HEAD main 2>/dev/null && echo "       自查之後多出的 commit 到了假遠端：是"
   S34_PIN=""; restore; }
 
-LIST="s01 s02 s03 s04 s05 s06 s07 s08 s09 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 s21 s22 s23 s24 s25 s26 s27 s28 s29 s30 s31 s32 s33 s34"
-N_SCEN=34
+s35() { at_start; clean_commit 35   # 讀不到共用慣例主檔（2026-10-08）：閘門第一關要停、講明讀不到主檔，不當成通過
+  [ -f "$CONV_MASTER" ] || die "假主檔原本就不在（35 的前提沒造成，拿掉之後的確認會恆真）"
+  mv "$CONV_MASTER" "$T/conv_master_hidden.md" || die "藏起假主檔（35）"
+  [ ! -e "$CONV_MASTER" ] || die "假主檔還在（35 的情境沒造成）"
+  rc="$(run)"
+  mv "$T/conv_master_hidden.md" "$CONV_MASTER" || die "放回假主檔（35）"
+  check "35 讀不到共用慣例主檔（第一關要停）" 1 "$rc" same 'PUSHSAFE: 共用慣例副本檢查沒過' 'CONVCHECK FAILED: 讀不到主檔' -- 'SELF-CHECK' '推送成功'; restore; }
+
+LIST="s01 s02 s03 s04 s05 s06 s07 s08 s09 s10 s11 s12 s13 s14 s15 s16 s17 s18 s19 s20 s21 s22 s23 s24 s25 s26 s27 s28 s29 s30 s31 s32 s33 s34 s35"
+N_SCEN=35
 run_list() {  # run_list normal|reverse
   local l="$LIST"; [ "$1" = reverse ] && l="$(printf '%s\n' $LIST | sort -r | tr '\n' ' ')"
   echo "順序：$1（$l）"; RESULT=(); for s in $l; do $s; done
@@ -533,7 +553,7 @@ fi
 # 【已知限制】下面算 passed 的這一行本身沒有常設情境守著（要守得讓整套驗法再跑一輪失敗，一輪要好幾分鐘）；
 #  替代的證明見證據檔「F10：驗法沒全過 → 刪登記」。
 passed=no; [ $bad -eq 0 ] && [ -z "$MUTATE" ] && [ "$ORDER" = both ] && passed=yes
-SPECS=""; for f in $FILES; do [ "$f" = scripts/test_pushsafe.sh ] && SPECS="$SPECS $f=$SELF" || SPECS="$SPECS $f=$T/work/$f"; done
+SPECS=""; for f in $FILES; do [ "$f" = scripts/test_pushsafe.sh ] && SPECS="$SPECS $f=$SELF" || SPECS="$SPECS $f=$T/w/work/$f"; done
 python "$T/verified_reg_head.py" "$SRC" "$SRC_REG" "$passed" $SPECS; rrc=$?
 if [ "$passed" = yes ]; then
   [ $rrc -eq 0 ] || { echo "TEST-PUSHSAFE: 全部符合，但沒有登記（見上一行）"; exit 1; }

@@ -128,7 +128,7 @@ def ours(dirs):
     """只認本 repo 驗法開的暫存目錄：裡面有複本，或有它一開跑就寫的 sample1.txt（被殺得太早、clone 還沒完成時靠這個認）。
     別的專案同時在暫存區開 tmp.* 不會被誤認。"""
     def mine(d):
-        if os.path.isfile(os.path.join(d, 'work', 'scripts', 'test_pushsafe.sh')):
+        if os.path.isfile(os.path.join(d, 'w', 'work', 'scripts', 'test_pushsafe.sh')):   # 2026-10-08 起複本在 $T/w/work
             return True
         s1 = os.path.join(d, 'sample1.txt')
         return os.path.isfile(s1) and 'path 命中' in open(s1, encoding='utf-8', errors='replace').read()
@@ -312,7 +312,7 @@ def attempt(bash, mode, label):
     d = not finished(final)
     ts = ours(tmpdirs() - t_before)
     T = ts[0] if len(ts) == 1 else None
-    ps = os.path.join(T, 'work', 'scripts', 'pushsafe.sh') if T else ''
+    ps = os.path.join(T, 'w', 'work', 'scripts', 'pushsafe.sh') if T else ''
     e = bool(T) and os.path.exists(ps) and 'fetch -q origin main' not in open(ps, encoding='utf-8').read()
     traces = (f'(a) 已改壞且情境開跑 {a}、(b) 殺時還在跑 {b}、(c) 程序樹 {m[0] if m else "?"} 個、'
               f'(d) 沒有結尾 {d}、(e) 複本裡是壞檔 {e}；開跑後 {time.time() - t0:.0f} 秒；'

@@ -166,7 +166,8 @@ def r_overescape(name, lines):
 # 正式閘門不讀未登記的環境變數（2026-09-25；MealMate 在正式閘門找到一個沒人用、設了就把檢查與推送改指到別的遠端的旋鈕，
 # StockDiary、TripQuest 也各有類似的）。只掃正式閘門這幾支（驗法本身讀 TEST_PUSHSAFE_* 是測試用，不在這裡）；
 # 白名單只放取使用者名稱與 gh 位置要用的。git 自己認得的 GIT_* 變數不是「讀取」，由 pushsafe.sh 開頭擋。
-ENV_TARGETS = ['scripts/pushsafe.sh', 'scripts/selfcheck_public.py', 'scripts/lib/verified_reg.py', 'scripts/lint_gate.py', 'scripts/lib/gitenv.py']
+ENV_TARGETS = ['scripts/pushsafe.sh', 'scripts/selfcheck_public.py', 'scripts/lib/verified_reg.py', 'scripts/lint_gate.py', 'scripts/lib/gitenv.py',
+               'scripts/convcheck.py']   # 2026-10-08 起是閘門第一關
 ENV_ALLOW = {'HOME', 'USERNAME', 'USER'}
 _ENV_PY = re.compile(r'(?:os\.environ\.get|os\.getenv|environ\.get)\(\s*[\'"](\w+)|os\.environ\[\s*[\'"](\w+)')
 _SH_ASSIGN = re.compile(r'^\s*(?:export\s+|local\s+|readonly\s+)?([A-Za-z_]\w*)=|\bfor\s+([A-Za-z_]\w*)\s+in\b|\bread\s+(?:-\w+\s+)*([A-Za-z_]\w*)')
@@ -302,6 +303,8 @@ EXCEPTIONS = [
      '驗法 noregistry 突變的改檔指令（錨點字串），不是斷言'),
     ('scripts/test_pushsafe.sh', 'absent', "confirm_mutated $PS 'if [ ! -f \"$REG\" ]; then'",
      '驗法 noregistry 突變的確認（改壞之後那段不在），前面 mutate 已先確認它原本在'),
+    ('scripts/test_pushsafe.sh', 'absent', '[ ! -e "$CONV_MASTER" ] || die "假主檔還在（35 的情境沒造成）"',
+     '2026-10-08 實際命中後補登：情境 35 確認假主檔真的被藏起來；兩行前 [ -f "$CONV_MASTER" ] 已先確認它原本在'),
 ]
 
 
