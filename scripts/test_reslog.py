@@ -25,6 +25,8 @@ import tempfile
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'scripts', 'reslog.py')
+sys.path.insert(0, os.path.join(ROOT, 'scripts', 'lib'))
+from tmpclean import rmtree_strict  # noqa: E402  刪不掉要報（2026-10-08，取代 ignore_errors=True）
 
 FAKE = '''import subprocess, sys, time
 kids = [subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(6)']) for _ in range(2)]
@@ -197,7 +199,10 @@ def main():
         print(f'TEST-RESLOG ABORT: 造情境失敗：{e}（沒驗到，不是通過）')
         return 2
     finally:
-        shutil.rmtree(td, ignore_errors=True)
+        left = rmtree_strict(td)   # 刪不掉通常是還有程序握著（上一輪沒收乾淨）——判失敗，不吞掉
+    if left:
+        print(f'TEST-RESLOG FAILED: 暫存目錄沒刪乾淨（{len(left)} 處，見上面 CLEANUP 那幾行）——通常是還有程序握著它')
+        return 1
     print('TEST-RESLOG OK' if all(results) else f'TEST-RESLOG FAILED: {results.count(False)} 項不符')
     return 0 if all(results) else 1
 

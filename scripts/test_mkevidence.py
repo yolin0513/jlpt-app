@@ -21,6 +21,8 @@ import tempfile
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.environ.get('TEST_MKEVIDENCE_SRC') or os.path.join(ROOT, 'scripts', 'mkevidence_mut.py')   # 驗這支自己會紅時換成突變副本
+sys.path.insert(0, os.path.join(ROOT, 'scripts', 'lib'))
+from tmpclean import rmtree_strict  # noqa: E402  刪不掉要報（2026-10-08，取代 ignore_errors=True）
 results = []
 
 
@@ -242,7 +244,10 @@ def main():
         print(f'TEST-MKEVIDENCE ABORT: 造情境失敗：{e}（沒驗到，不是通過）')
         return 2
     finally:
-        shutil.rmtree(td, ignore_errors=True)
+        left = rmtree_strict(td)   # 刪不掉通常是還有程序握著（上一輪沒收乾淨）——判失敗，不吞掉
+    if left:
+        print(f'TEST-MKEVIDENCE FAILED: 暫存目錄沒刪乾淨（{len(left)} 處，見上面 CLEANUP 那幾行）——通常是還有程序握著它')
+        return 1
     print('TEST-MKEVIDENCE OK' if all(results) else f'TEST-MKEVIDENCE FAILED: {results.count(False)} 項不符')
     return 0 if all(results) else 1
 
