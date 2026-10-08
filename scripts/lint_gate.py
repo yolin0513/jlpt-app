@@ -44,6 +44,7 @@ ESCAPE_TARGETS = [
     'scripts/mkevidence_mut.py', 'scripts/test_mkevidence.py',
     'scripts/run_gate_mutations.py', 'scripts/test_run_gate_mutations.py', 'scripts/lib/jobkill.py',
     'scripts/convcheck.py', 'scripts/test_convcheck.py', 'scripts/lib/tmpclean.py', 'scripts/test_tmpclean.py',
+    'scripts/memguard.py', 'scripts/test_memguard.py',
     'scripts/test_pushsafe.sh', 'scripts/test_selfcheck_meta.py', 'scripts/test_verified_reg.py', 'scripts/verify-full.mjs', 'scripts/verify-live.mjs', 'sw.js',
 ]
 
